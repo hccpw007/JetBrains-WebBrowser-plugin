@@ -13,6 +13,8 @@ object WebBrowserIcons {
     val BookmarkRemove = load("bookmark-remove")
     val NewTab = load("new-tab")
     val ToolWindow = load("toolwindow")
+    val Star = load("star")
+    val StarFilled = load("star-filled")
 
     private fun load(name: String): Icon =
         IconLoader.getIcon("/icons/$name.svg", javaClass)

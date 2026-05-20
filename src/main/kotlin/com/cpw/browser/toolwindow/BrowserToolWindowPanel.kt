@@ -3,6 +3,7 @@ package com.cpw.browser.toolwindow
 import com.cpw.browser.WebBrowserIcons
 import com.cpw.browser.action.AddBookmarkAction
 import com.cpw.browser.action.GoBackAction
+import com.cpw.browser.bookmark.BookmarkPersistentState
 import com.cpw.browser.action.GoForwardAction
 import com.cpw.browser.action.GoHomeAction
 import com.cpw.browser.action.NewTabAction
@@ -35,7 +36,11 @@ import javax.swing.SwingConstants
 class BrowserToolWindowPanel(private val project: Project) {
 
     private val tabManager = BrowserTabManager()
-    private val addressBar = AddressBar { rawUrl -> onNavigateRequested(rawUrl) }
+    private val addressBar = AddressBar(
+        onNavigate = { rawUrl -> onNavigateRequested(rawUrl) },
+        isUrlBookmarked = { url -> BookmarkPersistentState.getInstance().contains(url) },
+        onToggleBookmark = { url -> toggleBookmark(url) }
+    )
     private lateinit var bookmarkSidebar: BookmarkSidebar
     private val tabStripPanel = JPanel() // 自定义标签页栏
     private val browserContentPanel = JPanel(BorderLayout()) // 浏览器内容区域
@@ -202,6 +207,19 @@ class BrowserToolWindowPanel(private val project: Project) {
         }
         browserContentPanel.revalidate()
         browserContentPanel.repaint()
+    }
+
+    private fun toggleBookmark(url: String) {
+        val bookmarkState = BookmarkPersistentState.getInstance()
+        if (bookmarkState.contains(url)) {
+            bookmarkState.removeBookmark(url)
+        } else {
+            val tab = tabManager.activeTab
+            val title = tab?.pageTitle?.ifBlank { url } ?: url
+            bookmarkState.addBookmark(com.cpw.browser.bookmark.Bookmark(title, url))
+        }
+        bookmarkSidebar.refreshBookmarks()
+        addressBar.updateStarIcon(url)
     }
 
     private fun onNavigateRequested(rawUrl: String) {
