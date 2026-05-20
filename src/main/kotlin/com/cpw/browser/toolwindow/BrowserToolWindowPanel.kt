@@ -296,17 +296,20 @@ class BrowserToolWindowPanel(private val project: Project) {
         val origTitleCb = tab.onTitleChanged
         tab.onTitleChanged = { title ->
             chromeTab.titleLabel.text = tab.getTabTitle()
-            BrowsingHistoryState.getInstance().updateLastEntryTitle(title)
             origTitleCb?.invoke(title)
         }
 
-        // 记录浏览历史
-        val origUrlCb = tab.onUrlChanged
-        tab.onUrlChanged = { url ->
-            if (url.isNotBlank() && url != "about:blank") {
-                BrowsingHistoryState.getInstance().addEntry(url, url) // 先用 URL 占位，title 到达后再更新
+        // 页面加载完成后记录历史（标题和 URL 均不可为空）
+        val origLoadCb = tab.onLoadingStateChanged
+        tab.onLoadingStateChanged = { loading ->
+            if (!loading) {
+                val url = tab.currentUrl
+                val title = tab.pageTitle
+                if (url.isNotBlank() && url != "about:blank" && title.isNotBlank()) {
+                    BrowsingHistoryState.getInstance().addEntry(url, title)
+                }
             }
-            origUrlCb?.invoke(url)
+            origLoadCb?.invoke(loading)
         }
     }
 

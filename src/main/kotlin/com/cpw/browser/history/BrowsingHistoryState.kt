@@ -30,7 +30,7 @@ class BrowsingHistoryState : PersistentStateComponent<BrowsingHistoryState.State
     }
 
     fun addEntry(url: String, title: String) {
-        if (url.isBlank() || url == "about:blank") return
+        if (url.isBlank() || url == "about:blank" || title.isBlank()) return
         val now = System.currentTimeMillis()
         val todayStart = LocalDate.now(ZoneId.systemDefault())
             .atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
@@ -39,7 +39,7 @@ class BrowsingHistoryState : PersistentStateComponent<BrowsingHistoryState.State
             it.url == url && it.timestamp >= todayStart
         }
         if (existingIndex >= 0) state.entries.removeAt(existingIndex)
-        state.entries.add(HistoryEntry(url, title.ifBlank { url }, now))
+        state.entries.add(HistoryEntry(url, title, now))
         trimEntries()
     }
 
