@@ -53,6 +53,7 @@ class AddressBar(
             BorderFactory.createEmptyBorder(0, 4, 0, 22)
         )
         urlField.border = normalBorder
+        urlField.font = urlField.font.deriveFont(11f)
         urlField.addFocusListener(object : FocusAdapter() {
             override fun focusGained(e: FocusEvent) {
                 urlField.border = focusBorder
