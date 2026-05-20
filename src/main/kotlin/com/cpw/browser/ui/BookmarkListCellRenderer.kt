@@ -1,23 +1,48 @@
 package com.cpw.browser.ui
 
 import com.cpw.browser.bookmark.Bookmark
+import com.intellij.ui.JBColor
+import com.intellij.ui.components.JBLabel
+import java.awt.BorderLayout
 import java.awt.Component
-import javax.swing.DefaultListCellRenderer
+import java.awt.Cursor
+import java.awt.Font
+import javax.swing.JLabel
 import javax.swing.JList
+import javax.swing.JPanel
+import javax.swing.ListCellRenderer
+import javax.swing.border.EmptyBorder
 
-class BookmarkListCellRenderer : DefaultListCellRenderer() {
+class BookmarkListCellRenderer : JPanel(BorderLayout()), ListCellRenderer<Any> {
+    private val titleLabel = JBLabel().apply {
+        font = font.deriveFont(12f)
+    }
+    private val deleteLabel = JLabel("×").apply {
+        font = font.deriveFont(Font.PLAIN, 13f)
+        foreground = JBColor(0xAAAAAA, 0x777777)
+        cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        border = EmptyBorder(0, 4, 0, 2)
+    }
+
+    init {
+        add(titleLabel, BorderLayout.CENTER)
+        add(deleteLabel, BorderLayout.EAST)
+        border = EmptyBorder(2, 8, 2, 2)
+    }
+
     override fun getListCellRendererComponent(
-        list: JList<*>?,
+        list: JList<out Any>?,
         value: Any?,
         index: Int,
         isSelected: Boolean,
         cellHasFocus: Boolean
     ): Component {
-        val renderer = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
+        background = if (isSelected) JBColor(0xD0E4F6, 0x3A4A5A) else JBColor.WHITE
         if (value is Bookmark) {
-            text = value.title
-            toolTipText = value.url
+            titleLabel.text = value.title
+            titleLabel.toolTipText = value.url
+            deleteLabel.toolTipText = "删除书签"
         }
-        return renderer
+        return this
     }
 }

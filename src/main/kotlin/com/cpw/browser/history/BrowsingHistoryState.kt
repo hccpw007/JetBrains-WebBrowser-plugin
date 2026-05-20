@@ -45,6 +45,10 @@ class BrowsingHistoryState : PersistentStateComponent<BrowsingHistoryState.State
 
     fun getEntries(): List<HistoryEntry> = state.entries.toList().reversed()
 
+    fun removeEntry(url: String, timestamp: Long) {
+        state.entries.removeAll { it.url == url && it.timestamp == timestamp }
+    }
+
     fun clearEntries(hours: Long? = null) {
         if (hours == null) {
             state.entries.clear()

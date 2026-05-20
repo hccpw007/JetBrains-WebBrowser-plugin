@@ -4,6 +4,7 @@ import com.cpw.browser.bookmark.Bookmark
 import com.cpw.browser.bookmark.BookmarkPersistentState
 import com.cpw.browser.history.BrowsingHistoryState
 import com.cpw.browser.history.HistoryEntry
+import com.intellij.openapi.ui.Messages
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
@@ -50,12 +51,12 @@ class BookmarkSidebar(
         BookmarkPersistentState.getInstance().getBookmarks()
     )
     private val bookmarkList = JBList(bookmarkListModel).apply {
-        addListSelectionListener {
-            if (!it.valueIsAdjusting && selectedValue != null) {
-                onBookmarkSelected(selectedValue)
-            }
-        }
         cellRenderer = BookmarkListCellRenderer()
+        addMouseListener(object : MouseAdapter() {
+            override fun mouseClicked(e: MouseEvent) {
+                handleBookmarkClick(e)
+            }
+        })
     }
     private val bookmarkScroll = JBScrollPane(bookmarkList)
 
@@ -63,11 +64,11 @@ class BookmarkSidebar(
     private val historyListModel = HistoryEntriesModel()
     private val historyList = JBList(historyListModel).apply {
         cellRenderer = HistoryListRenderer()
-        addListSelectionListener {
-            if (!it.valueIsAdjusting && selectedValue is HistoryEntry) {
-                onHistoryEntrySelected((selectedValue as HistoryEntry).url)
+        addMouseListener(object : MouseAdapter() {
+            override fun mouseClicked(e: MouseEvent) {
+                handleHistoryClick(e)
             }
-        }
+        })
     }
     private val historyScroll = JBScrollPane(historyList)
 
@@ -195,6 +196,50 @@ class BookmarkSidebar(
         (contentPanel.layout as CardLayout).show(contentPanel, "history")
     }
 
+    private fun handleBookmarkClick(e: MouseEvent) {
+        val index = bookmarkList.locationToIndex(e.point)
+        if (index < 0) return
+        val bounds = bookmarkList.getCellBounds(index, index) ?: return
+        // 点击右侧删除区域 (~22px)
+        if (e.point.x >= bounds.x + bounds.width - 22) {
+            val bookmark = bookmarkListModel.getElementAt(index)
+            val result = Messages.showYesNoDialog(
+                "确定删除书签 \"${bookmark.title}\" 吗？",
+                "删除书签",
+                null
+            )
+            if (result == Messages.YES) {
+                BookmarkPersistentState.getInstance().removeBookmark(bookmark.url)
+                refreshBookmarks()
+            }
+        } else {
+            val bookmark = bookmarkListModel.getElementAt(index)
+            onBookmarkSelected(bookmark)
+        }
+    }
+
+    private fun handleHistoryClick(e: MouseEvent) {
+        val index = historyList.locationToIndex(e.point)
+        if (index < 0) return
+        val item = historyListModel.getElementAt(index)
+        if (item !is HistoryEntry) return
+        val bounds = historyList.getCellBounds(index, index) ?: return
+        // 点击右侧删除区域 (~22px)
+        if (e.point.x >= bounds.x + bounds.width - 22) {
+            val result = Messages.showYesNoDialog(
+                "确定删除该条历史记录吗？",
+                "删除历史记录",
+                null
+            )
+            if (result == Messages.YES) {
+                BrowsingHistoryState.getInstance().removeEntry(item.url, item.timestamp)
+                refreshHistory()
+            }
+        } else {
+            onHistoryEntrySelected(item.url)
+        }
+    }
+
     private fun showClearPopup() {
         val popup = JPopupMenu()
         popup.add(createClearItem("清空一小时内记录", 1L))
@@ -286,7 +331,7 @@ class BookmarkSidebar(
     }
 
     // ---- 历史列表渲染器 ----
-    private class HistoryListRenderer : JPanel(), ListCellRenderer<Any> {
+    private class HistoryListRenderer : JPanel(BorderLayout()), ListCellRenderer<Any> {
         private val titleLabel = JBLabel().apply {
             font = font.deriveFont(12f)
         }
@@ -294,12 +339,22 @@ class BookmarkSidebar(
             font = font.deriveFont(10f)
             foreground = JBColor(0x888888, 0x999999)
         }
-
-        init {
+        private val contentPanel = JPanel().apply {
             layout = BoxLayout(this, BoxLayout.Y_AXIS)
-            border = EmptyBorder(2, 8, 2, 8)
             add(titleLabel)
             add(timeLabel)
+        }
+        private val deleteLabel = JLabel("×").apply {
+            font = font.deriveFont(Font.PLAIN, 13f)
+            foreground = JBColor(0xAAAAAA, 0x777777)
+            cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+            border = EmptyBorder(0, 4, 0, 2)
+        }
+
+        init {
+            add(contentPanel, BorderLayout.CENTER)
+            add(deleteLabel, BorderLayout.EAST)
+            border = EmptyBorder(2, 8, 2, 2)
         }
 
         override fun getListCellRendererComponent(
@@ -316,10 +371,11 @@ class BookmarkSidebar(
                     titleLabel.font = titleLabel.font.deriveFont(Font.BOLD, 11f)
                     titleLabel.foreground = JBColor(0x666666, 0xAAAAAA)
                     timeLabel.isVisible = false
-                    border = BorderFactory.createCompoundBorder(
+                    contentPanel.border = BorderFactory.createCompoundBorder(
                         BorderFactory.createMatteBorder(1, 0, 0, 0, JBColor(0xE0E0E0, 0x555555)),
-                        EmptyBorder(4, 8, 2, 8)
+                        EmptyBorder(4, 0, 2, 0)
                     )
+                    deleteLabel.isVisible = false
                 }
                 is DayOfWeek -> {
                     titleLabel.text = when (value) {
@@ -334,10 +390,11 @@ class BookmarkSidebar(
                     titleLabel.font = titleLabel.font.deriveFont(Font.BOLD, 11f)
                     titleLabel.foreground = JBColor(0x666666, 0xAAAAAA)
                     timeLabel.isVisible = false
-                    border = BorderFactory.createCompoundBorder(
+                    contentPanel.border = BorderFactory.createCompoundBorder(
                         BorderFactory.createMatteBorder(1, 0, 0, 0, JBColor(0xE0E0E0, 0x555555)),
-                        EmptyBorder(4, 8, 2, 8)
+                        EmptyBorder(4, 0, 2, 0)
                     )
+                    deleteLabel.isVisible = false
                 }
                 is HistoryEntry -> {
                     titleLabel.text = value.title
@@ -345,7 +402,9 @@ class BookmarkSidebar(
                     titleLabel.foreground = JBColor(0x000000, 0xDDDDDD)
                     timeLabel.text = formatTimestamp(value.timestamp)
                     timeLabel.isVisible = true
-                    border = EmptyBorder(2, 8, 2, 8)
+                    contentPanel.border = EmptyBorder(0, 0, 0, 0)
+                    deleteLabel.isVisible = true
+                    deleteLabel.toolTipText = "删除"
                 }
             }
             return this
