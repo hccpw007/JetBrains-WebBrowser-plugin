@@ -12,7 +12,7 @@ import com.intellij.openapi.vfs.VirtualFile
 class BrowserFileEditorProvider : FileEditorProvider {
 
     override fun accept(project: Project, file: VirtualFile): Boolean {
-        return file.extension == "webbrowser"
+        return file.fileType == BrowserFileType
     }
 
     override fun createEditor(project: Project, file: VirtualFile): FileEditor {

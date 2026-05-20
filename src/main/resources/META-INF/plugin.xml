@@ -46,6 +46,12 @@
 
         <fileEditorProvider
             implementation="com.cpw.browser.editor.BrowserFileEditorProvider"/>
+
+        <fileType
+            name="WebBrowser"
+            implementationClass="com.cpw.browser.editor.BrowserFileType"
+            fieldName="INSTANCE"
+            extensions="webbrowser"/>
     </extensions>
     <!-- 新增：工具栏Action配置（直接添加在extensions后面即可） -->
     <actions>
