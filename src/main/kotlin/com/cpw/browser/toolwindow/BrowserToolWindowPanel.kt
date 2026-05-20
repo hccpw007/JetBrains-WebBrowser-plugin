@@ -304,7 +304,7 @@ class BrowserToolWindowPanel(private val project: Project) {
         val origUrlCb = tab.onUrlChanged
         tab.onUrlChanged = { url ->
             if (url.isNotBlank() && url != "about:blank") {
-                BrowsingHistoryState.getInstance().addEntry(url, tab.pageTitle)
+                BrowsingHistoryState.getInstance().addEntry(url, url) // 先用 URL 占位，title 到达后再更新
             }
             origUrlCb?.invoke(url)
         }

@@ -40,9 +40,7 @@ class BrowsingHistoryState : PersistentStateComponent<BrowsingHistoryState.State
 
     fun updateLastEntryTitle(title: String) {
         val last = state.entries.lastOrNull() ?: return
-        if (last.title.isBlank() || last.title == last.url) {
-            state.entries[state.entries.size - 1] = last.copy(title = title)
-        }
+        state.entries[state.entries.size - 1] = last.copy(title = title)
     }
 
     fun getEntries(): List<HistoryEntry> = state.entries.toList().reversed()
