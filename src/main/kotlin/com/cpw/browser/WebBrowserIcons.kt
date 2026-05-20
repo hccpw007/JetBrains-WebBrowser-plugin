@@ -12,7 +12,6 @@ object WebBrowserIcons {
     val BookmarkAdd = load("bookmark-add")
     val BookmarkRemove = load("bookmark-remove")
     val NewTab = load("new-tab")
-    val CloseTab = load("close-tab")
     val ToolWindow = load("toolwindow")
 
     private fun load(name: String): Icon =

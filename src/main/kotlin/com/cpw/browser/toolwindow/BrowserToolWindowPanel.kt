@@ -1,15 +1,16 @@
 package com.cpw.browser.toolwindow
 
-import com.cpw.browser.WebBrowserIcons
+import com.cpw.browser.action.AddBookmarkAction
 import com.cpw.browser.action.GoBackAction
 import com.cpw.browser.action.GoForwardAction
 import com.cpw.browser.action.GoHomeAction
+import com.cpw.browser.action.NewTabAction
+import com.cpw.browser.action.OpenDevToolsAction
 import com.cpw.browser.action.RefreshAction
 import com.cpw.browser.bookmark.Bookmark
 import com.cpw.browser.browser.BrowserTabManager
 import com.cpw.browser.ui.AddressBar
 import com.cpw.browser.ui.BookmarkSidebar
-import com.cpw.browser.ui.BrowserToolbar
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.application.ApplicationManager
@@ -18,12 +19,15 @@ import com.intellij.ui.JBSplitter
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import java.awt.BorderLayout
+import java.awt.Dimension
+import java.awt.FlowLayout
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import java.net.URLEncoder
+import javax.swing.BorderFactory
 import javax.swing.Box
 import javax.swing.BoxLayout
-import javax.swing.JButton
 import javax.swing.JPanel
-import javax.swing.JTabbedPane
 import javax.swing.SwingConstants
 
 class BrowserToolWindowPanel(private val project: Project) {
@@ -31,36 +35,26 @@ class BrowserToolWindowPanel(private val project: Project) {
     private val tabManager = BrowserTabManager()
     private val addressBar = AddressBar { rawUrl -> onNavigateRequested(rawUrl) }
     private lateinit var bookmarkSidebar: BookmarkSidebar
-    private lateinit var toolbar: BrowserToolbar
-    private val tabPane = JTabbedPane()
+    private val tabStripPanel = JPanel() // 自定义标签页栏
+    private val browserContentPanel = JPanel(BorderLayout()) // 浏览器内容区域
     private val statusLabel = JBLabel("就绪", SwingConstants.LEFT)
     private val mainPanel = JBPanel<JBPanel<*>>(BorderLayout())
-    // 标题标签缓存，key 为 BrowserTabPanel 引用
-    private val tabTitleLabels = mutableMapOf<BrowserTabPanel, JBLabel>()
+    private val tabTitleLabels = mutableMapOf<BrowserTabPanel, JBLabel>() // 标题标签缓存
+    private val tabStripItems = mutableMapOf<BrowserTabPanel, JPanel>() // 标签页栏条目
 
     init {
         bookmarkSidebar = BookmarkSidebar { bookmark -> onBookmarkSelected(bookmark) }
 
-        toolbar = BrowserToolbar(
-            tabManager = tabManager,
-            onBookmarkChanged = { bookmarkSidebar.refreshBookmarks() },
-            getSelectedBookmarkUrl = { bookmarkSidebar.getSelectedBookmarkUrl() }
-        )
+        // 标签页栏
+        tabStripPanel.layout = FlowLayout(FlowLayout.LEFT, 0, 0)
+        tabStripPanel.border = BorderFactory.createEmptyBorder(2, 4, 2, 4)
 
-        tabManager.onTabAdded = { tab -> addTabToPane(tab) }
+        tabManager.onTabAdded = { tab -> addTabToStrip(tab) }
         tabManager.onTabRemoved = { tab ->
             tabTitleLabels.remove(tab)
-            val index = getTabIndex(tab)
-            if (index >= 0) tabPane.removeTabAt(index)
+            removeTabFromStrip(tab)
         }
         tabManager.onActiveTabChanged = { tab -> onActiveTabChanged(tab) }
-
-        tabPane.addChangeListener {
-            val index = tabPane.selectedIndex
-            if (index >= 0 && index != tabManager.activeTabIndex) {
-                tabManager.switchToTab(index)
-            }
-        }
 
         // 后退/前进/刷新/主页 mini 工具栏
         val navGroup = DefaultActionGroup().apply {
@@ -73,23 +67,37 @@ class BrowserToolWindowPanel(private val project: Project) {
             .createActionToolbar("WebBrowser.NavBar", navGroup, true)
         navToolbar.setTargetComponent(navToolbar.component)
 
-        // 地址栏行
+        // url 右侧工具栏：开发者工具、添加书签、新建标签页
+        val rightGroup = DefaultActionGroup().apply {
+            add(OpenDevToolsAction(tabManager))
+            add(AddBookmarkAction(tabManager) { bookmarkSidebar.refreshBookmarks() })
+            addSeparator()
+            add(NewTabAction(tabManager))
+        }
+        val rightToolbar = ActionManager.getInstance()
+            .createActionToolbar("WebBrowser.RightActions", rightGroup, true)
+        rightToolbar.setTargetComponent(rightToolbar.component)
+
+        // 地址栏行：[导航按钮] [地址栏] [开发者工具/书签/新标签页]
         val navAddressBar = JBPanel<JBPanel<*>>(BorderLayout()).apply {
             add(navToolbar.component, BorderLayout.WEST)
             add(addressBar, BorderLayout.CENTER)
+            add(rightToolbar.component, BorderLayout.EAST)
         }
 
-        // 布局
-        val topPanel = JBPanel<JBPanel<*>>(BorderLayout()).apply {
-            add(toolbar.component, BorderLayout.NORTH)
-            add(navAddressBar, BorderLayout.SOUTH)
+        // 顶部区域：[标签页栏] [地址栏]
+        val topSection = JBPanel<JBPanel<*>>().apply {
+            layout = BoxLayout(this, BoxLayout.Y_AXIS)
+            add(tabStripPanel)
+            add(navAddressBar)
         }
 
+        // 侧边栏分割器：[书签] [浏览器内容]
         val sidebarSplitter = JBSplitter(false, 0.2f)
         sidebarSplitter.firstComponent = bookmarkSidebar
-        sidebarSplitter.secondComponent = tabPane
+        sidebarSplitter.secondComponent = browserContentPanel
 
-        mainPanel.add(topPanel, BorderLayout.NORTH)
+        mainPanel.add(topSection, BorderLayout.NORTH)
         mainPanel.add(sidebarSplitter, BorderLayout.CENTER)
         mainPanel.add(statusLabel, BorderLayout.SOUTH)
 
@@ -112,49 +120,70 @@ class BrowserToolWindowPanel(private val project: Project) {
         tabManager.activeTab?.openDevTools()
     }
 
-    private fun addTabToPane(tab: BrowserTabPanel) {
+    private fun addTabToStrip(tab: BrowserTabPanel) {
         val titleLabel = JBLabel(tab.getTabTitle())
         tabTitleLabels[tab] = titleLabel
 
-        val closeBtn = JButton(WebBrowserIcons.CloseTab).apply {
-            isBorderPainted = false
-            isContentAreaFilled = false
-            isFocusPainted = false
-            toolTipText = "关闭标签页"
-            addActionListener {
-                for (i in 0 until tabPane.tabCount) {
-                    if (tabPane.getComponentAt(i) == tab.component) {
-                        tabManager.closeTab(i)
-                        return@addActionListener
+        val tabStripItem = JPanel().apply {
+            layout = BoxLayout(this, BoxLayout.X_AXIS)
+            isOpaque = true
+            border = BorderFactory.createEmptyBorder(3, 8, 3, 8)
+            add(titleLabel)
+            add(Box.createRigidArea(Dimension(4, 0)))
+
+            addMouseListener(object : MouseAdapter() {
+                override fun mouseClicked(e: MouseEvent) {
+                    val index = tabManager.getTabs().indexOf(tab)
+                    if (index >= 0) {
+                        tabManager.switchToTab(index)
                     }
                 }
-            }
+            })
         }
 
-        val tabComponent = JPanel().apply {
-            layout = BoxLayout(this, BoxLayout.X_AXIS)
-            isOpaque = false
-            border = javax.swing.border.EmptyBorder(0, 0, 0, 0)
-            add(titleLabel)
-            add(Box.createHorizontalGlue())
-            add(closeBtn)
-        }
+        tabStripItems[tab] = tabStripItem
+        tabStripPanel.add(tabStripItem)
+        tabStripPanel.revalidate()
+        tabStripPanel.repaint()
+        updateTabStripHighlight()
+    }
 
-        tabPane.addTab(null, tab.component)
-        tabPane.setTabComponentAt(tabPane.tabCount - 1, tabComponent)
-        tabPane.selectedIndex = tabPane.tabCount - 1
+    private fun removeTabFromStrip(tab: BrowserTabPanel) {
+        val item = tabStripItems.remove(tab) ?: return
+        tabStripPanel.remove(item)
+        tabStripPanel.revalidate()
+        tabStripPanel.repaint()
+        updateTabStripHighlight()
+    }
+
+    private fun updateTabStripHighlight() {
+        val activeTab = tabManager.activeTab
+        for ((tab, item) in tabStripItems) {
+            item.background = if (tab == activeTab) tabStripPanel.background else tabStripPanel.background.darker()
+        }
     }
 
     private fun onActiveTabChanged(tab: BrowserTabPanel?) {
         if (tab != null) {
             addressBar.setUrl(tab.currentUrl)
             statusLabel.text = if (tab.isLoading) "加载中..." else "就绪"
-            updateTabPaneSelection(tab)
+            updateBrowserContent(tab)
+            updateTabStripHighlight()
             updateTabTitle(tab)
         } else {
             addressBar.setUrl("")
             statusLabel.text = "就绪"
+            updateBrowserContent(null)
         }
+    }
+
+    private fun updateBrowserContent(tab: BrowserTabPanel?) {
+        browserContentPanel.removeAll()
+        if (tab != null) {
+            browserContentPanel.add(tab.component, BorderLayout.CENTER)
+        }
+        browserContentPanel.revalidate()
+        browserContentPanel.repaint()
     }
 
     private fun onNavigateRequested(rawUrl: String) {
@@ -176,26 +205,8 @@ class BrowserToolWindowPanel(private val project: Project) {
         }
     }
 
-    private fun updateTabPaneSelection(tab: BrowserTabPanel) {
-        for (i in 0 until tabPane.tabCount) {
-            if (tabPane.getComponentAt(i) == tab.component) {
-                if (tabPane.selectedIndex != i) {
-                    tabPane.selectedIndex = i
-                }
-                return
-            }
-        }
-    }
-
     private fun updateTabTitle(tab: BrowserTabPanel) {
         tabTitleLabels[tab]?.text = tab.getTabTitle()
-    }
-
-    private fun getTabIndex(tab: BrowserTabPanel): Int {
-        for (i in 0 until tabPane.tabCount) {
-            if (tabPane.getComponentAt(i) == tab.component) return i
-        }
-        return -1
     }
 
     private fun normalizeUrl(input: String): String {
