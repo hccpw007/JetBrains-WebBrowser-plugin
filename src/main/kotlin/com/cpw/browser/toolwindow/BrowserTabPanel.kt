@@ -5,6 +5,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.PathManager
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.ui.jcef.JBCefBrowser
+import com.jetbrains.cef.JCefAppConfig
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.handler.CefDisplayHandlerAdapter
@@ -17,6 +18,14 @@ import java.nio.file.Path
 import javax.swing.JComponent
 
 class BrowserTabPanel(private val initialUrl: String = "about:blank") {
+
+    // 在第一个 JBCefBrowser 创建前启用远程调试端口，确保生成 DevToolsActivePort
+    init {
+        try {
+            JCefAppConfig.getInstance().cefSettings.remote_debugging_port = 0
+        } catch (_: Throwable) {
+        }
+    }
 
     val browser: JBCefBrowser = JBCefBrowser(initialUrl).also {
         // 强制白色背景，避免深色主题下网页背景变黑
@@ -236,7 +245,7 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
 
             for (root in candidates) {
                 if (!Files.isDirectory(root)) continue
-                val found = Files.walk(root, 2)
+                val found = Files.walk(root, 6)
                     .filter { it.fileName.toString() == "DevToolsActivePort" }
                     .findFirst()
                 if (found.isPresent) {
