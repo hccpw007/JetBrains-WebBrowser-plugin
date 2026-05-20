@@ -43,7 +43,7 @@ class ChromeTab(
 
     companion object {
         /** 标签页高度（不含 tabStrip 顶部内边距） */
-        const val TAB_HEIGHT = 30
+        const val TAB_HEIGHT = 26
         /** 顶部圆角半径 */
         private const val CR = 10
         /** 非活跃标签底部内凹幅度 */
@@ -60,7 +60,7 @@ class ChromeTab(
     init {
         isOpaque = false
         layout = BoxLayout(this, BoxLayout.X_AXIS)
-        border = EmptyBorder(6, 10, 0, 10)
+        border = EmptyBorder(4, 10, 0, 10)
 
         add(titleLabel)
         add(Box.createRigidArea(Dimension(6, 0)))
