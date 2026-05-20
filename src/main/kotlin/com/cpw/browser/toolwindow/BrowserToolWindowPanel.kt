@@ -151,7 +151,7 @@ class BrowserToolWindowPanel(private val project: Project) {
         val navGroup = DefaultActionGroup().apply {
             add(GoBackAction(tabManager))
             add(GoForwardAction(tabManager))
-            add(RefreshAction(tabManager) { showZoomToastForActiveTab("恢复至") })
+            add(RefreshAction(tabManager) { })
             add(GoHomeAction(tabManager))
         }
         val navToolbar = ActionManager.getInstance()
