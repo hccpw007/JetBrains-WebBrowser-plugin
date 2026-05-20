@@ -219,6 +219,8 @@ class BrowserToolWindowPanel(private val project: Project) {
             tab.openEmbeddedDevTools { devTools ->
                 if (devTools != null) {
                     updateBrowserContent(tab)
+                } else {
+                    statusLabel.text = "嵌入式 DevTools 加载失败，请使用独立窗口模式"
                 }
             }
         }

@@ -188,10 +188,12 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
                         connectDevToolsViaCDP(port, callback)
                     }
                 } else {
+                    System.err.println("[WebBrowser] Remote debugging port not available: $port")
                     callback(null)
                 }
             }
         } catch (e: Exception) {
+            System.err.println("[WebBrowser] Failed to get JBCefApp: ${e.message}")
             callback(null)
         }
     }
@@ -200,14 +202,16 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
         try {
             val json = URI("http://127.0.0.1:$port/json").toURL().readText()
             val pages = JsonParser.parseString(json).asJsonArray
+            System.err.println("[WebBrowser] CDP /json returned ${pages.size()} pages (port=$port, currentUrl=$currentUrl)")
 
-            // 尝试按当前 URL 精确匹配页面
+            // 尝试按当前 URL 匹配（含 jbcefbrowser 前缀的 URL）
             var pageId: String? = null
             for (page in pages) {
                 val obj = page.asJsonObject
                 if (obj.get("type")?.asString == "page") {
                     val pageUrl = obj.get("url")?.asString ?: ""
-                    if (pageUrl == currentUrl) {
+                    // 精确匹配或包含匹配（jbcefbrowser 的 URL 会带 #url= 参数）
+                    if (pageUrl == currentUrl || pageUrl.contains(currentUrl)) {
                         pageId = obj.get("id")?.asString
                         break
                     }
@@ -216,6 +220,7 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
 
             // 未匹配到则使用第一个 page 类型
             if (pageId == null) {
+                System.err.println("[WebBrowser] No page matched currentUrl='$currentUrl', using first available page")
                 for (page in pages) {
                     val obj = page.asJsonObject
                     if (obj.get("type")?.asString == "page") {
@@ -227,19 +232,23 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
 
             if (pageId != null) {
                 val devToolsUrl = "http://127.0.0.1:$port/devtools/inspector.html?ws=127.0.0.1:$port/devtools/page/$pageId"
+                System.err.println("[WebBrowser] Opening embedded DevTools at: $devToolsUrl")
                 ApplicationManager.getApplication().invokeLater {
                     try {
                         val devBrowser = JBCefBrowser(devToolsUrl)
                         cdpDevTools = devBrowser
                         callback(devBrowser)
                     } catch (e: Exception) {
+                        System.err.println("[WebBrowser] Failed to create DevTools browser: ${e.message}")
                         callback(null)
                     }
                 }
             } else {
+                System.err.println("[WebBrowser] No page type found in /json list")
                 ApplicationManager.getApplication().invokeLater { callback(null) }
             }
         } catch (e: Exception) {
+            System.err.println("[WebBrowser] CDP connection failed: ${e.message}")
             ApplicationManager.getApplication().invokeLater { callback(null) }
         }
     }
