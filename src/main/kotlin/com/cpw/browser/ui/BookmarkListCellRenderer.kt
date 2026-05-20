@@ -6,6 +6,7 @@ import com.intellij.ui.components.JBLabel
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Cursor
+import java.awt.FlowLayout
 import java.awt.Font
 import javax.swing.JLabel
 import javax.swing.JList
@@ -17,16 +18,29 @@ class BookmarkListCellRenderer : JPanel(BorderLayout()), ListCellRenderer<Any> {
     private val titleLabel = JBLabel().apply {
         font = font.deriveFont(12f)
     }
+    private val editLabel = JLabel("✎").apply {
+        font = font.deriveFont(Font.PLAIN, 13f)
+        foreground = JBColor(0xAAAAAA, 0x777777)
+        cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        border = EmptyBorder(0, 4, 0, 4)
+        toolTipText = "编辑"
+    }
     private val deleteLabel = JLabel("×").apply {
         font = font.deriveFont(Font.PLAIN, 13f)
         foreground = JBColor(0xAAAAAA, 0x777777)
         cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
         border = EmptyBorder(0, 4, 0, 6)
+        toolTipText = "删除书签"
     }
 
     init {
+        val eastPanel = JPanel(FlowLayout(FlowLayout.RIGHT, 0, 0)).apply {
+            isOpaque = false
+            add(editLabel)
+            add(deleteLabel)
+        }
         add(titleLabel, BorderLayout.CENTER)
-        add(deleteLabel, BorderLayout.EAST)
+        add(eastPanel, BorderLayout.EAST)
         border = EmptyBorder(6, 8, 6, 2)
     }
 
@@ -41,7 +55,6 @@ class BookmarkListCellRenderer : JPanel(BorderLayout()), ListCellRenderer<Any> {
         if (value is Bookmark) {
             titleLabel.text = value.title
             titleLabel.toolTipText = value.url
-            deleteLabel.toolTipText = "删除书签"
         }
         return this
     }

@@ -10,6 +10,7 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
+import com.intellij.ui.components.JBTextField
 import java.awt.BorderLayout
 import java.awt.CardLayout
 import java.awt.Color
@@ -20,6 +21,9 @@ import java.awt.FlowLayout
 import java.awt.Font
 import java.awt.Graphics
 import java.awt.Graphics2D
+import java.awt.GridBagConstraints
+import java.awt.GridBagLayout
+import java.awt.Insets
 import java.awt.RenderingHints
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
@@ -206,21 +210,31 @@ class BookmarkSidebar(
         val index = bookmarkList.locationToIndex(e.point)
         if (index < 0) return
         val bounds = bookmarkList.getCellBounds(index, index) ?: return
-        // 点击右侧删除区域 (~22px)
-        if (e.point.x >= bounds.x + bounds.width - 22) {
-            val bookmark = bookmarkListModel.getElementAt(index)
-            val result = Messages.showYesNoDialog(
-                "确定删除书签 \"${bookmark.title}\" 吗？",
-                "删除书签",
-                null
-            )
-            if (result == Messages.YES) {
-                BookmarkPersistentState.getInstance().removeBookmark(bookmark.url)
-                refreshBookmarks()
+        val bookmark = bookmarkListModel.getElementAt(index)
+        val rightEdge = bounds.x + bounds.width
+
+        when {
+            e.point.x >= rightEdge - 22 -> {
+                val result = Messages.showYesNoDialog(
+                    "确定删除书签 \"${bookmark.title}\" 吗？",
+                    "删除书签",
+                    null
+                )
+                if (result == Messages.YES) {
+                    BookmarkPersistentState.getInstance().removeBookmark(bookmark.url)
+                    refreshBookmarks()
+                }
             }
-        } else {
-            val bookmark = bookmarkListModel.getElementAt(index)
-            onBookmarkSelected(bookmark)
+            e.point.x >= rightEdge - 44 -> {
+                val result = showBookmarkEditDialog(bookmark.title, bookmark.url)
+                if (result != null) {
+                    BookmarkPersistentState.getInstance().updateBookmark(
+                        bookmark.url, result.first, result.second
+                    )
+                    refreshBookmarks()
+                }
+            }
+            else -> onBookmarkSelected(bookmark)
         }
     }
 
@@ -427,6 +441,36 @@ class BookmarkSidebar(
     companion object {
         private const val TAB_BOOKMARKS = 0
         private const val TAB_HISTORY = 1
+
+        /** 弹出书签编辑/添加对话框，返回 (标题, 地址) 或 null */
+        fun showBookmarkEditDialog(title: String, url: String): Pair<String, String>? {
+            val panel = JPanel(GridBagLayout())
+            val c = GridBagConstraints().apply {
+                insets = Insets(4, 4, 4, 4)
+                anchor = GridBagConstraints.WEST
+            }
+            c.gridx = 0; c.gridy = 0
+            panel.add(JLabel("标题:"), c)
+            c.gridx = 1; c.fill = GridBagConstraints.HORIZONTAL; c.weightx = 1.0
+            val titleField = JBTextField(title, 20)
+            panel.add(titleField, c)
+
+            c.gridx = 0; c.gridy = 1; c.fill = GridBagConstraints.NONE; c.weightx = 0.0
+            panel.add(JLabel("地址:"), c)
+            c.gridx = 1; c.fill = GridBagConstraints.HORIZONTAL; c.weightx = 1.0
+            val urlField = JBTextField(url, 20)
+            panel.add(urlField, c)
+
+            val result = javax.swing.JOptionPane.showOptionDialog(
+                null, panel, "书签",
+                javax.swing.JOptionPane.OK_CANCEL_OPTION,
+                javax.swing.JOptionPane.PLAIN_MESSAGE,
+                null, null, null
+            )
+            return if (result == javax.swing.JOptionPane.OK_OPTION) {
+                Pair(titleField.text.trim(), urlField.text.trim())
+            } else null
+        }
 
         private fun formatTimestamp(millis: Long): String {
             val zone = ZoneId.systemDefault()

@@ -354,14 +354,29 @@ class BrowserToolWindowPanel(private val project: Project) {
     private fun toggleBookmark(url: String) {
         val bookmarkState = BookmarkPersistentState.getInstance()
         if (bookmarkState.contains(url)) {
-            bookmarkState.removeBookmark(url)
+            val bookmark = bookmarkState.getBookmarks().find { it.url == url }
+            if (bookmark != null) {
+                val result = BookmarkSidebar.showBookmarkEditDialog(bookmark.title, bookmark.url)
+                if (result != null) {
+                    bookmarkState.updateBookmark(url, result.first, result.second)
+                    bookmarkSidebar.refreshBookmarks()
+                    addressBar.updateStarIcon(result.second)
+                }
+            } else {
+                bookmarkState.removeBookmark(url)
+                bookmarkSidebar.refreshBookmarks()
+                addressBar.updateStarIcon(url)
+            }
         } else {
             val tab = tabManager.activeTab
-            val title = tab?.pageTitle?.ifBlank { url } ?: url
-            bookmarkState.addBookmark(com.cpw.browser.bookmark.Bookmark(title, url))
+            val defaultTitle = tab?.pageTitle?.ifBlank { url } ?: url
+            val result = BookmarkSidebar.showBookmarkEditDialog(defaultTitle, url)
+            if (result != null) {
+                bookmarkState.addBookmark(com.cpw.browser.bookmark.Bookmark(result.first, result.second))
+                bookmarkSidebar.refreshBookmarks()
+                addressBar.updateStarIcon(result.second)
+            }
         }
-        bookmarkSidebar.refreshBookmarks()
-        addressBar.updateStarIcon(url)
     }
 
     private fun onNavigateRequested(rawUrl: String) {

@@ -34,10 +34,16 @@ class BookmarkPersistentState : PersistentStateComponent<BookmarkPersistentState
 
     fun contains(url: String): Boolean = state.bookmarks.any { it.url == url }
 
-    fun updateTitle(url: String, title: String) {
-        state.bookmarks.find { it.url == url }?.let {
-            val index = state.bookmarks.indexOf(it)
-            state.bookmarks[index] = it.copy(title = title)
+    fun updateBookmark(oldUrl: String, newTitle: String, newUrl: String) {
+        val bookmark = state.bookmarks.find { it.url == oldUrl } ?: return
+        val index = state.bookmarks.indexOf(bookmark)
+        if (oldUrl != newUrl) {
+            state.bookmarks.removeAt(index)
+            if (state.bookmarks.none { it.url == newUrl }) {
+                state.bookmarks.add(bookmark.copy(title = newTitle, url = newUrl))
+            }
+        } else {
+            state.bookmarks[index] = bookmark.copy(title = newTitle)
         }
     }
 
