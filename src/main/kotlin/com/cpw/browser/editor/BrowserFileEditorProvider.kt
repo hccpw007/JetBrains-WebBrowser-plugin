@@ -16,7 +16,7 @@ class BrowserFileEditorProvider : FileEditorProvider {
     }
 
     override fun createEditor(project: Project, file: VirtualFile): FileEditor {
-        return BrowserFileEditor(project)
+        return BrowserFileEditor(project, file)
     }
 
     override fun getEditorTypeId(): String = "webbrowser-editor"

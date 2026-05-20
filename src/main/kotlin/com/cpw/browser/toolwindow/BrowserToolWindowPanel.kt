@@ -45,6 +45,8 @@ import javax.swing.Timer
 
 class BrowserToolWindowPanel(private val project: Project) {
 
+    var onTitleChanged: ((String) -> Unit)? = null
+
     private val tabManager = BrowserTabManager()
     private val addressBar = AddressBar(
         onNavigate = { rawUrl -> onNavigateRequested(rawUrl) },
@@ -297,6 +299,9 @@ class BrowserToolWindowPanel(private val project: Project) {
         tab.onTitleChanged = { title ->
             chromeTab.titleLabel.text = tab.getTabTitle()
             origTitleCb?.invoke(title)
+            if (tab == tabManager.activeTab) {
+                onTitleChanged?.invoke(tab.getTabTitle())
+            }
         }
 
         // 页面加载完成后记录历史（标题和 URL 均不可为空）
@@ -335,10 +340,12 @@ class BrowserToolWindowPanel(private val project: Project) {
             updateBrowserContent(tab)
             updateTabStripHighlight()
             updateTabTitle(tab)
+            onTitleChanged?.invoke(tab.getTabTitle())
         } else {
             addressBar.setUrl("")
             statusLabel.text = "就绪"
             updateBrowserContent(null)
+            onTitleChanged?.invoke("Web Browser")
         }
     }
 
