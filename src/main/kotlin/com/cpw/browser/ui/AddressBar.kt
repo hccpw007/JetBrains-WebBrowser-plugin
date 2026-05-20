@@ -1,10 +1,13 @@
 package com.cpw.browser.ui
 
 import com.cpw.browser.WebBrowserIcons
+import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBTextField
 import java.awt.BorderLayout
 import java.awt.Cursor
+import java.awt.event.FocusAdapter
+import java.awt.event.FocusEvent
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
 import java.awt.event.MouseAdapter
@@ -34,11 +37,24 @@ class AddressBar(
     }
 
     init {
-        // 给文本字段右侧留出空间给内嵌星标
-        urlField.border = BorderFactory.createCompoundBorder(
-            urlField.border,
-            BorderFactory.createEmptyBorder(0, 0, 0, 22)
+        // 自定义边框：聚焦时不用蓝色
+        val normalBorder = BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(JBColor(0xC0C0C0, 0x4A4A4A), 1),
+            BorderFactory.createEmptyBorder(0, 4, 0, 22)
         )
+        val focusBorder = BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(JBColor(0x909090, 0x888888), 1),
+            BorderFactory.createEmptyBorder(0, 4, 0, 22)
+        )
+        urlField.border = normalBorder
+        urlField.addFocusListener(object : FocusAdapter() {
+            override fun focusGained(e: FocusEvent) {
+                urlField.border = focusBorder
+            }
+            override fun focusLost(e: FocusEvent) {
+                urlField.border = normalBorder
+            }
+        })
 
         urlField.addKeyListener(object : KeyAdapter() {
             override fun keyPressed(e: KeyEvent) {
@@ -54,7 +70,7 @@ class AddressBar(
                 val w = width
                 val h = height
                 urlField.setBounds(0, 0, w, h)
-                val starSize = 20
+                val starSize = 16
                 starLabel.setBounds(w - starSize - 4, (h - starSize) / 2, starSize, starSize)
                 setLayer(starLabel, PALETTE_LAYER)
             }
