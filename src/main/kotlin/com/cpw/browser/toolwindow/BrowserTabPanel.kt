@@ -1,14 +1,16 @@
 package com.cpw.browser.toolwindow
 
+import com.google.gson.JsonParser
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.ui.jcef.JBCefApp
 import com.intellij.ui.jcef.JBCefBrowser
-import com.intellij.ui.jcef.JBCefBrowserBuilder
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.handler.CefDisplayHandlerAdapter
 import org.cef.handler.CefLifeSpanHandlerAdapter
 import org.cef.handler.CefLoadHandler
 import org.cef.handler.CefLoadHandlerAdapter
+import java.net.URI
 import javax.swing.JComponent
 
 class BrowserTabPanel(private val initialUrl: String = "about:blank") {
@@ -35,11 +37,10 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
     // 网页弹窗/新窗口回调 — 传入目标 URL
     var onPopupUrl: ((String) -> Unit)? = null
 
-    // 嵌入式 DevTools
-    private var embeddedDevTools: JBCefBrowser? = null
-    private var pendingDevToolsCallback: ((JBCefBrowser?) -> Unit)? = null
+    // 嵌入式 DevTools — 通过 CDP 远程调试端口实现
+    private var cdpDevTools: JBCefBrowser? = null
 
-    val isEmbeddedDevToolsOpen: Boolean get() = embeddedDevTools != null
+    val isEmbeddedDevToolsOpen: Boolean get() = cdpDevTools != null
 
     init {
         if (initialUrl != "about:blank") {
@@ -108,29 +109,6 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
                 onTitleChanged?.invoke(title)
             }
         }, browser.cefBrowser)
-
-        // 拦截 DevTools 弹窗浏览器，转为嵌入式
-        // 注册在 CefClient 级别（而非单个浏览器），以捕获 DevTools 浏览器创建事件
-        browser.jbCefClient.getCefClient().addLifeSpanHandler(object : CefLifeSpanHandlerAdapter() {
-            override fun onAfterCreated(browser: CefBrowser) {
-                if (pendingDevToolsCallback != null && embeddedDevTools == null) {
-                    val devCefBrowser = browser
-                    ApplicationManager.getApplication().invokeLater {
-                        try {
-                            val jbDevTools = JBCefBrowserBuilder()
-                                .setCefBrowser(devCefBrowser)
-                                .setClient(this@BrowserTabPanel.browser.jbCefClient)
-                                .build()
-                            embeddedDevTools = jbDevTools
-                            pendingDevToolsCallback?.invoke(jbDevTools)
-                        } catch (e: Exception) {
-                            pendingDevToolsCallback?.invoke(null)
-                        }
-                        pendingDevToolsCallback = null
-                    }
-                }
-            }
-        })
     }
 
     fun navigate(url: String) {
@@ -193,24 +171,87 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
         return if (rawTitle.length > 20) rawTitle.take(20) + "..." else rawTitle
     }
 
+    /**
+     * 通过 CDP（Chrome DevTools Protocol）远程调试端口打开嵌入式 DevTools。
+     * 利用 IntelliJ 底层 JCEF 的远程调试端口获取 DevTools 前端页面并嵌入到 JSplitPane 中。
+     */
     fun openEmbeddedDevTools(callback: (JBCefBrowser?) -> Unit) {
-        if (embeddedDevTools != null) {
-            callback(embeddedDevTools)
+        if (cdpDevTools != null) {
+            callback(cdpDevTools)
             return
         }
-        pendingDevToolsCallback = callback
-        browser.cefBrowser.openDevTools()
+
+        try {
+            JBCefApp.getInstance().getRemoteDebuggingPort { port ->
+                if (port != null && port > 0) {
+                    ApplicationManager.getApplication().executeOnPooledThread {
+                        connectDevToolsViaCDP(port, callback)
+                    }
+                } else {
+                    callback(null)
+                }
+            }
+        } catch (e: Exception) {
+            callback(null)
+        }
+    }
+
+    private fun connectDevToolsViaCDP(port: Int, callback: (JBCefBrowser?) -> Unit) {
+        try {
+            val json = URI("http://127.0.0.1:$port/json").toURL().readText()
+            val pages = JsonParser.parseString(json).asJsonArray
+
+            // 尝试按当前 URL 精确匹配页面
+            var pageId: String? = null
+            for (page in pages) {
+                val obj = page.asJsonObject
+                if (obj.get("type")?.asString == "page") {
+                    val pageUrl = obj.get("url")?.asString ?: ""
+                    if (pageUrl == currentUrl) {
+                        pageId = obj.get("id")?.asString
+                        break
+                    }
+                }
+            }
+
+            // 未匹配到则使用第一个 page 类型
+            if (pageId == null) {
+                for (page in pages) {
+                    val obj = page.asJsonObject
+                    if (obj.get("type")?.asString == "page") {
+                        pageId = obj.get("id")?.asString
+                        break
+                    }
+                }
+            }
+
+            if (pageId != null) {
+                val devToolsUrl = "http://127.0.0.1:$port/devtools/inspector.html?ws=127.0.0.1:$port/devtools/page/$pageId"
+                ApplicationManager.getApplication().invokeLater {
+                    try {
+                        val devBrowser = JBCefBrowser(devToolsUrl)
+                        cdpDevTools = devBrowser
+                        callback(devBrowser)
+                    } catch (e: Exception) {
+                        callback(null)
+                    }
+                }
+            } else {
+                ApplicationManager.getApplication().invokeLater { callback(null) }
+            }
+        } catch (e: Exception) {
+            ApplicationManager.getApplication().invokeLater { callback(null) }
+        }
     }
 
     fun closeEmbeddedDevTools() {
-        embeddedDevTools?.let { devTools ->
+        cdpDevTools?.let { devTools ->
             devTools.dispose()
-            embeddedDevTools = null
+            cdpDevTools = null
         }
-        browser.cefBrowser.closeDevTools()
     }
 
-    fun getEmbeddedDevToolsComponent(): JComponent? = embeddedDevTools?.component
+    fun getEmbeddedDevToolsComponent(): JComponent? = cdpDevTools?.component
 
     fun dispose() {
         closeEmbeddedDevTools()
