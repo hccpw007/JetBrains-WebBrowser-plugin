@@ -8,8 +8,9 @@ class BrowserEditorTabTitleProvider : EditorTabTitleProvider {
 
     override fun getEditorTabTitle(project: Project, file: VirtualFile): String? {
         if (file.fileType == BrowserFileType) {
-            return file.getUserData(BrowserFileEditor.TITLE_KEY)
-                ?: "Web Browser"
+            val title = file.getUserData(BrowserFileEditor.TITLE_KEY)
+                ?: return "Web Browser"
+            return if (title.length > 15) title.take(15) + "..." else title
         }
         return null
     }
