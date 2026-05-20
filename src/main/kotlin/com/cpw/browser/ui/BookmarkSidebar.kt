@@ -11,11 +11,15 @@ import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
 import java.awt.BorderLayout
 import java.awt.CardLayout
+import java.awt.Color
 import java.awt.Component
 import java.awt.Cursor
 import java.awt.Dimension
 import java.awt.FlowLayout
 import java.awt.Font
+import java.awt.Graphics
+import java.awt.Graphics2D
+import java.awt.RenderingHints
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.time.DayOfWeek
@@ -27,8 +31,8 @@ import java.time.temporal.TemporalAdjusters
 import javax.swing.AbstractListModel
 import javax.swing.BorderFactory
 import javax.swing.BoxLayout
-import javax.swing.ButtonGroup
 import javax.swing.JButton
+import javax.swing.JLabel
 import javax.swing.JList
 import javax.swing.JPanel
 import javax.swing.JPopupMenu
@@ -67,38 +71,71 @@ class BookmarkSidebar(
     }
     private val historyScroll = JBScrollPane(historyList)
 
-    // ---- 标签切换按钮 ----
-    private val bookmarkBtn = JButton("书签").apply {
-        isFocusPainted = false
-        font = font.deriveFont(Font.BOLD, 11f)
-        preferredSize = Dimension(70, 22)
-        addActionListener { showBookmarks() }
-    }
-    private val historyBtn = JButton("历史").apply {
-        isFocusPainted = false
-        font = font.deriveFont(Font.PLAIN, 11f)
-        preferredSize = Dimension(70, 22)
-        addActionListener { showHistory() }
-    }
-
     // ---- 布局 ----
     private val contentPanel = JPanel(CardLayout())
     private val historyPanel = JPanel(BorderLayout())
+    private val segmentWidth = 140
+    private val segmentHeight = 24
+
+    // ---- 分段切换器 (Element Plus 风格) ----
+    private var currentTab = TAB_BOOKMARKS
+    private val segmentBar = object : JPanel() {
+        override fun paintComponent(g: Graphics) {
+            val g2 = g.create() as Graphics2D
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+            g2.color = JBColor(0xE8E8E8, 0x3C3C3C)
+            g2.fillRoundRect(0, 0, width - 1, height - 1, 12, 12)
+            g2.dispose()
+        }
+    }
+    private val bookmarkLabel = JLabel("书签", SwingConstants.CENTER).apply {
+        font = font.deriveFont(Font.BOLD, 11f)
+        cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        addMouseListener(object : MouseAdapter() {
+            override fun mouseClicked(e: MouseEvent) { showBookmarks() }
+        })
+    }
+    private val historyLabel = JLabel("历史", SwingConstants.CENTER).apply {
+        font = font.deriveFont(Font.PLAIN, 11f)
+        cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        addMouseListener(object : MouseAdapter() {
+            override fun mouseClicked(e: MouseEvent) { showHistory() }
+        })
+    }
+    /** 选中态白色滑块 */
+    private val activeBg = object : JLabel() {
+        override fun paintComponent(g: Graphics) {
+            val g2 = g.create() as Graphics2D
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+            g2.color = JBColor(0xFFFFFF, 0x585A5C)
+            g2.fillRoundRect(0, 0, width - 1, height - 1, 10, 10)
+            g2.dispose()
+        }
+    }.apply {
+        isOpaque = false
+        setBounds(0, 0, segmentWidth / 2, segmentHeight)
+    }
 
     init {
-        ButtonGroup().apply {
-            add(bookmarkBtn)
-            add(historyBtn)
-            setSelected(bookmarkBtn.model, true)
-        }
+        segmentBar.layout = null
+        segmentBar.preferredSize = Dimension(segmentWidth, segmentHeight)
+        segmentBar.minimumSize = Dimension(segmentWidth, segmentHeight)
+        segmentBar.maximumSize = Dimension(segmentWidth, segmentHeight)
+        segmentBar.add(activeBg)
+        segmentBar.add(bookmarkLabel)
+        segmentBar.add(historyLabel)
+        segmentBar.setComponentZOrder(activeBg, segmentBar.componentCount - 1)
+        segmentBar.setComponentZOrder(bookmarkLabel, 0)
+        segmentBar.setComponentZOrder(historyLabel, 1)
+        bookmarkLabel.setBounds(0, 0, segmentWidth / 2, segmentHeight)
+        historyLabel.setBounds(segmentWidth / 2, 0, segmentWidth / 2, segmentHeight)
 
         val tabBar = JPanel(FlowLayout(FlowLayout.CENTER, 0, 0)).apply {
             border = BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 1, 0, JBColor(0xC0C0C0, 0x4A4A4A)),
-                BorderFactory.createEmptyBorder(4, 0, 4, 0)
+                BorderFactory.createEmptyBorder(6, 0, 6, 0)
             )
-            add(bookmarkBtn)
-            add(historyBtn)
+            add(segmentBar)
         }
 
         // 历史面板 — 清空链接
@@ -136,14 +173,24 @@ class BookmarkSidebar(
     fun getSelectedBookmarkUrl(): String? = bookmarkList.selectedValue?.url
 
     private fun showBookmarks() {
-        bookmarkBtn.font = bookmarkBtn.font.deriveFont(Font.BOLD)
-        historyBtn.font = historyBtn.font.deriveFont(Font.PLAIN)
+        if (currentTab == TAB_BOOKMARKS) return
+        currentTab = TAB_BOOKMARKS
+        bookmarkLabel.font = bookmarkLabel.font.deriveFont(Font.BOLD)
+        historyLabel.font = historyLabel.font.deriveFont(Font.PLAIN)
+        // 移动选中背景到左侧
+        segmentBar.getComponent(segmentBar.componentCount - 1)?.setBounds(0, 0, segmentBar.width / 2, segmentBar.height)
+        segmentBar.repaint()
         (contentPanel.layout as CardLayout).show(contentPanel, "bookmarks")
     }
 
     private fun showHistory() {
-        historyBtn.font = historyBtn.font.deriveFont(Font.BOLD)
-        bookmarkBtn.font = bookmarkBtn.font.deriveFont(Font.PLAIN)
+        if (currentTab == TAB_HISTORY) return
+        currentTab = TAB_HISTORY
+        historyLabel.font = historyLabel.font.deriveFont(Font.BOLD)
+        bookmarkLabel.font = bookmarkLabel.font.deriveFont(Font.PLAIN)
+        // 移动选中背景到右侧
+        segmentBar.getComponent(segmentBar.componentCount - 1)?.setBounds(segmentBar.width / 2, 0, segmentBar.width / 2, segmentBar.height)
+        segmentBar.repaint()
         refreshHistory()
         (contentPanel.layout as CardLayout).show(contentPanel, "history")
     }
@@ -153,7 +200,7 @@ class BookmarkSidebar(
         popup.add(createClearItem("清空一小时内记录", 1L))
         popup.add(createClearItem("清空24小时内记录", 24L))
         popup.add(createClearItem("清空所有记录", null))
-        popup.show(this, 8, historyBtn.y + historyBtn.height + 4)
+        popup.show(this, 8, segmentBar.y + segmentBar.height + 4)
     }
 
     private fun createClearItem(text: String, hours: Long?) = JButton(text).apply {
@@ -306,6 +353,9 @@ class BookmarkSidebar(
     }
 
     companion object {
+        private const val TAB_BOOKMARKS = 0
+        private const val TAB_HISTORY = 1
+
         private fun formatTimestamp(millis: Long): String {
             val zone = ZoneId.systemDefault()
             val zdt = Instant.ofEpochMilli(millis).atZone(zone)
