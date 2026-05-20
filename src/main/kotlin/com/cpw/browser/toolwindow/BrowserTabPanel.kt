@@ -2,6 +2,7 @@ package com.cpw.browser.toolwindow
 
 import com.google.gson.JsonParser
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.PathManager
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.ui.jcef.JBCefBrowser
 import org.cef.browser.CefBrowser
@@ -11,6 +12,8 @@ import org.cef.handler.CefLifeSpanHandlerAdapter
 import org.cef.handler.CefLoadHandler
 import org.cef.handler.CefLoadHandlerAdapter
 import java.net.URI
+import java.nio.file.Files
+import java.nio.file.Path
 import javax.swing.JComponent
 
 class BrowserTabPanel(private val initialUrl: String = "about:blank") {
@@ -173,7 +176,8 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
 
     /**
      * 通过 CDP（Chrome DevTools Protocol）远程调试端口打开嵌入式 DevTools。
-     * 利用 IntelliJ 底层 JCEF 的远程调试端口获取 DevTools 前端页面并嵌入到 JSplitPane 中。
+     * 利用 JCEF 的远程调试端口获取 DevTools 前端页面并嵌入到 JSplitPane 中。
+     * 如果 CDP 不可用，回调会返回 null。
      */
     fun openEmbeddedDevTools(callback: (JBCefBrowser?) -> Unit) {
         if (cdpDevTools != null) {
@@ -181,22 +185,80 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
             return
         }
 
+        ApplicationManager.getApplication().executeOnPooledThread {
+            val port = findDevToolsPort()
+            if (port != null && port > 0) {
+                connectDevToolsViaCDP(port, callback)
+            } else {
+                System.err.println("[WebBrowser] DevTools port not found (tried JBCefApp + file scan)")
+                callback(null)
+            }
+        }
+    }
+
+    /**
+     * 查找 JCEF 远程调试端口。
+     * 依次尝试：JBCefApp API → 已知路径的 DevToolsActivePort 文件 → 系统属性
+     */
+    private fun findDevToolsPort(): Int? {
+        // 1. 尝试 JBCefApp API（主要 IDE 可用）
         try {
-            JBCefApp.getInstance().getRemoteDebuggingPort { port ->
+            val app = JBCefApp.getInstance()
+            val result = java.util.concurrent.atomic.AtomicReference<Int?>()
+            val latch = java.util.concurrent.CountDownLatch(1)
+            app.getRemoteDebuggingPort { port ->
+                result.set(port)
+                latch.countDown()
+            }
+            if (latch.await(3, java.util.concurrent.TimeUnit.SECONDS)) {
+                val port = result.get()
                 if (port != null && port > 0) {
-                    ApplicationManager.getApplication().executeOnPooledThread {
-                        connectDevToolsViaCDP(port, callback)
-                    }
-                } else {
-                    System.err.println("[WebBrowser] Remote debugging port not available: $port")
-                    callback(null)
+                    System.err.println("[WebBrowser] Found DevTools port via JBCefApp: $port")
+                    return port
                 }
             }
         } catch (t: Throwable) {
-            System.err.println("[WebBrowser] Failed to get JBCefApp/JBCefApp.getRemoteDebuggingPort: ${t.message}")
-            t.printStackTrace(System.err)
-            callback(null)
+            System.err.println("[WebBrowser] JBCefApp.getRemoteDebuggingPort failed: ${t.message}")
         }
+
+        // 2. 尝试读取 DevToolsActivePort 文件
+        //    优先搜索当前 sandbox（缓存大小大），再搜索其他已知路径
+        try {
+            val candidates = mutableListOf<Path>()
+
+            // 2a. 当前 sandbox 的 jcef_cache（最优先 — runIde 的 CDP 端口）
+            Path.of(PathManager.getSystemDir()!!.toString(), "jcef_cache").let { candidates.add(it) }
+
+            // 2b. macOS 主 IDE 的 jcef_cache
+            try {
+                Path.of(System.getProperty("user.home")!!, "Library", "Caches", "JetBrains").let { candidates.add(it) }
+            } catch (_: Exception) {}
+
+            for (root in candidates) {
+                if (!Files.isDirectory(root)) continue
+                val found = Files.walk(root, 2)
+                    .filter { it.fileName.toString() == "DevToolsActivePort" }
+                    .findFirst()
+                if (found.isPresent) {
+                    val port = found.get().let { Files.readAllLines(it).firstOrNull()?.trim()?.toIntOrNull() }
+                    if (port != null && port > 0) {
+                        System.err.println("[WebBrowser] Found DevTools port via file: $port (${found.get()})")
+                        return port
+                    }
+                }
+            }
+        } catch (t: Throwable) {
+            System.err.println("[WebBrowser] DevToolsActivePort file search failed: ${t.message}")
+        }
+
+        // 3. 尝试系统属性（用户手动指定）
+        val sysPort = System.getProperty("webbrowser.devtools.port")?.toIntOrNull()
+        if (sysPort != null && sysPort > 0) {
+            System.err.println("[WebBrowser] Found DevTools port via system property: $sysPort")
+            return sysPort
+        }
+
+        return null
     }
 
     private fun connectDevToolsViaCDP(port: Int, callback: (JBCefBrowser?) -> Unit) {
@@ -205,34 +267,40 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
             val pages = JsonParser.parseString(json).asJsonArray
             System.err.println("[WebBrowser] CDP /json returned ${pages.size()} pages (port=$port, currentUrl=$currentUrl)")
 
-            // 尝试按当前 URL 匹配（含 jbcefbrowser 前缀的 URL）
-            var pageId: String? = null
+            // 按当前 URL 匹配 page 目标
+            var matchedPage: com.google.gson.JsonObject? = null
             for (page in pages) {
                 val obj = page.asJsonObject
                 if (obj.get("type")?.asString == "page") {
                     val pageUrl = obj.get("url")?.asString ?: ""
-                    // 精确匹配或包含匹配（jbcefbrowser 的 URL 会带 #url= 参数）
-                    if (pageUrl == currentUrl || pageUrl.contains(currentUrl)) {
-                        pageId = obj.get("id")?.asString
+                    if (pageUrl == currentUrl || (currentUrl != "about:blank" && pageUrl.contains(currentUrl))) {
+                        matchedPage = obj
                         break
                     }
                 }
             }
 
-            // 未匹配到则使用第一个 page 类型
-            if (pageId == null) {
+            // 未精确匹配到则使用第一个 page 类型
+            if (matchedPage == null) {
                 System.err.println("[WebBrowser] No page matched currentUrl='$currentUrl', using first available page")
                 for (page in pages) {
                     val obj = page.asJsonObject
                     if (obj.get("type")?.asString == "page") {
-                        pageId = obj.get("id")?.asString
+                        matchedPage = obj
                         break
                     }
                 }
             }
 
-            if (pageId != null) {
-                val devToolsUrl = "http://127.0.0.1:$port/devtools/inspector.html?ws=127.0.0.1:$port/devtools/page/$pageId"
+            if (matchedPage != null) {
+                // 使用 CDP 返回的 devtoolsFrontendUrl（含 ws 参数），
+                // 该 URL 指向 Chrome DevTools Frontend CDN，CEF 本身不托管前端资源
+                val devToolsUrl = matchedPage.get("devtoolsFrontendUrl")?.asString
+                if (devToolsUrl.isNullOrBlank()) {
+                    System.err.println("[WebBrowser] Page has no devtoolsFrontendUrl, cannot open DevTools")
+                    ApplicationManager.getApplication().invokeLater { callback(null) }
+                    return
+                }
                 System.err.println("[WebBrowser] Opening embedded DevTools at: $devToolsUrl")
                 ApplicationManager.getApplication().invokeLater {
                     try {
