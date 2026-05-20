@@ -29,7 +29,9 @@ class AddressBar(
     private val onToggleBookmark: (String) -> Unit
 ) : JPanel(BorderLayout()) {
 
-    val urlField = JBTextField()
+    val urlField = JBTextField().apply {
+        emptyText.text = "about:blank"
+    }
     private val starLabel = JBLabel(WebBrowserIcons.Star).apply {
         isOpaque = false
         cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
@@ -96,8 +98,9 @@ class AddressBar(
     }
 
     fun setUrl(url: String) {
-        if (url != urlField.text) {
-            urlField.text = url
+        val displayText = if (url == "about:blank") "" else url
+        if (displayText != urlField.text) {
+            urlField.text = displayText
         }
         updateStarIcon(url)
     }
