@@ -11,6 +11,8 @@ import org.cef.handler.CefDisplayHandlerAdapter
 import org.cef.handler.CefLifeSpanHandlerAdapter
 import org.cef.handler.CefLoadHandler
 import org.cef.handler.CefLoadHandlerAdapter
+import java.net.InetAddress
+import java.net.NetworkInterface
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
@@ -310,8 +312,10 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
 
                 // 通过 CdpBridge 的 CDP 服务器代理加载 DevTools 前端，
                 // CdpBridge 注入 WebSocket polyfill（HTTP POST + SSE 替代 WebSocket）
-                val finalUrl = "http://127.0.0.1:${bridge.port}/cdp-server/devtools/inspector.html" +
-                        "?ws=127.0.0.1:${bridge.port}/devtools/page/$pageId"
+                // 使用非回环 IP 地址，避免 CEF 子进程绕过代理直接连接 127.0.0.1 失败
+                val host = getNonLoopbackAddress()
+                val finalUrl = "http://$host:${bridge.port}/cdp-server/devtools/inspector.html" +
+                        "?ws=$host:${bridge.port}/devtools/page/$pageId"
                 System.err.println("[WebBrowser] Opening embedded DevTools at: $finalUrl")
 
                 ApplicationManager.getApplication().invokeLater {
@@ -363,5 +367,28 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
         }
         navigationHistory.addLast(url)
         currentHistoryIndex = navigationHistory.size - 1
+    }
+
+    companion object {
+        /**
+         * 获取非回环 IPv4 地址。
+         * CEF 子进程访问 127.0.0.1 时会绕过 JCEF 代理直接连接子进程自身，
+         * 但 CdpBridge 在主进程，必须使用非回环 IP 才能通过代理路由到主进程。
+         */
+        fun getNonLoopbackAddress(): String {
+            val interfaces = NetworkInterface.getNetworkInterfaces()
+            while (interfaces.hasMoreElements()) {
+                val ni = interfaces.nextElement()
+                if (ni.isLoopback || !ni.isUp) continue
+                val addrs = ni.inetAddresses
+                while (addrs.hasMoreElements()) {
+                    val addr = addrs.nextElement()
+                    if (addr is java.net.Inet4Address && !addr.isLoopbackAddress) {
+                        return addr.hostAddress
+                    }
+                }
+            }
+            return "127.0.0.1"
+        }
     }
 }
