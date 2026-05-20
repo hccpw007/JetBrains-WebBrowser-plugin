@@ -2,6 +2,7 @@ package com.cpw.browser.toolwindow
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.ui.jcef.JBCefBrowser
+import com.intellij.ui.jcef.JBCefBrowserBuilder
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.handler.CefDisplayHandlerAdapter
@@ -115,7 +116,10 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
                     val devCefBrowser = browser
                     ApplicationManager.getApplication().invokeLater {
                         try {
-                            val jbDevTools = JBCefBrowser(devCefBrowser, this@BrowserTabPanel.browser.jbCefClient)
+                            val jbDevTools = JBCefBrowserBuilder()
+                                .setCefBrowser(devCefBrowser)
+                                .setClient(this@BrowserTabPanel.browser.jbCefClient)
+                                .build()
                             devCefBrowser.setWindowVisibility(false)
                             embeddedDevTools = jbDevTools
                             pendingDevToolsCallback?.invoke(jbDevTools)

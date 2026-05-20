@@ -40,6 +40,7 @@ import javax.swing.BoxLayout
 import javax.swing.JButton
 import javax.swing.JLayeredPane
 import javax.swing.JPanel
+import javax.swing.JSplitPane
 import javax.swing.SwingConstants
 import javax.swing.Timer
 
