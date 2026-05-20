@@ -27,7 +27,7 @@ class BookmarkListCellRenderer : JPanel(BorderLayout()), ListCellRenderer<Any> {
     init {
         add(titleLabel, BorderLayout.CENTER)
         add(deleteLabel, BorderLayout.EAST)
-        border = EmptyBorder(2, 8, 2, 2)
+        border = EmptyBorder(6, 8, 6, 2)
     }
 
     override fun getListCellRendererComponent(
