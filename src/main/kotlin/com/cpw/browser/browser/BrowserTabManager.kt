@@ -43,9 +43,7 @@ class BrowserTabManager {
         }
 
         tabs.add(tab)
-        if (activeTabIndex == -1) {
-            activeTabIndex = 0
-        }
+        activeTabIndex = tabs.size - 1
         onTabAdded?.invoke(tab)
         onActiveTabChanged?.invoke(tab)
         return tab
