@@ -1,5 +1,6 @@
 package com.cpw.browser.toolwindow
 
+import com.cpw.browser.WebBrowserIcons
 import com.cpw.browser.action.AddBookmarkAction
 import com.cpw.browser.action.GoBackAction
 import com.cpw.browser.action.GoForwardAction
@@ -9,9 +10,13 @@ import com.cpw.browser.action.OpenDevToolsAction
 import com.cpw.browser.action.RefreshAction
 import com.cpw.browser.browser.BrowserTabManager
 import com.cpw.browser.ui.AddressBar
+import com.cpw.browser.ui.BookmarkSidebar
 import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.AnAction
+import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
@@ -31,14 +36,23 @@ class BrowserToolWindowPanel(private val project: Project) {
 
     private val tabManager = BrowserTabManager()
     private val addressBar = AddressBar { rawUrl -> onNavigateRequested(rawUrl) }
+    private lateinit var bookmarkSidebar: BookmarkSidebar
     private val tabStripPanel = JPanel() // 自定义标签页栏
     private val browserContentPanel = JPanel(BorderLayout()) // 浏览器内容区域
+    private val centerPanel = JPanel(BorderLayout()) // 居中区域：书签(可隐藏) + 浏览器内容
     private val statusLabel = JBLabel("就绪", SwingConstants.LEFT)
     private val mainPanel = JBPanel<JBPanel<*>>(BorderLayout())
     private val tabTitleLabels = mutableMapOf<BrowserTabPanel, JBLabel>() // 标题标签缓存
     private val tabStripItems = mutableMapOf<BrowserTabPanel, JPanel>() // 标签页栏条目
 
     init {
+        bookmarkSidebar = BookmarkSidebar { bookmark -> onBookmarkSelected(bookmark) }
+        bookmarkSidebar.isVisible = false // 默认隐藏书签侧边栏
+
+        // 居中区域：[书签侧边栏(可隐藏)] [浏览器内容]
+        centerPanel.add(bookmarkSidebar, BorderLayout.WEST)
+        centerPanel.add(browserContentPanel, BorderLayout.CENTER)
+
         // 标签页栏
         tabStripPanel.layout = FlowLayout(FlowLayout.LEFT, 0, 0)
         tabStripPanel.border = BorderFactory.createEmptyBorder(2, 4, 2, 4)
@@ -61,10 +75,12 @@ class BrowserToolWindowPanel(private val project: Project) {
             .createActionToolbar("WebBrowser.NavBar", navGroup, true)
         navToolbar.setTargetComponent(navToolbar.component)
 
-        // url 右侧工具栏：开发者工具、添加书签、新建标签页
+        // url 右侧工具栏：开发者工具、添加书签、书签侧边栏切换、新建标签页
         val rightGroup = DefaultActionGroup().apply {
             add(OpenDevToolsAction(tabManager))
-            add(AddBookmarkAction(tabManager) { })
+            add(AddBookmarkAction(tabManager) { bookmarkSidebar.refreshBookmarks() })
+            addSeparator()
+            add(ToggleBookmarkSidebarAction())
             addSeparator()
             add(NewTabAction(tabManager))
         }
@@ -87,7 +103,7 @@ class BrowserToolWindowPanel(private val project: Project) {
         }
 
         mainPanel.add(topSection, BorderLayout.NORTH)
-        mainPanel.add(browserContentPanel, BorderLayout.CENTER)
+        mainPanel.add(centerPanel, BorderLayout.CENTER)
         mainPanel.add(statusLabel, BorderLayout.SOUTH)
 
         tabManager.createTab()
@@ -107,6 +123,19 @@ class BrowserToolWindowPanel(private val project: Project) {
 
     fun openDevTools() {
         tabManager.activeTab?.openDevTools()
+    }
+
+    // 书签侧边栏切换 Action
+    private inner class ToggleBookmarkSidebarAction : AnAction(
+        "显示书签", "显示或隐藏书签侧边栏", WebBrowserIcons.BookmarkAdd
+    ), DumbAware {
+        override fun actionPerformed(e: AnActionEvent) {
+            bookmarkSidebar.isVisible = !bookmarkSidebar.isVisible
+            centerPanel.revalidate()
+            centerPanel.repaint()
+            // 更新按钮描述
+            e.presentation.description = if (bookmarkSidebar.isVisible) "隐藏书签侧边栏" else "显示书签侧边栏"
+        }
     }
 
     private fun addTabToStrip(tab: BrowserTabPanel) {
@@ -182,6 +211,15 @@ class BrowserToolWindowPanel(private val project: Project) {
             tab.navigate(url)
         } else {
             tabManager.createTab(url)
+        }
+    }
+
+    private fun onBookmarkSelected(bookmark: com.cpw.browser.bookmark.Bookmark) {
+        val tab = tabManager.activeTab
+        if (tab != null) {
+            tab.navigate(bookmark.url)
+        } else {
+            tabManager.createTab(bookmark.url)
         }
     }
 
