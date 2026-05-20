@@ -32,4 +32,21 @@
         <applicationService
             serviceImplementation="com.cpw.browser.bookmark.BookmarkPersistentState"/>
     </extensions>
+    <!-- 新增：工具栏Action配置（直接添加在extensions后面即可） -->
+    <actions>
+        <!-- 注册打开/关闭浏览器工具窗口的Action -->
+        <action
+            id="com.cpw.browser.ToggleBrowserAction"
+            class="com.cpw.browser.ToggleBrowserAction"
+            text="Toggle Web Browser"
+            description="Open or close the web browser tool window"
+            icon="/icons/toolwindow.svg"> <!-- 复用你已有的工具窗口图标 -->
+
+            <!-- 新版UI（2020.3+）：添加到主工具栏最左侧 -->
+            <add-to-group group-id="MainToolbarLeft" anchor="first" />
+
+            <!-- 旧版UI兼容：添加到主工具栏最左侧 -->
+            <add-to-group group-id="MainToolbar" anchor="first" />
+        </action>
+    </actions>
 </idea-plugin>
