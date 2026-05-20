@@ -1,7 +1,6 @@
 package com.cpw.browser.toolwindow
 
 import com.cpw.browser.WebBrowserIcons
-import com.cpw.browser.action.AddBookmarkAction
 import com.cpw.browser.action.GoBackAction
 import com.cpw.browser.bookmark.BookmarkPersistentState
 import com.cpw.browser.action.GoForwardAction
@@ -22,6 +21,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import java.awt.BorderLayout
+import java.awt.Color
 import java.awt.Dimension
 import java.awt.FlowLayout
 import java.awt.event.MouseAdapter
@@ -30,6 +30,7 @@ import java.net.URLEncoder
 import javax.swing.BorderFactory
 import javax.swing.Box
 import javax.swing.BoxLayout
+import javax.swing.JButton
 import javax.swing.JPanel
 import javax.swing.SwingConstants
 
@@ -49,6 +50,7 @@ class BrowserToolWindowPanel(private val project: Project) {
     private val mainPanel = JBPanel<JBPanel<*>>(BorderLayout())
     private val tabTitleLabels = mutableMapOf<BrowserTabPanel, JBLabel>() // 标题标签缓存
     private val tabStripItems = mutableMapOf<BrowserTabPanel, JPanel>() // 标签页栏条目
+    private val tabCloseButtons = mutableMapOf<BrowserTabPanel, JButton>() // 关闭按钮
 
     init {
         bookmarkSidebar = BookmarkSidebar { bookmark -> onBookmarkSelected(bookmark) }
@@ -65,6 +67,7 @@ class BrowserToolWindowPanel(private val project: Project) {
         tabManager.onTabAdded = { tab -> addTabToStrip(tab) }
         tabManager.onTabRemoved = { tab ->
             tabTitleLabels.remove(tab)
+            tabCloseButtons.remove(tab)
             removeTabFromStrip(tab)
         }
         tabManager.onActiveTabChanged = { tab -> onActiveTabChanged(tab) }
@@ -80,10 +83,9 @@ class BrowserToolWindowPanel(private val project: Project) {
             .createActionToolbar("WebBrowser.NavBar", navGroup, true)
         navToolbar.setTargetComponent(navToolbar.component)
 
-        // url 右侧工具栏：开发者工具、添加书签、书签侧边栏切换、新建标签页
+        // url 右侧工具栏：开发者工具、书签侧边栏切换、新建标签页
         val rightGroup = DefaultActionGroup().apply {
             add(OpenDevToolsAction(tabManager))
-            add(AddBookmarkAction(tabManager) { bookmarkSidebar.refreshBookmarks() })
             addSeparator()
             add(ToggleBookmarkSidebarAction())
             addSeparator()
@@ -144,15 +146,36 @@ class BrowserToolWindowPanel(private val project: Project) {
     }
 
     private fun addTabToStrip(tab: BrowserTabPanel) {
-        val titleLabel = JBLabel(tab.getTabTitle())
+        val titleLabel = JBLabel(tab.getTabTitle()).apply {
+            foreground = Color.BLACK
+        }
         tabTitleLabels[tab] = titleLabel
+
+        val closeBtn = JButton("×").apply {
+            isBorderPainted = false
+            isContentAreaFilled = false
+            isFocusPainted = false
+            preferredSize = Dimension(16, 16)
+            maximumSize = Dimension(16, 16)
+            minimumSize = Dimension(16, 16)
+            font = font.deriveFont(12f)
+            toolTipText = "关闭标签页"
+            addActionListener {
+                val index = tabManager.getTabs().indexOf(tab)
+                if (index >= 0) {
+                    tabManager.closeTab(index)
+                }
+            }
+        }
+        tabCloseButtons[tab] = closeBtn
 
         val tabStripItem = JPanel().apply {
             layout = BoxLayout(this, BoxLayout.X_AXIS)
             isOpaque = true
             border = BorderFactory.createEmptyBorder(3, 8, 3, 8)
             add(titleLabel)
-            add(Box.createRigidArea(Dimension(4, 0)))
+            add(Box.createRigidArea(Dimension(6, 0)))
+            add(closeBtn)
 
             addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(e: MouseEvent) {

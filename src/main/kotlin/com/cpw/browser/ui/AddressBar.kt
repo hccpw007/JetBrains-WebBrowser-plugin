@@ -10,7 +10,6 @@ import java.awt.event.KeyEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import javax.swing.BorderFactory
-import javax.swing.JButton
 import javax.swing.JLayeredPane
 import javax.swing.JPanel
 
@@ -66,12 +65,7 @@ class AddressBar(
         fieldLayer.add(urlField, JLayeredPane.DEFAULT_LAYER)
         fieldLayer.add(starLabel, JLayeredPane.PALETTE_LAYER)
 
-        val goButton = JButton("前往").apply {
-            addActionListener { navigate() }
-        }
-
         add(fieldLayer, BorderLayout.CENTER)
-        add(goButton, BorderLayout.EAST)
     }
 
     fun setUrl(url: String) {
