@@ -77,7 +77,7 @@ class AddressBar(
                 val w = width
                 val h = height
                 urlField.setBounds(0, 0, w, h)
-                val starSize = 14
+                val starSize = 16
                 starLabel.setBounds(w - starSize - 4, (h - starSize) / 2, starSize, starSize)
                 setLayer(starLabel, PALETTE_LAYER)
             }
