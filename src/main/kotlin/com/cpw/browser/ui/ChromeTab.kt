@@ -60,10 +60,10 @@ class ChromeTab(
     init {
         isOpaque = false
         layout = BoxLayout(this, BoxLayout.X_AXIS)
-        border = EmptyBorder(4, 10, 0, 10)
+        border = EmptyBorder(4, 10, 0, 6)
 
         add(titleLabel)
-        add(Box.createRigidArea(Dimension(6, 0)))
+        add(Box.createRigidArea(Dimension(3, 0)))
 
         val closeBtn = JButton("×").apply {
             isBorderPainted = false
@@ -72,9 +72,9 @@ class ChromeTab(
             font = font.deriveFont(16f)
             cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
             toolTipText = "关闭标签页"
-            preferredSize = Dimension(20, 20)
-            maximumSize = Dimension(20, 20)
-            minimumSize = Dimension(20, 20)
+            preferredSize = Dimension(16, 16)
+            maximumSize = Dimension(16, 16)
+            minimumSize = Dimension(16, 16)
             addActionListener { onClose() }
         }
         add(closeBtn)

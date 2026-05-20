@@ -7,6 +7,7 @@ import com.intellij.ui.components.JBTextField
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Cursor
+import java.awt.Dimension
 import java.awt.Graphics
 import java.awt.Graphics2D
 import java.awt.Insets
@@ -82,7 +83,10 @@ class AddressBar(
                 setLayer(starLabel, PALETTE_LAYER)
             }
 
-            override fun getPreferredSize() = urlField.preferredSize
+            override fun getPreferredSize(): Dimension {
+                val ps = urlField.preferredSize
+                return Dimension(ps.width, ps.height - 4)
+            }
         }
 
         fieldLayer.add(urlField, JLayeredPane.DEFAULT_LAYER)
