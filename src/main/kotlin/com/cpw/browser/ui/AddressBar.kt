@@ -5,7 +5,12 @@ import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBTextField
 import java.awt.BorderLayout
+import java.awt.Component
 import java.awt.Cursor
+import java.awt.Graphics
+import java.awt.Graphics2D
+import java.awt.Insets
+import java.awt.RenderingHints
 import java.awt.event.FocusAdapter
 import java.awt.event.FocusEvent
 import java.awt.event.KeyAdapter
@@ -15,6 +20,7 @@ import java.awt.event.MouseEvent
 import javax.swing.BorderFactory
 import javax.swing.JLayeredPane
 import javax.swing.JPanel
+import javax.swing.border.AbstractBorder
 
 class AddressBar(
     private val onNavigate: (String) -> Unit,
@@ -37,14 +43,14 @@ class AddressBar(
     }
 
     init {
-        // 自定义边框：聚焦时不用蓝色
+        // 自定义圆角边框：聚焦时不用蓝色
         val normalBorder = BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(JBColor(0xC0C0C0, 0x4A4A4A), 1),
-            BorderFactory.createEmptyBorder(0, 4, 0, 22)
+            RoundedBorder(JBColor(0xC0C0C0, 0x4A4A4A), 6),
+            BorderFactory.createEmptyBorder(2, 4, 2, 22)
         )
         val focusBorder = BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(JBColor(0x909090, 0x888888), 1),
-            BorderFactory.createEmptyBorder(0, 4, 0, 22)
+            RoundedBorder(JBColor(0x909090, 0x888888), 6),
+            BorderFactory.createEmptyBorder(2, 4, 2, 22)
         )
         urlField.border = normalBorder
         urlField.addFocusListener(object : FocusAdapter() {
@@ -112,6 +118,23 @@ class AddressBar(
         val text = getUrl()
         if (text.isNotEmpty()) {
             onNavigate(text)
+        }
+    }
+
+    /** 圆角边框 */
+    private class RoundedBorder(private val color: JBColor, private val radius: Int) : AbstractBorder() {
+        override fun paintBorder(c: Component, g: Graphics, x: Int, y: Int, width: Int, height: Int) {
+            val g2 = g.create() as Graphics2D
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+            g2.color = color
+            g2.drawRoundRect(x, y, width - 1, height - 1, radius, radius)
+            g2.dispose()
+        }
+
+        override fun getBorderInsets(c: Component) = Insets(1, 1, 1, 1)
+        override fun getBorderInsets(c: Component, insets: Insets): Insets {
+            insets.top = 1; insets.left = 1; insets.bottom = 1; insets.right = 1
+            return insets
         }
     }
 }

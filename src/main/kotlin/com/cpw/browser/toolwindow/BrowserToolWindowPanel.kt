@@ -114,6 +114,7 @@ class BrowserToolWindowPanel(private val project: Project) {
 
         // 地址栏行：[导航按钮] [地址栏] [开发者工具/书签/新标签页]
         val navAddressBar = JBPanel<JBPanel<*>>(BorderLayout()).apply {
+            border = BorderFactory.createEmptyBorder(0, 0, 2, 0)
             add(navToolbar.component, BorderLayout.WEST)
             add(addressBar, BorderLayout.CENTER)
             add(rightToolbar.component, BorderLayout.EAST)
