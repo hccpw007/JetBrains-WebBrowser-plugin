@@ -1,0 +1,35 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
+    <id>com.cpw.browser.WebBrowser</id>
+
+    <!-- Public plugin name should be written in Title Case. -->
+    <name>WebBrowser</name>
+
+    <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
+    <vendor url="https://www.yourcompany.com">YourCompany</vendor>
+
+    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager. -->
+    <description><![CDATA[
+        A Simple Browser for IntelliJ IDEA, inspired by VS Code Simple Browser.
+        Embed web pages directly in the IDE with navigation, bookmarks, and DevTools support.
+    ]]></description>
+
+    <!-- Product and plugin compatibility requirements. -->
+    <depends>com.intellij.modules.platform</depends>
+
+    <resource-bundle>messages.MyMessageBundle</resource-bundle>
+
+    <!-- Extensions defined by the plugin. -->
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow
+            id="WebBrowser"
+            factoryClass="com.cpw.browser.BrowserToolWindowFactory"
+            icon="/icons/toolwindow.svg"
+            anchor="left"
+            secondary="false"/>
+
+        <applicationService
+            serviceImplementation="com.cpw.browser.bookmark.BookmarkPersistentState"/>
+    </extensions>
+</idea-plugin>
