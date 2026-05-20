@@ -1,5 +1,6 @@
 package com.cpw.browser.history
 
+import com.cpw.browser.settings.BrowserSettingsState
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.State
@@ -39,6 +40,18 @@ class BrowsingHistoryState : PersistentStateComponent<BrowsingHistoryState.State
         }
         if (existingIndex >= 0) state.entries.removeAt(existingIndex)
         state.entries.add(HistoryEntry(url, title.ifBlank { url }, now))
+        trimEntries()
+    }
+
+    private fun trimEntries() {
+        val settings = BrowserSettingsState.getInstance()
+        if (settings.maxHistoryDays > 0) {
+            val cutoff = System.currentTimeMillis() - settings.maxHistoryDays * 86400000L
+            state.entries.removeAll { it.timestamp < cutoff }
+        }
+        if (settings.maxHistoryCount > 0 && state.entries.size > settings.maxHistoryCount) {
+            state.entries.subList(0, state.entries.size - settings.maxHistoryCount).clear()
+        }
     }
 
     fun updateLastEntryTitle(title: String) {
