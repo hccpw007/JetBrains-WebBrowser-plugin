@@ -62,7 +62,9 @@ class ToggleBrowserAction : AnAction(), DumbAware {
             }
 
             // 创建临时文件作为标记，用于在编辑区打开浏览器
-            val tempFile = File.createTempFile("webbrowser", ".webbrowser")
+            val tempFile = File(System.getProperty("java.io.tmpdir"), "Web Browser.webbrowser")
+            if (tempFile.exists()) tempFile.delete()
+            tempFile.createNewFile()
             tempFile.deleteOnExit()
             tempFile.writeText("WebBrowser")
 
