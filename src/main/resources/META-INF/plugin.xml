@@ -61,7 +61,7 @@
             text="Toggle Web Browser"
             description="Open or close the web browser tool window"
             icon="/icons/toolwindow.svg">
-            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <add-to-group group-id="MainToolbarLeft" anchor="first" />
             <keyboard-shortcut first-keystroke="alt shift W" keymap="$default"/>
         </action>
     </actions>
