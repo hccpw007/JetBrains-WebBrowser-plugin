@@ -17,5 +17,6 @@ dependencies {
 
         // Add plugin dependencies for compilation here:
         bundledPlugin("com.intellij.java")
+        bundledModule("intellij.platform.ide.impl")
     }
 }
