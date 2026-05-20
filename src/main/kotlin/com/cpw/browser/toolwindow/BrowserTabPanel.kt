@@ -264,8 +264,8 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
     private fun connectDevToolsViaCDP(port: Int, callback: (JBCefBrowser?) -> Unit) {
         try {
             val json = URI("http://127.0.0.1:$port/json").toURL().readText()
+            System.err.println("[WebBrowser] CDP /json response (port=$port): $json")
             val pages = JsonParser.parseString(json).asJsonArray
-            System.err.println("[WebBrowser] CDP /json returned ${pages.size()} pages (port=$port, currentUrl=$currentUrl)")
 
             // 按当前 URL 匹配 page 目标
             var matchedPage: com.google.gson.JsonObject? = null
@@ -293,15 +293,18 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
             }
 
             if (matchedPage != null) {
-                // 使用 CDP 返回的 devtoolsFrontendUrl（含 ws 参数），
-                // 该 URL 指向 Chrome DevTools Frontend CDN，CEF 本身不托管前端资源
-                val devToolsUrl = matchedPage.get("devtoolsFrontendUrl")?.asString
-                if (devToolsUrl.isNullOrBlank()) {
-                    System.err.println("[WebBrowser] Page has no devtoolsFrontendUrl, cannot open DevTools")
+                val pageId = matchedPage.get("id")?.asString
+                if (pageId.isNullOrBlank()) {
+                    System.err.println("[WebBrowser] Page has no id, cannot open DevTools")
                     ApplicationManager.getApplication().invokeLater { callback(null) }
                     return
                 }
-                System.err.println("[WebBrowser] Opening embedded DevTools at: $devToolsUrl")
+
+                // 使用 http://127.0.0.1:{port}/devtools/inspector.html?ws=... 格式，
+                // 这样 devtools 前端通过 HTTP 从 CDP 服务器加载（走 JCEF 代理），
+                // 避免 devtools:// 协议在远程 CEF 子进程中可能无法连接 WebSocket 的问题
+                val devToolsUrl = "http://127.0.0.1:$port/devtools/inspector.html?ws=127.0.0.1:$port/devtools/page/$pageId"
+                System.err.println("[WebBrowser] Opening embedded DevTools at: $devToolsUrl (pageId=$pageId)")
                 ApplicationManager.getApplication().invokeLater {
                     try {
                         val devBrowser = JBCefBrowser(devToolsUrl)
