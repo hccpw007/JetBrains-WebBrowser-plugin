@@ -21,7 +21,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import java.awt.BorderLayout
-import java.awt.Color
 import java.awt.Dimension
 import java.awt.FlowLayout
 import java.awt.event.MouseAdapter
@@ -146,9 +145,7 @@ class BrowserToolWindowPanel(private val project: Project) {
     }
 
     private fun addTabToStrip(tab: BrowserTabPanel) {
-        val titleLabel = JBLabel(tab.getTabTitle()).apply {
-            foreground = Color.BLACK
-        }
+        val titleLabel = JBLabel(tab.getTabTitle())
         tabTitleLabels[tab] = titleLabel
 
         val closeBtn = JButton("×").apply {
