@@ -302,26 +302,16 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
                 cdpBridge = bridge
                 System.err.println("[WebBrowser] CdpBridge started on port ${bridge.port}")
 
-                // 构造通过 CdpBridge 加载 DevTools 前端的 URL
-                // 这样 inspector.html 经过桥接器的 CDN 代理时会被注入 WebSocket polyfill
-                val devToolsFrontendUrl = matchedPage.get("devtoolsFrontendUrl")?.asString
-                val finalUrl = if (!devToolsFrontendUrl.isNullOrBlank()
-                    && devToolsFrontendUrl.startsWith("https://chrome-devtools-frontend.appspot.com")) {
-                    // CDN URL：提取路径，通过 CdpBridge 代理加载（触发 polyfill 注入）
-                    val cdnPath = devToolsFrontendUrl.removePrefix("https://chrome-devtools-frontend.appspot.com")
-                    val rewritten = cdnPath.replace(
-                        Regex("ws=127\\.0\\.0\\.1:\\d+"),
-                        "ws=127.0.0.1:${bridge.port}"
-                    )
-                    "http://127.0.0.1:${bridge.port}$rewritten"
-                } else if (pageId != null) {
-                    // fallback：通过 CdpBridge 从 CDP 服务器代理
-                    "http://127.0.0.1:${bridge.port}/cdp-server/devtools/inspector.html?ws=127.0.0.1:${bridge.port}/devtools/page/$pageId"
-                } else {
-                    System.err.println("[WebBrowser] Cannot construct DevTools URL")
+                if (pageId.isNullOrBlank()) {
+                    System.err.println("[WebBrowser] No page ID in /json response")
                     ApplicationManager.getApplication().invokeLater { callback(null) }
                     return
                 }
+
+                // 通过 CdpBridge 的 CDP 服务器代理加载 DevTools 前端，
+                // CdpBridge 注入 WebSocket polyfill（HTTP POST + SSE 替代 WebSocket）
+                val finalUrl = "http://127.0.0.1:${bridge.port}/cdp-server/devtools/inspector.html" +
+                        "?ws=127.0.0.1:${bridge.port}/devtools/page/$pageId"
                 System.err.println("[WebBrowser] Opening embedded DevTools at: $finalUrl")
 
                 ApplicationManager.getApplication().invokeLater {
