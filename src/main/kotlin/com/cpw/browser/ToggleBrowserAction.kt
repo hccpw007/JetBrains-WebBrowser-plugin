@@ -21,13 +21,7 @@ class ToggleBrowserAction : AnAction(), DumbAware {
     }
 
     override fun update(e: AnActionEvent) {
-        val project = e.project
-        if (project != null) {
-            val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("WebBrowser")
-            e.presentation.isEnabled = toolWindow != null
-        } else {
-            e.presentation.isEnabled = false
-        }
+        e.presentation.isEnabled = e.project != null
     }
 
     override fun actionPerformed(e: AnActionEvent) {

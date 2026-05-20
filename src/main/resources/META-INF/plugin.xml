@@ -61,7 +61,8 @@
             class="com.cpw.browser.ToggleBrowserAction"
             text="Toggle Web Browser"
             description="Open or close the web browser tool window"
-            icon="/icons/toolwindow.svg"> <!-- 复用你已有的工具窗口图标 -->
+            icon="/icons/toolwindow.svg">
+            <add-to-group group-id="MainToolBar" anchor="last"/>
         </action>
     </actions>
 </idea-plugin>
