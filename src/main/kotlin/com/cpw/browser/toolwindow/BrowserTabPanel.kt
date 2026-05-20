@@ -127,6 +127,24 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
 
     fun canGoForward(): Boolean = currentHistoryIndex < navigationHistory.size - 1
 
+    var zoomLevel: Double = 0.0
+        private set
+
+    fun zoomIn() {
+        zoomLevel += 0.05
+        browser.setZoomLevel(zoomLevel)
+    }
+
+    fun zoomOut() {
+        zoomLevel -= 0.05
+        browser.setZoomLevel(zoomLevel)
+    }
+
+    fun zoomReset() {
+        zoomLevel = 0.0
+        browser.setZoomLevel(0.0)
+    }
+
     fun openDevTools() {
         browser.openDevtools()
     }

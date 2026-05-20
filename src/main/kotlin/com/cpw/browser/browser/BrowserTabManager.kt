@@ -88,6 +88,10 @@ class BrowserTabManager {
 
     fun getTabs(): List<BrowserTabPanel> = tabs.toList()
 
+    fun zoomIn() = activeTab?.zoomIn()
+    fun zoomOut() = activeTab?.zoomOut()
+    fun zoomReset() = activeTab?.zoomReset()
+
     fun disposeAll() {
         tabs.forEach { it.dispose() }
         tabs.clear()

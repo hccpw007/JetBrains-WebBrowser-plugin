@@ -49,8 +49,6 @@ class BrowserToolWindowPanel(private val project: Project) {
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
             g2.color = ChromeTab.STRIP_BG
             g2.fillRect(0, 0, width, height)
-            g2.color = ChromeTab.BORDER
-            g2.drawLine(0, height - 1, width, height - 1)
             g2.dispose()
         }
     }
@@ -102,8 +100,10 @@ class BrowserToolWindowPanel(private val project: Project) {
             .createActionToolbar("WebBrowser.NavBar", navGroup, true)
         navToolbar.setTargetComponent(navToolbar.component)
 
-        // url 右侧工具栏：开发者工具、书签侧边栏切换
+        // url 右侧工具栏：放大、缩小、开发者工具、书签侧边栏切换
         val rightGroup = DefaultActionGroup().apply {
+            add(ZoomInAction(tabManager))
+            add(ZoomOutAction(tabManager))
             add(OpenDevToolsAction(tabManager))
             addSeparator()
             add(ToggleBookmarkSidebarAction())
@@ -148,6 +148,24 @@ class BrowserToolWindowPanel(private val project: Project) {
 
     fun openDevTools() {
         tabManager.activeTab?.openDevTools()
+    }
+
+    // 放大 Action
+    private inner class ZoomInAction(tabManager: BrowserTabManager) : AnAction(
+        "放大", "放大网页 5%", WebBrowserIcons.ZoomIn
+    ), DumbAware {
+        override fun actionPerformed(e: AnActionEvent) {
+            tabManager.zoomIn()
+        }
+    }
+
+    // 缩小 Action
+    private inner class ZoomOutAction(tabManager: BrowserTabManager) : AnAction(
+        "缩小", "缩小网页 5%", WebBrowserIcons.ZoomOut
+    ), DumbAware {
+        override fun actionPerformed(e: AnActionEvent) {
+            tabManager.zoomOut()
+        }
     }
 
     // 书签侧边栏切换 Action

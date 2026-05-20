@@ -12,6 +12,7 @@ class RefreshAction(private val tabManager: BrowserTabManager) : AnAction("åˆ·æ–
     }
 
     override fun actionPerformed(e: AnActionEvent) {
+        tabManager.zoomReset()
         tabManager.activeTab?.refresh()
     }
 }
