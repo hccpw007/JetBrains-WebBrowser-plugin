@@ -4,6 +4,8 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
+import java.time.LocalDate
+import java.time.ZoneId
 
 data class HistoryEntry(
     val url: String,
@@ -29,13 +31,14 @@ class BrowsingHistoryState : PersistentStateComponent<BrowsingHistoryState.State
     fun addEntry(url: String, title: String) {
         if (url.isBlank() || url == "about:blank") return
         val now = System.currentTimeMillis()
-        val last = state.entries.lastOrNull()
-        // 如果最后一条记录同 URL，更新时间戳（避免连续重复）
-        if (last?.url == url) {
-            state.entries[state.entries.size - 1] = last.copy(timestamp = now)
-        } else {
-            state.entries.add(HistoryEntry(url, title.ifBlank { url }, now))
+        val todayStart = LocalDate.now(ZoneId.systemDefault())
+            .atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        // 同一天相同 URL 只保留最后一条
+        val existingIndex = state.entries.indexOfLast {
+            it.url == url && it.timestamp >= todayStart
         }
+        if (existingIndex >= 0) state.entries.removeAt(existingIndex)
+        state.entries.add(HistoryEntry(url, title.ifBlank { url }, now))
     }
 
     fun updateLastEntryTitle(title: String) {
