@@ -22,11 +22,14 @@ import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import java.awt.BorderLayout
+import java.awt.Component
 import java.awt.Cursor
 import java.awt.Dimension
 import java.awt.FlowLayout
+import java.awt.Font
 import java.awt.Graphics
 import java.awt.Graphics2D
+import java.awt.Insets
 import java.awt.RenderingHints
 import java.net.URLEncoder
 import javax.swing.BorderFactory
@@ -36,6 +39,7 @@ import javax.swing.JLayeredPane
 import javax.swing.JPanel
 import javax.swing.SwingConstants
 import javax.swing.Timer
+import javax.swing.border.AbstractBorder
 
 class BrowserToolWindowPanel(private val project: Project) {
 
@@ -57,14 +61,27 @@ class BrowserToolWindowPanel(private val project: Project) {
     }
     private val browserContentPanel = JPanel(BorderLayout()) // 浏览器内容区域
     private val zoomToast = JBLabel().apply {
-        isOpaque = true
-        background = JBColor(0x555555, 0xBBBBBB)
+        isOpaque = false
         foreground = JBColor(0xFFFFFF, 0x333333)
-        font = font.deriveFont(12f)
-        border = BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(JBColor(0x666666, 0x999999), 1),
-            BorderFactory.createEmptyBorder(4, 10, 4, 10)
-        )
+        font = font.deriveFont(Font.BOLD, 13f)
+        border = object : AbstractBorder() {
+            private val color = JBColor(0x444444, 0xCCCCCC)
+
+            override fun paintBorder(c: Component, g: Graphics, x: Int, y: Int, width: Int, height: Int) {
+                val g2 = g.create() as Graphics2D
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+                g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_NORMALIZE)
+                g2.color = color
+                g2.fillRoundRect(x, y, width - 1, height - 1, 10, 10)
+                g2.dispose()
+            }
+
+            override fun getBorderInsets(c: Component) = Insets(6, 16, 6, 16)
+            override fun getBorderInsets(c: Component, insets: Insets): Insets {
+                insets.set(6, 16, 6, 16)
+                return insets
+            }
+        }
         isVisible = false
     }
     private val browserLayer = object : JLayeredPane() {
