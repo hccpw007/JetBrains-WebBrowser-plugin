@@ -103,6 +103,18 @@ class BookmarkSidebar(
             override fun mouseClicked(e: MouseEvent) { showHistory() }
         })
     }
+    /** 清空历史记录标签 */
+    private val clearLabel = JBLabel("清空记录").apply {
+        font = font.deriveFont(11f)
+        foreground = JBColor(0x3366CC, 0x7799DD)
+        cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        addMouseListener(object : MouseAdapter() {
+            override fun mouseClicked(e: MouseEvent) {
+                showClearPopup()
+            }
+        })
+    }
+
     /** 选中态白色滑块 */
     private val activeBg = object : JLabel() {
         override fun paintComponent(g: Graphics) {
@@ -140,17 +152,8 @@ class BookmarkSidebar(
         }
 
         // 历史面板 — 清空链接
-        val clearLabel = JBLabel("清空记录").apply {
-            font = font.deriveFont(11f)
-            foreground = JBColor(0x3366CC, 0x7799DD)
-            cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
-            addMouseListener(object : MouseAdapter() {
-                override fun mouseClicked(e: MouseEvent) {
-                    showClearPopup()
-                }
-            })
-        }
-        val clearPanel = JPanel(FlowLayout(FlowLayout.LEFT, 6, 2)).apply {
+        val clearPanel = JPanel(FlowLayout(FlowLayout.RIGHT, 6, 4)).apply {
+            border = BorderFactory.createEmptyBorder(2, 0, 2, 0)
             add(clearLabel)
         }
         historyPanel.add(clearPanel, BorderLayout.NORTH)
@@ -241,11 +244,18 @@ class BookmarkSidebar(
     }
 
     private fun showClearPopup() {
-        val popup = JPopupMenu()
+        val popup = JPopupMenu().apply {
+            isOpaque = true
+            border = BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(JBColor(0xC0C0C0, 0x4A4A4A), 1, true),
+                BorderFactory.createEmptyBorder(2, 0, 2, 0)
+            )
+        }
         popup.add(createClearItem("清空一小时内记录", 1L))
         popup.add(createClearItem("清空24小时内记录", 24L))
         popup.add(createClearItem("清空所有记录", null))
-        popup.show(this, 8, segmentBar.y + segmentBar.height + 4)
+        // 在清空记录标签下方弹出
+        popup.show(clearLabel, 0, clearLabel.height + 2)
     }
 
     private fun createClearItem(text: String, hours: Long?) = JButton(text).apply {
