@@ -12,7 +12,10 @@ import javax.swing.JComponent
 
 class BrowserTabPanel(private val initialUrl: String = "about:blank") {
 
-    val browser: JBCefBrowser = JBCefBrowser(initialUrl)
+    val browser: JBCefBrowser = JBCefBrowser(initialUrl).also {
+        // 强制白色背景，避免深色主题下网页背景变黑
+        it.setPageBackgroundColor("white")
+    }
     val component: JComponent = browser.component
 
     private val navigationHistory = ArrayDeque<String>()
