@@ -44,9 +44,6 @@
 
             <!-- 新版UI（2020.3+）：添加到主工具栏最左侧 -->
             <add-to-group group-id="MainToolbarLeft" anchor="first" />
-
-            <!-- 旧版UI兼容：添加到主工具栏最左侧 -->
-            <add-to-group group-id="MainToolbar" anchor="first" />
         </action>
     </actions>
 </idea-plugin>

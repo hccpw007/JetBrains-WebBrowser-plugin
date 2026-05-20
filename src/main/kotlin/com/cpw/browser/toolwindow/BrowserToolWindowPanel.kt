@@ -7,15 +7,12 @@ import com.cpw.browser.action.GoHomeAction
 import com.cpw.browser.action.NewTabAction
 import com.cpw.browser.action.OpenDevToolsAction
 import com.cpw.browser.action.RefreshAction
-import com.cpw.browser.bookmark.Bookmark
 import com.cpw.browser.browser.BrowserTabManager
 import com.cpw.browser.ui.AddressBar
-import com.cpw.browser.ui.BookmarkSidebar
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
-import com.intellij.ui.JBSplitter
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import java.awt.BorderLayout
@@ -34,7 +31,6 @@ class BrowserToolWindowPanel(private val project: Project) {
 
     private val tabManager = BrowserTabManager()
     private val addressBar = AddressBar { rawUrl -> onNavigateRequested(rawUrl) }
-    private lateinit var bookmarkSidebar: BookmarkSidebar
     private val tabStripPanel = JPanel() // 自定义标签页栏
     private val browserContentPanel = JPanel(BorderLayout()) // 浏览器内容区域
     private val statusLabel = JBLabel("就绪", SwingConstants.LEFT)
@@ -43,8 +39,6 @@ class BrowserToolWindowPanel(private val project: Project) {
     private val tabStripItems = mutableMapOf<BrowserTabPanel, JPanel>() // 标签页栏条目
 
     init {
-        bookmarkSidebar = BookmarkSidebar { bookmark -> onBookmarkSelected(bookmark) }
-
         // 标签页栏
         tabStripPanel.layout = FlowLayout(FlowLayout.LEFT, 0, 0)
         tabStripPanel.border = BorderFactory.createEmptyBorder(2, 4, 2, 4)
@@ -70,7 +64,7 @@ class BrowserToolWindowPanel(private val project: Project) {
         // url 右侧工具栏：开发者工具、添加书签、新建标签页
         val rightGroup = DefaultActionGroup().apply {
             add(OpenDevToolsAction(tabManager))
-            add(AddBookmarkAction(tabManager) { bookmarkSidebar.refreshBookmarks() })
+            add(AddBookmarkAction(tabManager) { })
             addSeparator()
             add(NewTabAction(tabManager))
         }
@@ -92,13 +86,8 @@ class BrowserToolWindowPanel(private val project: Project) {
             add(navAddressBar)
         }
 
-        // 侧边栏分割器：[书签] [浏览器内容]
-        val sidebarSplitter = JBSplitter(false, 0.2f)
-        sidebarSplitter.firstComponent = bookmarkSidebar
-        sidebarSplitter.secondComponent = browserContentPanel
-
         mainPanel.add(topSection, BorderLayout.NORTH)
-        mainPanel.add(sidebarSplitter, BorderLayout.CENTER)
+        mainPanel.add(browserContentPanel, BorderLayout.CENTER)
         mainPanel.add(statusLabel, BorderLayout.SOUTH)
 
         tabManager.createTab()
@@ -193,15 +182,6 @@ class BrowserToolWindowPanel(private val project: Project) {
             tab.navigate(url)
         } else {
             tabManager.createTab(url)
-        }
-    }
-
-    private fun onBookmarkSelected(bookmark: Bookmark) {
-        val tab = tabManager.activeTab
-        if (tab != null) {
-            tab.navigate(bookmark.url)
-        } else {
-            tabManager.createTab(bookmark.url)
         }
     }
 
