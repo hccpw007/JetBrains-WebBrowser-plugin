@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 每次对话中完成编译（`./gradlew build` 或 `./gradlew compileKotlin` 通过）后，必须执行以下操作：
 
 1. 运行 `git add -A` 暂存所有文件变更
-2. 运行 `git commit -m "对话: {本次修改的内容总结}"` 提交代码
+2. 运行 `git commit -m "{本次修改的内容总结}"` 提交代码
 3. commit 信息中的 `{本次修改的内容总结}` 用简短的中文概括本次对话修改了哪些内容、解决了什么问题
 
 此规则覆盖其他所有规则，每次编译通过后必须执行。
