@@ -293,18 +293,22 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
             }
 
             if (matchedPage != null) {
-                val pageId = matchedPage.get("id")?.asString
-                if (pageId.isNullOrBlank()) {
-                    System.err.println("[WebBrowser] Page has no id, cannot open DevTools")
+                // 优先使用 CDP 返回的 devtoolsFrontendUrl（从 Google CDN 加载 DevTools 前端），
+                // 如果 devtoolsFrontendUrl 不可用则自己构造 URL
+                var devToolsUrl = matchedPage.get("devtoolsFrontendUrl")?.asString
+                if (devToolsUrl.isNullOrBlank()) {
+                    // 备选：自己构造 URL，从 CDP HTTP 服务器加载前端
+                    val pageId = matchedPage.get("id")?.asString
+                    if (pageId != null) {
+                        devToolsUrl = "http://127.0.0.1:$port/devtools/inspector.html?ws=127.0.0.1:$port/devtools/page/$pageId"
+                    }
+                }
+                if (devToolsUrl.isNullOrBlank()) {
+                    System.err.println("[WebBrowser] Cannot construct DevTools URL, page has neither devtoolsFrontendUrl nor id")
                     ApplicationManager.getApplication().invokeLater { callback(null) }
                     return
                 }
-
-                // 使用 http://127.0.0.1:{port}/devtools/inspector.html?ws=... 格式，
-                // 这样 devtools 前端通过 HTTP 从 CDP 服务器加载（走 JCEF 代理），
-                // 避免 devtools:// 协议在远程 CEF 子进程中可能无法连接 WebSocket 的问题
-                val devToolsUrl = "http://127.0.0.1:$port/devtools/inspector.html?ws=127.0.0.1:$port/devtools/page/$pageId"
-                System.err.println("[WebBrowser] Opening embedded DevTools at: $devToolsUrl (pageId=$pageId)")
+                System.err.println("[WebBrowser] Opening embedded DevTools at: $devToolsUrl (port=$port)")
                 ApplicationManager.getApplication().invokeLater {
                     try {
                         val devBrowser = JBCefBrowser(devToolsUrl)
