@@ -11,6 +11,7 @@ import com.cpw.browser.action.RefreshAction
 import com.cpw.browser.browser.BrowserTabManager
 import com.cpw.browser.ui.AddressBar
 import com.cpw.browser.ui.BookmarkSidebar
+import com.cpw.browser.ui.ChromeTab
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -23,13 +24,12 @@ import com.intellij.ui.components.JBPanel
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.FlowLayout
-import java.awt.event.MouseAdapter
-import java.awt.event.MouseEvent
+import java.awt.Graphics
+import java.awt.Graphics2D
+import java.awt.RenderingHints
 import java.net.URLEncoder
 import javax.swing.BorderFactory
-import javax.swing.Box
 import javax.swing.BoxLayout
-import javax.swing.JButton
 import javax.swing.JPanel
 import javax.swing.SwingConstants
 
@@ -42,14 +42,22 @@ class BrowserToolWindowPanel(private val project: Project) {
         onToggleBookmark = { url -> toggleBookmark(url) }
     )
     private lateinit var bookmarkSidebar: BookmarkSidebar
-    private val tabStripPanel = JPanel() // 自定义标签页栏
+    private val tabStripPanel = object : JPanel() {
+        override fun paintComponent(g: Graphics) {
+            val g2 = g.create() as Graphics2D
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+            g2.color = ChromeTab.STRIP_BG
+            g2.fillRect(0, 0, width, height)
+            g2.color = ChromeTab.BORDER
+            g2.drawLine(0, height - 1, width, height - 1)
+            g2.dispose()
+        }
+    }
     private val browserContentPanel = JPanel(BorderLayout()) // 浏览器内容区域
     private val centerPanel = JPanel(BorderLayout()) // 居中区域：书签(可隐藏) + 浏览器内容
     private val statusLabel = JBLabel("就绪", SwingConstants.LEFT)
     private val mainPanel = JBPanel<JBPanel<*>>(BorderLayout())
-    private val tabTitleLabels = mutableMapOf<BrowserTabPanel, JBLabel>() // 标题标签缓存
-    private val tabStripItems = mutableMapOf<BrowserTabPanel, JPanel>() // 标签页栏条目
-    private val tabCloseButtons = mutableMapOf<BrowserTabPanel, JButton>() // 关闭按钮
+    private val chromeTabs = mutableMapOf<BrowserTabPanel, ChromeTab>()
 
     init {
         bookmarkSidebar = BookmarkSidebar { bookmark -> onBookmarkSelected(bookmark) }
@@ -61,12 +69,11 @@ class BrowserToolWindowPanel(private val project: Project) {
 
         // 标签页栏
         tabStripPanel.layout = FlowLayout(FlowLayout.LEFT, 0, 0)
-        tabStripPanel.border = BorderFactory.createEmptyBorder(2, 4, 2, 4)
+        tabStripPanel.border = BorderFactory.createEmptyBorder(4, 4, 0, 4)
 
         tabManager.onTabAdded = { tab -> addTabToStrip(tab) }
         tabManager.onTabRemoved = { tab ->
-            tabTitleLabels.remove(tab)
-            tabCloseButtons.remove(tab)
+            chromeTabs.remove(tab)
             removeTabFromStrip(tab)
         }
         tabManager.onActiveTabChanged = { tab -> onActiveTabChanged(tab) }
@@ -145,55 +152,35 @@ class BrowserToolWindowPanel(private val project: Project) {
     }
 
     private fun addTabToStrip(tab: BrowserTabPanel) {
-        val titleLabel = JBLabel(tab.getTabTitle())
-        tabTitleLabels[tab] = titleLabel
-
-        val closeBtn = JButton("×").apply {
-            isBorderPainted = false
-            isContentAreaFilled = false
-            isFocusPainted = false
-            preferredSize = Dimension(16, 16)
-            maximumSize = Dimension(16, 16)
-            minimumSize = Dimension(16, 16)
-            font = font.deriveFont(12f)
-            toolTipText = "关闭标签页"
-            addActionListener {
+        val chromeTab = ChromeTab(
+            browserTab = tab,
+            onSelect = {
                 val index = tabManager.getTabs().indexOf(tab)
-                if (index >= 0) {
-                    tabManager.closeTab(index)
-                }
+                if (index >= 0) tabManager.switchToTab(index)
+            },
+            onClose = {
+                val index = tabManager.getTabs().indexOf(tab)
+                if (index >= 0) tabManager.closeTab(index)
             }
-        }
-        tabCloseButtons[tab] = closeBtn
+        )
 
-        val tabStripItem = JPanel().apply {
-            layout = BoxLayout(this, BoxLayout.X_AXIS)
-            isOpaque = true
-            border = BorderFactory.createEmptyBorder(3, 8, 3, 8)
-            add(titleLabel)
-            add(Box.createRigidArea(Dimension(6, 0)))
-            add(closeBtn)
-
-            addMouseListener(object : MouseAdapter() {
-                override fun mouseClicked(e: MouseEvent) {
-                    val index = tabManager.getTabs().indexOf(tab)
-                    if (index >= 0) {
-                        tabManager.switchToTab(index)
-                    }
-                }
-            })
-        }
-
-        tabStripItems[tab] = tabStripItem
-        tabStripPanel.add(tabStripItem)
+        chromeTabs[tab] = chromeTab
+        tabStripPanel.add(chromeTab)
         tabStripPanel.revalidate()
         tabStripPanel.repaint()
         updateTabStripHighlight()
+
+        // 监听标题变更（即便非活跃标签也更新标题）
+        val origTitleCb = tab.onTitleChanged
+        tab.onTitleChanged = { title ->
+            chromeTab.titleLabel.text = tab.getTabTitle()
+            origTitleCb?.invoke(title)
+        }
     }
 
     private fun removeTabFromStrip(tab: BrowserTabPanel) {
-        val item = tabStripItems.remove(tab) ?: return
-        tabStripPanel.remove(item)
+        val chromeTab = chromeTabs[tab] ?: return
+        tabStripPanel.remove(chromeTab)
         tabStripPanel.revalidate()
         tabStripPanel.repaint()
         updateTabStripHighlight()
@@ -201,8 +188,8 @@ class BrowserToolWindowPanel(private val project: Project) {
 
     private fun updateTabStripHighlight() {
         val activeTab = tabManager.activeTab
-        for ((tab, item) in tabStripItems) {
-            item.background = if (tab == activeTab) tabStripPanel.background else tabStripPanel.background.darker()
+        for ((tab, chromeTab) in chromeTabs) {
+            chromeTab.isActive = tab == activeTab
         }
     }
 
@@ -262,7 +249,7 @@ class BrowserToolWindowPanel(private val project: Project) {
     }
 
     private fun updateTabTitle(tab: BrowserTabPanel) {
-        tabTitleLabels[tab]?.text = tab.getTabTitle()
+        chromeTabs[tab]?.titleLabel?.text = tab.getTabTitle()
     }
 
     private fun normalizeUrl(input: String): String {
