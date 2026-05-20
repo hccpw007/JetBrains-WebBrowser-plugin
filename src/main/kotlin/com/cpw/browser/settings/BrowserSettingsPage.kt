@@ -8,6 +8,7 @@ import java.awt.FlowLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.Insets
+import javax.swing.JComboBox
 import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JPanel
@@ -18,6 +19,7 @@ class BrowserSettingsPage : Configurable {
     private var openHomeCheckBox: JBCheckBox? = null
     private var maxHistoryDaysField: JBTextField? = null
     private var maxHistoryCountField: JBTextField? = null
+    private var displayPositionCombo: JComboBox<String>? = null
 
     override fun getDisplayName() = "WebBrowser"
 
@@ -64,8 +66,21 @@ class BrowserSettingsPage : Configurable {
         maxHistoryCountField = JBTextField().apply { columns = 4 }
         panel.add(maxHistoryCountField!!, c)
 
+        // 位置 — 标签
+        c.gridy = 6; c.gridx = 0; c.gridwidth = 2; c.fill = GridBagConstraints.NONE
+        c.insets = Insets(12, 0, 4, 0); c.weightx = 0.0
+        panel.add(TitledSeparator("显示"), c)
+
+        // 位置 — 下拉框
+        c.gridy = 7; c.gridx = 0; c.gridwidth = 1; c.fill = GridBagConstraints.HORIZONTAL
+        c.insets = Insets(0, 0, 0, 0); c.weightx = 0.0
+        panel.add(JLabel("位置:"), c)
+        c.gridx = 1
+        displayPositionCombo = JComboBox(arrayOf("工具栏", "编辑区"))
+        panel.add(displayPositionCombo!!, c)
+
         // 右下角签名
-        c.gridy = 6; c.gridx = 1; c.weightx = 1.0; c.anchor = GridBagConstraints.LAST_LINE_END
+        c.gridy = 8; c.gridx = 1; c.weightx = 1.0; c.anchor = GridBagConstraints.LAST_LINE_END
         c.fill = GridBagConstraints.NONE; c.insets = Insets(20, 0, 0, 0)
         val footerPanel = JPanel(FlowLayout(FlowLayout.RIGHT, 0, 0)).apply {
             isOpaque = false
@@ -83,7 +98,8 @@ class BrowserSettingsPage : Configurable {
         return homePageField?.text != state.homePageUrl ||
                 openHomeCheckBox?.isSelected != state.openHomeOnNewTab ||
                 maxHistoryDaysField?.text?.toIntOrNull() != state.maxHistoryDays ||
-                maxHistoryCountField?.text?.toIntOrNull() != state.maxHistoryCount
+                maxHistoryCountField?.text?.toIntOrNull() != state.maxHistoryCount ||
+                positionToSetting(displayPositionCombo?.selectedItem as? String) != state.displayPosition
     }
 
     override fun apply() {
@@ -92,6 +108,9 @@ class BrowserSettingsPage : Configurable {
         state.openHomeOnNewTab = openHomeCheckBox?.isSelected ?: state.openHomeOnNewTab
         state.maxHistoryDays = maxHistoryDaysField?.text?.toIntOrNull() ?: state.maxHistoryDays
         state.maxHistoryCount = maxHistoryCountField?.text?.toIntOrNull() ?: state.maxHistoryCount
+        displayPositionCombo?.selectedItem?.let {
+            state.displayPosition = positionToSetting(it as? String)
+        }
     }
 
     override fun reset() {
@@ -100,5 +119,16 @@ class BrowserSettingsPage : Configurable {
         openHomeCheckBox?.isSelected = state.openHomeOnNewTab
         maxHistoryDaysField?.text = state.maxHistoryDays.toString()
         maxHistoryCountField?.text = state.maxHistoryCount.toString()
+        displayPositionCombo?.selectedItem = settingToPosition(state.displayPosition)
+    }
+
+    private fun positionToSetting(display: String?): String = when (display) {
+        "编辑区" -> "editor"
+        else -> "toolbar"
+    }
+
+    private fun settingToPosition(setting: String): String = when (setting) {
+        "editor" -> "编辑区"
+        else -> "工具栏"
     }
 }

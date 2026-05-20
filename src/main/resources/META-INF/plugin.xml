@@ -43,6 +43,9 @@
             instance="com.cpw.browser.settings.BrowserSettingsPage"
             displayName="WebBrowser"
             id="com.cpw.browser.settings.BrowserSettingsPage"/>
+
+        <fileEditorProvider
+            implementation="com.cpw.browser.editor.BrowserFileEditorProvider"/>
     </extensions>
     <!-- 新增：工具栏Action配置（直接添加在extensions后面即可） -->
     <actions>

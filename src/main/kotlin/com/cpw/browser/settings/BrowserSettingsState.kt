@@ -12,7 +12,8 @@ class BrowserSettingsState : PersistentStateComponent<BrowserSettingsState.State
         var homePageUrl: String = "https://www.google.com",
         var openHomeOnNewTab: Boolean = false,
         var maxHistoryDays: Int = 30,
-        var maxHistoryCount: Int = 200
+        var maxHistoryCount: Int = 200,
+        var displayPosition: String = "toolbar"
     )
 
     private var state = State()
@@ -35,6 +36,10 @@ class BrowserSettingsState : PersistentStateComponent<BrowserSettingsState.State
     var maxHistoryCount: Int
         get() = state.maxHistoryCount
         set(value) { state.maxHistoryCount = value }
+
+    var displayPosition: String
+        get() = state.displayPosition
+        set(value) { state.displayPosition = value }
 
     companion object {
         fun getInstance(): BrowserSettingsState =
