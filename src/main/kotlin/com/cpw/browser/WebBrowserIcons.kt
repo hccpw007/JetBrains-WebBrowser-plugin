@@ -18,6 +18,7 @@ object WebBrowserIcons {
     val ShowBookmark = load("显示书签")
     val ZoomIn = load("放大镜")
     val ZoomOut = load("缩小镜")
+    val Google = load("谷歌")
 
     private fun load(name: String): Icon =
         IconLoader.getIcon("/icons/$name.svg", javaClass)

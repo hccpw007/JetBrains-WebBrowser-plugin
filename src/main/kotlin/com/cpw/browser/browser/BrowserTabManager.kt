@@ -1,5 +1,6 @@
 package com.cpw.browser.browser
 
+import com.cpw.browser.settings.BrowserSettingsState
 import com.cpw.browser.toolwindow.BrowserTabPanel
 
 class BrowserTabManager {
@@ -46,6 +47,15 @@ class BrowserTabManager {
         activeTabIndex = tabs.size - 1
         onTabAdded?.invoke(tab)
         onActiveTabChanged?.invoke(tab)
+
+        // 如果新建的空白标签且用户开启了"新标签打开主页"，则导航到主页
+        if (initialUrl == "about:blank") {
+            val settings = BrowserSettingsState.getInstance()
+            if (settings.openHomeOnNewTab && settings.homePageUrl.isNotBlank()) {
+                tab.navigate(settings.homePageUrl)
+            }
+        }
+
         return tab
     }
 

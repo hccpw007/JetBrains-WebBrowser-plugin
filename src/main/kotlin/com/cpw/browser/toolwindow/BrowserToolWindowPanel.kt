@@ -8,6 +8,8 @@ import com.cpw.browser.action.GoHomeAction
 import com.cpw.browser.action.OpenDevToolsAction
 import com.cpw.browser.action.RefreshAction
 import com.cpw.browser.browser.BrowserTabManager
+import com.cpw.browser.settings.BrowserSettingsPage
+import com.cpw.browser.settings.BrowserSettingsState
 import com.cpw.browser.ui.AddressBar
 import com.cpw.browser.ui.BookmarkSidebar
 import com.cpw.browser.ui.ChromeTab
@@ -16,6 +18,7 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
@@ -158,6 +161,8 @@ class BrowserToolWindowPanel(private val project: Project) {
             add(OpenDevToolsAction(tabManager))
             addSeparator()
             add(ToggleBookmarkSidebarAction())
+            add(OpenInSystemBrowserAction())
+            add(SettingsAction())
         }
         val rightToolbar = ActionManager.getInstance()
             .createActionToolbar("WebBrowser.RightActions", rightGroup, true)
@@ -230,8 +235,37 @@ class BrowserToolWindowPanel(private val project: Project) {
             bookmarkSidebar.isVisible = !bookmarkSidebar.isVisible
             centerPanel.revalidate()
             centerPanel.repaint()
-            // 更新按钮描述
             e.presentation.description = if (bookmarkSidebar.isVisible) "隐藏书签侧边栏" else "显示书签侧边栏"
+        }
+    }
+
+    // 系统浏览器打开 Action
+    private inner class OpenInSystemBrowserAction : AnAction(
+        "系统浏览器打开", "在系统浏览器中打开当前网页", WebBrowserIcons.Google
+    ), DumbAware {
+        override fun actionPerformed(e: AnActionEvent) {
+            val url = tabManager.activeTab?.currentUrl
+            if (!url.isNullOrBlank() && url != "about:blank") {
+                try {
+                    java.awt.Desktop.getDesktop().browse(java.net.URI(url))
+                } catch (ex: Exception) {
+                    statusLabel.text = "打开系统浏览器失败: ${ex.message}"
+                }
+            }
+        }
+
+        override fun update(e: AnActionEvent) {
+            val url = tabManager.activeTab?.currentUrl
+            e.presentation.isEnabled = !url.isNullOrBlank() && url != "about:blank"
+        }
+    }
+
+    // 设置 Action
+    private inner class SettingsAction : AnAction(
+        "设置", "打开 WebBrowser 设置", com.intellij.icons.AllIcons.General.Settings
+    ), DumbAware {
+        override fun actionPerformed(e: AnActionEvent) {
+            ShowSettingsUtil.getInstance().showSettingsDialog(project, BrowserSettingsPage::class.java)
         }
     }
 

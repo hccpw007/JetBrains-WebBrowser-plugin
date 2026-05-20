@@ -31,6 +31,14 @@
 
         <applicationService
             serviceImplementation="com.cpw.browser.bookmark.BookmarkPersistentState"/>
+
+        <applicationService
+            serviceImplementation="com.cpw.browser.settings.BrowserSettingsState"/>
+
+        <applicationConfigurable
+            instance="com.cpw.browser.settings.BrowserSettingsPage"
+            displayName="WebBrowser"
+            id="com.cpw.browser.settings.BrowserSettingsPage"/>
     </extensions>
     <!-- 新增：工具栏Action配置（直接添加在extensions后面即可） -->
     <actions>
