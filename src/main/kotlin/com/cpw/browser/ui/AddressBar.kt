@@ -48,12 +48,12 @@ class AddressBar(
     init {
         // 自定义圆角边框：聚焦时不用蓝色
         val normalBorder = BorderFactory.createCompoundBorder(
-            RoundedBorder(JBColor(0xE0E0E0, 0x4A4A4A), 15),
-            BorderFactory.createEmptyBorder(0, 4, 0, 22)
+            RoundedBorder(JBColor(0xF0F0F0, 0x4A4A4A), 15),
+            BorderFactory.createEmptyBorder(0, 4, 0, 27)
         )
         val focusBorder = BorderFactory.createCompoundBorder(
-            RoundedBorder(JBColor(0xB0B0B0, 0x888888), 15),
-            BorderFactory.createEmptyBorder(0, 4, 0, 22)
+            RoundedBorder(JBColor(0xD0D0D0, 0x888888), 15),
+            BorderFactory.createEmptyBorder(0, 4, 0, 27)
         )
         urlField.border = normalBorder
         urlField.font = urlField.font.deriveFont(13f)
@@ -81,7 +81,7 @@ class AddressBar(
                 val h = height
                 urlField.setBounds(0, 0, w, h)
                 val starSize = 14
-                starLabel.setBounds(w - starSize - 4, (h - starSize) / 2, starSize, starSize)
+                starLabel.setBounds(w - starSize - 9, (h - starSize) / 2, starSize, starSize)
                 setLayer(starLabel, PALETTE_LAYER)
             }
 
