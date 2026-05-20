@@ -53,6 +53,12 @@ class BrowserTabManager {
 
     fun closeTab(index: Int): Boolean {
         if (index < 0 || index >= tabs.size) return tabs.isNotEmpty()
+
+        // 如果是最后一个标签页，先创建一个空白标签页，确保 tab 栏不消失
+        if (tabs.size == 1) {
+            createTab()
+        }
+
         val tab = tabs[index]
         tab.dispose()
         tabs.removeAt(index)
