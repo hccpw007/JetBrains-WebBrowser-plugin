@@ -113,8 +113,13 @@ class BrowserToolWindowPanel(private val project: Project) {
     }
 
     init {
-        bookmarkSidebar = BookmarkSidebar { bookmark -> onBookmarkSelected(bookmark) }
-        bookmarkSidebar.isVisible = false // 默认隐藏书签侧边栏
+        bookmarkSidebar = BookmarkSidebar { bookmark -> onBookmarkSelected(bookmark) }.apply {
+            isVisible = false // 默认隐藏书签侧边栏
+            val sideW = 200
+            preferredSize = Dimension(sideW, 0)
+            minimumSize = Dimension(sideW, 0)
+            maximumSize = Dimension(sideW, Int.MAX_VALUE)
+        }
 
         // 居中区域：[书签侧边栏(可隐藏)] [浏览器内容层(含 toast 叠加)]
         browserLayer.setLayer(browserContentPanel, JLayeredPane.DEFAULT_LAYER)
