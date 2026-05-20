@@ -18,6 +18,7 @@ import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
+import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import java.awt.BorderLayout
@@ -31,8 +32,10 @@ import java.net.URLEncoder
 import javax.swing.BorderFactory
 import javax.swing.BoxLayout
 import javax.swing.JButton
+import javax.swing.JLayeredPane
 import javax.swing.JPanel
 import javax.swing.SwingConstants
+import javax.swing.Timer
 
 class BrowserToolWindowPanel(private val project: Project) {
 
@@ -53,6 +56,34 @@ class BrowserToolWindowPanel(private val project: Project) {
         }
     }
     private val browserContentPanel = JPanel(BorderLayout()) // 浏览器内容区域
+    private val zoomToast = JBLabel().apply {
+        isOpaque = true
+        background = JBColor(0x555555, 0xBBBBBB)
+        foreground = JBColor(0xFFFFFF, 0x333333)
+        font = font.deriveFont(12f)
+        border = BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(JBColor(0x666666, 0x999999), 1),
+            BorderFactory.createEmptyBorder(4, 10, 4, 10)
+        )
+        isVisible = false
+    }
+    private val browserLayer = object : JLayeredPane() {
+        override fun doLayout() {
+            val w = width
+            val h = height
+            browserContentPanel.setBounds(0, 0, w, h)
+            if (zoomToast.isVisible) {
+                val pref = zoomToast.preferredSize
+                zoomToast.setBounds(
+                    maxOf(0, (w - pref.width) / 2),
+                    50,
+                    pref.width,
+                    pref.height
+                )
+            }
+        }
+    }
+    private var zoomToastTimer: Timer? = null
     private val centerPanel = JPanel(BorderLayout()) // 居中区域：书签(可隐藏) + 浏览器内容
     private val statusLabel = JBLabel("就绪", SwingConstants.LEFT)
     private val mainPanel = JBPanel<JBPanel<*>>(BorderLayout())
@@ -74,9 +105,13 @@ class BrowserToolWindowPanel(private val project: Project) {
         bookmarkSidebar = BookmarkSidebar { bookmark -> onBookmarkSelected(bookmark) }
         bookmarkSidebar.isVisible = false // 默认隐藏书签侧边栏
 
-        // 居中区域：[书签侧边栏(可隐藏)] [浏览器内容]
+        // 居中区域：[书签侧边栏(可隐藏)] [浏览器内容层(含 toast 叠加)]
+        browserLayer.setLayer(browserContentPanel, JLayeredPane.DEFAULT_LAYER)
+        browserLayer.setLayer(zoomToast, JLayeredPane.PALETTE_LAYER)
+        browserLayer.add(browserContentPanel, JLayeredPane.DEFAULT_LAYER)
+        browserLayer.add(zoomToast, JLayeredPane.PALETTE_LAYER)
         centerPanel.add(bookmarkSidebar, BorderLayout.WEST)
-        centerPanel.add(browserContentPanel, BorderLayout.CENTER)
+        centerPanel.add(browserLayer, BorderLayout.CENTER)
 
         // 标签页栏
         tabStripPanel.layout = FlowLayout(FlowLayout.LEFT, 0, 0)
@@ -93,7 +128,7 @@ class BrowserToolWindowPanel(private val project: Project) {
         val navGroup = DefaultActionGroup().apply {
             add(GoBackAction(tabManager))
             add(GoForwardAction(tabManager))
-            add(RefreshAction(tabManager))
+            add(RefreshAction(tabManager) { showZoomToastForActiveTab("恢复至") })
             add(GoHomeAction(tabManager))
         }
         val navToolbar = ActionManager.getInstance()
@@ -157,6 +192,7 @@ class BrowserToolWindowPanel(private val project: Project) {
     ), DumbAware {
         override fun actionPerformed(e: AnActionEvent) {
             tabManager.zoomIn()
+            showZoomToastForActiveTab("放大至")
         }
     }
 
@@ -166,6 +202,7 @@ class BrowserToolWindowPanel(private val project: Project) {
     ), DumbAware {
         override fun actionPerformed(e: AnActionEvent) {
             tabManager.zoomOut()
+            showZoomToastForActiveTab("缩小至")
         }
     }
 
@@ -281,6 +318,26 @@ class BrowserToolWindowPanel(private val project: Project) {
 
     private fun updateTabTitle(tab: BrowserTabPanel) {
         chromeTabs[tab]?.titleLabel?.text = tab.getTabTitle()
+    }
+
+    private fun showZoomToast(text: String) {
+        zoomToast.text = text
+        zoomToast.isVisible = true
+        zoomToastTimer?.stop()
+        browserLayer.revalidate()
+        browserLayer.repaint()
+        zoomToastTimer = Timer(1000) {
+            zoomToast.isVisible = false
+            browserLayer.repaint()
+        }.apply {
+            isRepeats = false
+            start()
+        }
+    }
+
+    private fun showZoomToastForActiveTab(action: String) {
+        val pct = ((tabManager.activeTab?.zoomLevel ?: 1.0) * 100).toInt()
+        showZoomToast("${action}${pct}%")
     }
 
     private fun normalizeUrl(input: String): String {
