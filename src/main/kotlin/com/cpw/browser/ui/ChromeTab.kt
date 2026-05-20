@@ -50,11 +50,11 @@ class ChromeTab(
         private const val BC = 4
 
         // ---- 主题色 ----
-        val ACTIVE_BG = JBColor(0xFFFFFF, 0x3C3F41)
-        private val INACTIVE_BG = JBColor(0xD6D6D6, 0x282828)
-        private val HOVER_BG = JBColor(0xE3E3E3, 0x303030)
+        val ACTIVE_BG = JBColor(0xFFFFFF, 0x454749)
+        private val INACTIVE_BG = JBColor(0xC8C8C8, 0x222222)
+        private val HOVER_BG = JBColor(0xDCDCDC, 0x303030)
         val BORDER = JBColor(0xC0C0C0, 0x4A4A4A)
-        val STRIP_BG = JBColor(0xD6D6D6, 0x282828)
+        val STRIP_BG = JBColor(0xC8C8C8, 0x222222)
     }
 
     init {
