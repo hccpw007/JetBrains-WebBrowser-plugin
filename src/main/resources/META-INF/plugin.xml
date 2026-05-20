@@ -35,6 +35,9 @@
         <applicationService
             serviceImplementation="com.cpw.browser.settings.BrowserSettingsState"/>
 
+        <applicationService
+            serviceImplementation="com.cpw.browser.history.BrowsingHistoryState"/>
+
         <applicationConfigurable
             instance="com.cpw.browser.settings.BrowserSettingsPage"
             displayName="WebBrowser"

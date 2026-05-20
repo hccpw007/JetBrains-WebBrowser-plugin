@@ -2,6 +2,7 @@ package com.cpw.browser.toolwindow
 
 import com.cpw.browser.WebBrowserIcons
 import com.cpw.browser.action.GoBackAction
+import com.cpw.browser.history.BrowsingHistoryState
 import com.cpw.browser.bookmark.BookmarkPersistentState
 import com.cpw.browser.action.GoForwardAction
 import com.cpw.browser.action.GoHomeAction
@@ -116,7 +117,10 @@ class BrowserToolWindowPanel(private val project: Project) {
     }
 
     init {
-        bookmarkSidebar = BookmarkSidebar { bookmark -> onBookmarkSelected(bookmark) }.apply {
+        bookmarkSidebar = BookmarkSidebar(
+            onBookmarkSelected = { bookmark -> onBookmarkSelected(bookmark) },
+            onHistoryEntrySelected = { url -> onHistoryEntryClicked(url) }
+        ).apply {
             isVisible = false // 默认隐藏书签侧边栏
             val sideW = 200
             preferredSize = Dimension(sideW, 0)
@@ -292,7 +296,17 @@ class BrowserToolWindowPanel(private val project: Project) {
         val origTitleCb = tab.onTitleChanged
         tab.onTitleChanged = { title ->
             chromeTab.titleLabel.text = tab.getTabTitle()
+            BrowsingHistoryState.getInstance().updateLastEntryTitle(title)
             origTitleCb?.invoke(title)
+        }
+
+        // 记录浏览历史
+        val origUrlCb = tab.onUrlChanged
+        tab.onUrlChanged = { url ->
+            if (url.isNotBlank() && url != "about:blank") {
+                BrowsingHistoryState.getInstance().addEntry(url, tab.pageTitle)
+            }
+            origUrlCb?.invoke(url)
         }
     }
 
@@ -363,6 +377,15 @@ class BrowserToolWindowPanel(private val project: Project) {
             tab.navigate(bookmark.url)
         } else {
             tabManager.createTab(bookmark.url)
+        }
+    }
+
+    private fun onHistoryEntryClicked(url: String) {
+        val tab = tabManager.activeTab
+        if (tab != null) {
+            tab.navigate(url)
+        } else {
+            tabManager.createTab(url)
         }
     }
 
