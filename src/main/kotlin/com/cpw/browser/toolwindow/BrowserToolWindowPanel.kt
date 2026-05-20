@@ -210,7 +210,17 @@ class BrowserToolWindowPanel(private val project: Project) {
     }
 
     fun openDevTools() {
-        tabManager.activeTab?.openDevTools()
+        val tab = tabManager.activeTab ?: return
+        if (tab.isEmbeddedDevToolsOpen) {
+            tab.closeEmbeddedDevTools()
+            updateBrowserContent(tab)
+        } else {
+            tab.openEmbeddedDevTools { devTools ->
+                if (devTools != null) {
+                    updateBrowserContent(tab)
+                }
+            }
+        }
     }
 
     // 放大 Action
@@ -352,7 +362,17 @@ class BrowserToolWindowPanel(private val project: Project) {
     private fun updateBrowserContent(tab: BrowserTabPanel?) {
         browserContentPanel.removeAll()
         if (tab != null) {
-            browserContentPanel.add(tab.component, BorderLayout.CENTER)
+            val devToolsComp = if (tab.isEmbeddedDevToolsOpen) tab.getEmbeddedDevToolsComponent() else null
+            if (devToolsComp != null) {
+                val splitPane = JSplitPane(JSplitPane.VERTICAL_SPLIT, tab.component, devToolsComp).apply {
+                    resizeWeight = 0.7
+                    dividerSize = 4
+                    isContinuousLayout = true
+                }
+                browserContentPanel.add(splitPane, BorderLayout.CENTER)
+            } else {
+                browserContentPanel.add(tab.component, BorderLayout.CENTER)
+            }
         }
         browserContentPanel.revalidate()
         browserContentPanel.repaint()

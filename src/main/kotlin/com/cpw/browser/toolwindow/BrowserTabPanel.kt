@@ -34,6 +34,12 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
     // 网页弹窗/新窗口回调 — 传入目标 URL
     var onPopupUrl: ((String) -> Unit)? = null
 
+    // 嵌入式 DevTools
+    private var embeddedDevTools: JBCefBrowser? = null
+    private var pendingDevToolsCallback: ((JBCefBrowser?) -> Unit)? = null
+
+    val isEmbeddedDevToolsOpen: Boolean get() = embeddedDevTools != null
+
     init {
         if (initialUrl != "about:blank") {
             pushHistory(initialUrl)
@@ -101,6 +107,26 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
                 onTitleChanged?.invoke(title)
             }
         }, browser.cefBrowser)
+
+        // 拦截 DevTools 弹窗浏览器，转为嵌入式
+        browser.jbCefClient.addLifeSpanHandler(object : CefLifeSpanHandlerAdapter() {
+            override fun onAfterCreated(browser: CefBrowser) {
+                if (browser.isPopup && pendingDevToolsCallback != null) {
+                    val devCefBrowser = browser
+                    ApplicationManager.getApplication().invokeLater {
+                        try {
+                            val jbDevTools = JBCefBrowser(devCefBrowser, this@BrowserTabPanel.browser.jbCefClient)
+                            devCefBrowser.setWindowVisibility(false)
+                            embeddedDevTools = jbDevTools
+                            pendingDevToolsCallback?.invoke(jbDevTools)
+                        } catch (e: Exception) {
+                            pendingDevToolsCallback?.invoke(null)
+                        }
+                        pendingDevToolsCallback = null
+                    }
+                }
+            }
+        }, browser.cefBrowser)
     }
 
     fun navigate(url: String) {
@@ -163,7 +189,27 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
         return if (rawTitle.length > 20) rawTitle.take(20) + "..." else rawTitle
     }
 
+    fun openEmbeddedDevTools(callback: (JBCefBrowser?) -> Unit) {
+        if (embeddedDevTools != null) {
+            callback(embeddedDevTools)
+            return
+        }
+        pendingDevToolsCallback = callback
+        browser.cefBrowser.openDevTools()
+    }
+
+    fun closeEmbeddedDevTools() {
+        embeddedDevTools?.let { devTools ->
+            devTools.dispose()
+            embeddedDevTools = null
+        }
+        browser.cefBrowser.closeDevTools()
+    }
+
+    fun getEmbeddedDevToolsComponent(): JComponent? = embeddedDevTools?.component
+
     fun dispose() {
+        closeEmbeddedDevTools()
         val disposeRunnable = Runnable {
             browser.dispose()
         }
