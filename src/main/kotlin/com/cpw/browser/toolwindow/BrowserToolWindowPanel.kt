@@ -18,7 +18,6 @@ import com.intellij.ui.JBSplitter
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import java.awt.BorderLayout
-import java.awt.Dimension
 import java.net.URLEncoder
 import javax.swing.Box
 import javax.swing.BoxLayout
@@ -135,11 +134,10 @@ class BrowserToolWindowPanel(private val project: Project) {
         val tabComponent = JPanel().apply {
             layout = BoxLayout(this, BoxLayout.X_AXIS)
             isOpaque = false
+            border = javax.swing.border.EmptyBorder(0, 0, 0, 0)
             add(titleLabel)
             add(Box.createHorizontalGlue())
-            add(Box.createHorizontalStrut(4))
             add(closeBtn)
-            minimumSize = Dimension(80, 0)
         }
 
         tabPane.addTab(null, tab.component)
