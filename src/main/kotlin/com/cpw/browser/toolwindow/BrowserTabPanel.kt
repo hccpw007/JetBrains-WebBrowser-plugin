@@ -110,9 +110,10 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
         }, browser.cefBrowser)
 
         // 拦截 DevTools 弹窗浏览器，转为嵌入式
-        browser.jbCefClient.addLifeSpanHandler(object : CefLifeSpanHandlerAdapter() {
+        // 注册在 CefClient 级别（而非单个浏览器），以捕获 DevTools 浏览器创建事件
+        browser.jbCefClient.getCefClient().addLifeSpanHandler(object : CefLifeSpanHandlerAdapter() {
             override fun onAfterCreated(browser: CefBrowser) {
-                if (browser.isPopup && pendingDevToolsCallback != null) {
+                if (pendingDevToolsCallback != null && embeddedDevTools == null) {
                     val devCefBrowser = browser
                     ApplicationManager.getApplication().invokeLater {
                         try {
@@ -120,7 +121,6 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
                                 .setCefBrowser(devCefBrowser)
                                 .setClient(this@BrowserTabPanel.browser.jbCefClient)
                                 .build()
-                            devCefBrowser.setWindowVisibility(false)
                             embeddedDevTools = jbDevTools
                             pendingDevToolsCallback?.invoke(jbDevTools)
                         } catch (e: Exception) {
@@ -130,7 +130,7 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
                     }
                 }
             }
-        }, browser.cefBrowser)
+        })
     }
 
     fun navigate(url: String) {
