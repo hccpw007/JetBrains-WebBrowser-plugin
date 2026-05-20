@@ -32,7 +32,7 @@ import java.util.concurrent.CopyOnWriteArrayList
  *     → CefDevToolsClient（CEF 内部 IPC，不走网络）
  *     → 被检查页面
  */
-class CdpBridge(private val inspectedBrowser: CefBrowser) {
+class CdpBridge(private val inspectedBrowser: CefBrowser, private val cdpPort: Int? = null) {
 
     private val serverSocket: ServerSocket
     val port: Int
@@ -98,6 +98,12 @@ class CdpBridge(private val inspectedBrowser: CefBrowser) {
             // SSE 事件流
             if (method == "GET" && path == "/events") {
                 handleEvents(output)
+                return
+            }
+
+            // DevTools 前端文件：从 CDP 服务器代理（仅在 `devtoolsFrontendUrl` 缺失时使用）
+            if (method == "GET" && path.startsWith("/cdp-server/")) {
+                proxyFromCdpServer(path.removePrefix("/cdp-server"), output)
                 return
             }
 
@@ -233,6 +239,34 @@ class CdpBridge(private val inspectedBrowser: CefBrowser) {
     }
 
     /**
+     * 从 CDP 服务器代理 DevTools 前端文件。
+     * 仅在 `devtoolsFrontendUrl` 不可用时的 fallback。
+     */
+    private fun proxyFromCdpServer(path: String, output: OutputStream) {
+        if (cdpPort == null) {
+            sendHttp(output, 502, "text/plain", "CDP server port not configured")
+            return
+        }
+        try {
+            val url = URL("http://127.0.0.1:$cdpPort$path")
+            val conn = url.openConnection() as HttpURLConnection
+            conn.connectTimeout = 10000
+            conn.readTimeout = 10000
+            val contentType = conn.contentType ?: "application/octet-stream"
+            val data = conn.inputStream.readBytes()
+            val body = if (contentType.contains("text/html")) {
+                injectPolyfill(String(data, StandardCharsets.UTF_8))
+            } else {
+                String(data, StandardCharsets.UTF_8)
+            }
+            sendHttp(output, 200, contentType, body)
+        } catch (e: Exception) {
+            System.err.println("[CdpBridge] CDP server proxy error for $path: ${e.message}")
+            sendHttp(output, 502, "text/plain", "Proxy error: ${e.message}")
+        }
+    }
+
+    /**
      * 在 inspector.html 中注入 WebSocket polyfill，
      * 使得 DevTools 前端使用 HTTP POST + SSE 替代 WebSocket 与 CDP 通信。
      */
@@ -270,6 +304,12 @@ class CdpBridge(private val inspectedBrowser: CefBrowser) {
             var xhr = new XMLHttpRequest();
             xhr.open('POST', base + '/cdp', true);
             xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.onload = function() {
+                if (self.onmessage) self.onmessage({data: xhr.responseText});
+            };
+            xhr.onerror = function() {
+                if (self.onerror) self.onerror(new Event('error'));
+            };
             xhr.send(data);
         };
 
