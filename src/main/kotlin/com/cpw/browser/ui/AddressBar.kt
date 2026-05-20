@@ -1,14 +1,17 @@
 package com.cpw.browser.ui
 
 import com.cpw.browser.WebBrowserIcons
+import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBTextField
 import java.awt.BorderLayout
-import java.awt.Dimension
+import java.awt.Cursor
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
-import javax.swing.Box
-import javax.swing.BoxLayout
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
+import javax.swing.BorderFactory
 import javax.swing.JButton
+import javax.swing.JLayeredPane
 import javax.swing.JPanel
 
 class AddressBar(
@@ -18,23 +21,26 @@ class AddressBar(
 ) : JPanel(BorderLayout()) {
 
     val urlField = JBTextField()
-    private val starButton = JButton(WebBrowserIcons.Star).apply {
-        isBorderPainted = false
-        isContentAreaFilled = false
-        isFocusPainted = false
+    private val starLabel = JBLabel(WebBrowserIcons.Star).apply {
         isOpaque = false
-        toolTipText = "添加书签"
-        preferredSize = Dimension(20, 20)
-        maximumSize = Dimension(20, 20)
-        addActionListener {
-            val url = urlField.text.trim()
-            if (url.isNotEmpty() && url != "about:blank") {
-                onToggleBookmark(url)
+        cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        addMouseListener(object : MouseAdapter() {
+            override fun mouseClicked(e: MouseEvent) {
+                val url = urlField.text.trim()
+                if (url.isNotEmpty() && url != "about:blank") {
+                    onToggleBookmark(url)
+                }
             }
-        }
+        })
     }
 
     init {
+        // 给文本字段右侧留出空间给内嵌星标
+        urlField.border = BorderFactory.createCompoundBorder(
+            urlField.border,
+            BorderFactory.createEmptyBorder(0, 0, 0, 22)
+        )
+
         urlField.addKeyListener(object : KeyAdapter() {
             override fun keyPressed(e: KeyEvent) {
                 if (e.keyCode == KeyEvent.VK_ENTER) {
@@ -43,20 +49,29 @@ class AddressBar(
             }
         })
 
+        // 使用 JLayeredPane 将星标叠加在文本字段右侧内部
+        val fieldLayer = object : JLayeredPane() {
+            override fun doLayout() {
+                val w = width
+                val h = height
+                urlField.setBounds(0, 0, w, h)
+                val starSize = 20
+                starLabel.setBounds(w - starSize - 4, (h - starSize) / 2, starSize, starSize)
+                setLayer(starLabel, PALETTE_LAYER)
+            }
+
+            override fun getPreferredSize() = urlField.preferredSize
+        }
+
+        fieldLayer.add(urlField, JLayeredPane.DEFAULT_LAYER)
+        fieldLayer.add(starLabel, JLayeredPane.PALETTE_LAYER)
+
         val goButton = JButton("前往").apply {
             addActionListener { navigate() }
         }
 
-        // 右侧面板：[星标] [前往]
-        val rightPanel = JPanel().apply {
-            layout = BoxLayout(this, BoxLayout.X_AXIS)
-            add(starButton)
-            add(Box.createRigidArea(Dimension(2, 0)))
-            add(goButton)
-        }
-
-        add(urlField, BorderLayout.CENTER)
-        add(rightPanel, BorderLayout.EAST)
+        add(fieldLayer, BorderLayout.CENTER)
+        add(goButton, BorderLayout.EAST)
     }
 
     fun setUrl(url: String) {
@@ -68,11 +83,11 @@ class AddressBar(
 
     fun updateStarIcon(url: String) {
         if (url.isNotEmpty() && url != "about:blank") {
-            starButton.icon = if (isUrlBookmarked(url)) WebBrowserIcons.StarFilled else WebBrowserIcons.Star
-            starButton.toolTipText = if (isUrlBookmarked(url)) "从书签中移除" else "添加书签"
+            starLabel.icon = if (isUrlBookmarked(url)) WebBrowserIcons.StarFilled else WebBrowserIcons.Star
+            starLabel.toolTipText = if (isUrlBookmarked(url)) "从书签中移除" else "添加书签"
         } else {
-            starButton.icon = WebBrowserIcons.Star
-            starButton.toolTipText = "添加书签"
+            starLabel.icon = WebBrowserIcons.Star
+            starLabel.toolTipText = "添加书签"
         }
     }
 
