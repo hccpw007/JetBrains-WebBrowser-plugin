@@ -11,6 +11,7 @@ import java.net.HttpURLConnection
 import java.net.InetAddress
 import java.net.ServerSocket
 import java.net.Socket
+import java.net.URI
 import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
@@ -27,10 +28,10 @@ import java.util.concurrent.CopyOnWriteArrayList
  *
  * 架构：
  *   DevTools 浏览器（CEF 子进程）
- *     → HTTP 请求到本服务器（通过 JCEF 代理 → 主进程 → 本机 IP:端口）
- *     → POST /cdp 执行命令 / GET /events 接收事件 / GET / (static) 提供前端文件
- *     → CefDevToolsClient（CEF 内部 IPC，不走网络）
- *     → 被检查页面
+ *     -> HTTP 请求到本服务器（通过 JCEF 代理 -> 主进程 -> 本机 IP:端口）
+ *     -> POST /cdp 执行命令 / GET /events 接收事件 / GET / (static) 提供前端文件
+ *     -> CefDevToolsClient（CEF 内部 IPC，不走网络）
+ *     -> 被检查页面
  */
 class CdpBridge(private val inspectedBrowser: CefBrowser, private val cdpPort: Int? = null) {
 
@@ -81,7 +82,18 @@ class CdpBridge(private val inspectedBrowser: CefBrowser, private val cdpPort: I
             val statusLine = req.substringBefore("\r\n")
             val headers = parseHeaders(req)
             val method = statusLine.substringBefore(" ")
-            val path = statusLine.substringAfter(" ").substringBeforeLast(" ")
+            val rawRequestUri = statusLine.substringAfter(" ").substringBeforeLast(" ")
+
+            // 处理绝对 URL（JCEF 代理转发时可能使用 http://host/path 格式）
+            val requestPath = try {
+                val uri = URI(rawRequestUri)
+                val q = uri.rawQuery
+                (uri.path ?: rawRequestUri) + if (q != null) "?$q" else ""
+            } catch (_: Exception) {
+                rawRequestUri
+            }
+
+            System.err.println("[CdpBridge] $method $requestPath")
 
             // WebSocket 升级
             if (headers["Upgrade"]?.equals("websocket", ignoreCase = true) == true) {
@@ -90,32 +102,33 @@ class CdpBridge(private val inspectedBrowser: CefBrowser, private val cdpPort: I
             }
 
             // CDP 命令（POST）
-            if (method == "POST" && path == "/cdp") {
+            if (method == "POST" && requestPath == "/cdp") {
                 handleCdpPost(raw, output)
                 return
             }
 
             // SSE 事件流
-            if (method == "GET" && path == "/events") {
+            if (method == "GET" && requestPath == "/events") {
                 handleEvents(output)
                 return
             }
 
-            // DevTools 前端文件：从 CDP 服务器代理（仅在 `devtoolsFrontendUrl` 缺失时使用）
-            if (method == "GET" && path.startsWith("/cdp-server/")) {
-                proxyFromCdpServer(path.removePrefix("/cdp-server"), output)
+            // DevTools 前端文件：从 CDP 服务器代理
+            if (method == "GET" && requestPath.startsWith("/cdp-server/")) {
+                proxyFromCdpServer(requestPath.removePrefix("/cdp-server"), output)
                 return
             }
 
             // 前端文件：从 CDN 代理
-            if (method == "GET" && path.startsWith("/")) {
-                proxyFromCdn(path, output)
+            if (method == "GET" && requestPath.startsWith("/")) {
+                proxyFromCdn(requestPath, output)
                 return
             }
 
-            // 其他 → 404
+            // 其他 -> 404
             sendHttp(output, 404, "text/plain", "Not Found")
         } catch (e: Exception) {
+            System.err.println("[CdpBridge] handleClient error: ${e.message}")
             try { client.close() } catch (_: Exception) {}
         }
     }
@@ -273,52 +286,52 @@ class CdpBridge(private val inspectedBrowser: CefBrowser, private val cdpPort: I
     private fun injectPolyfill(html: String): String {
         val polyfill = """
 <script>
-// DevTools WebSocket polyfill — 使用 HTTP POST + SSE 替代 WebSocket 与 CDP 桥接器通信
+// DevTools WebSocket polyfill - use HTTP POST + SSE instead of WebSocket for CDP communication
 (function() {
-    var realWS = window.WebSocket;
-    var base = location.origin; // http://MACHINE_IP:PORT
+    var base = location.origin;
 
-    window.WebSocket = function(url) {
+    var WS = function(url) {
         var self = this;
         this.readyState = 0;
-        this.onopen = null;
-        this.onclose = null;
-        this.onmessage = null;
-        this.onerror = null;
         this.url = url;
+        this._listeners = {};
 
-        // SSE 接收事件和命令响应
+        this.addEventListener = function(type, fn) {
+            (self._listeners[type] || (self._listeners[type] = [])).push(fn);
+        };
+        this.removeEventListener = function(type, fn) {
+            var a = self._listeners[type];
+            if (a) self._listeners[type] = a.filter(function(l) { return l !== fn; });
+        };
+        this._fire = function(event) {
+            if (self['on' + event.type]) self['on' + event.type](event);
+            (self._listeners[event.type] || []).forEach(function(l) { l(event); });
+        };
+
+        // SSE receives CDP events pushed from the bridge
         this._es = new EventSource(base + '/events');
-        this._es.onmessage = function(e) {
-            if (self.onmessage) self.onmessage({data: e.data});
-        };
-        this._es.onerror = function() {
-            if (self.onclose) self.onclose({code: 1006, reason: 'SSE error', wasClean: false});
-        };
+        this._es.onmessage = function(e) { self._fire({type: 'message', data: e.data}); };
+        this._es.onerror = function() { self.close(); };
 
         this.readyState = 1;
-        var _this = this;
-        setTimeout(function() { if (_this.onopen) _this.onopen(); }, 0);
+        setTimeout(function() { self._fire({type: 'open'}); }, 0);
 
         this.send = function(data) {
             var xhr = new XMLHttpRequest();
             xhr.open('POST', base + '/cdp', true);
             xhr.setRequestHeader('Content-Type', 'application/json');
-            xhr.onload = function() {
-                if (self.onmessage) self.onmessage({data: xhr.responseText});
-            };
-            xhr.onerror = function() {
-                if (self.onerror) self.onerror(new Event('error'));
-            };
+            xhr.onload = function() { self._fire({type: 'message', data: xhr.responseText}); };
+            xhr.onerror = function() { self._fire({type: 'error'}); };
             xhr.send(data);
         };
 
         this.close = function() {
             this.readyState = 3;
             if (this._es) { this._es.close(); this._es = null; }
-            if (this.onclose) this.onclose({code: 1000, reason: 'closed', wasClean: true});
+            self._fire({type: 'close', code: 1000, reason: 'closed', wasClean: true});
         };
     };
+    window.WebSocket = WS;
 })();
 </script>
 </head>
