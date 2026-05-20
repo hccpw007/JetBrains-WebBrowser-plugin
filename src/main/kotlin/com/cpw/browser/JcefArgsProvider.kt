@@ -11,6 +11,7 @@ internal class JcefArgsProvider : JBCefAppRequiredArgumentsProvider {
 
     override val options: List<String> = listOf(
         "--remote-debugging-port=0",
-        "--allow-running-insecure-content",  // 允许 HTTPS 页面加载 WS 等非安全内容（DevTools CDN → CDP）
+        "--remote-allow-origins=*",         // 允许 CDP 接受来自 CDN 等任意来源的 WebSocket 连接
+        "--allow-running-insecure-content", // 允许 HTTPS 页面加载 WS 等非安全内容（DevTools CDN → CDP）
     )
 }
