@@ -12,6 +12,8 @@ import org.cef.handler.CefDisplayHandlerAdapter
 import org.cef.handler.CefLifeSpanHandlerAdapter
 import org.cef.handler.CefLoadHandler
 import org.cef.handler.CefLoadHandlerAdapter
+import java.net.InetAddress
+import java.net.NetworkInterface
 import java.net.ServerSocket
 import java.net.Socket
 import java.net.URI
@@ -316,15 +318,17 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
                     return
                 }
 
-                // 启动 TCP 隧道代理，将 DevTools 前端的 WebSocket 连接先指向本机代理端口
+                // 启动 TCP 隧道代理（监听 0.0.0.0 以接受来自任何接口的连接）
                 val proxyPort = startCdpProxy(port)
                 val finalUrl = if (proxyPort != null) {
-                    // 将 URL 中的 ws=127.0.0.1:PORT 替换为 ws=127.0.0.1:PROXY_PORT
+                    val localAddr = findLocalAddress()
+                    // 将 URL 中的 ws=127.0.0.1:PORT 替换为 ws=MACHINE_IP:PROXY_PORT
+                    // 使用非 loopback 地址使 CEF 子进程通过 JCEF 代理路由连接，避免直连失败
                     val modified = devToolsUrl.replace(
                         Regex("ws=(127\\.0\\.0\\.1|localhost):$port"),
-                        "ws=127.0.0.1:$proxyPort"
+                        "ws=$localAddr:$proxyPort"
                     )
-                    System.err.println("[WebBrowser] Using CDP proxy: ws=127.0.0.1:$proxyPort (original port=$port)")
+                    System.err.println("[WebBrowser] Using CDP proxy: ws=$localAddr:$proxyPort -> 127.0.0.1:$port")
                     modified
                 } else {
                     System.err.println("[WebBrowser] CDP proxy failed to start, falling back to direct connection")
@@ -357,13 +361,38 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
      * DevTools 前端（在远程 CEF 子进程中）通过 WebSocket 连接到该代理，
      * 代理在主进程中直接与 CDP 服务器通信，避免跨进程 WebSocket 连接问题。
      */
+    /**
+     * 查找本机非 loopback 的 IPv4 地址。
+     * 用于 DevTools WebSocket URL，使 CEF 子进程通过主进程代理路由连接而非直连 127.0.0.1。
+     */
+    private fun findLocalAddress(): String {
+        try {
+            val interfaces = NetworkInterface.getNetworkInterfaces()
+            while (interfaces.hasMoreElements()) {
+                val iface = interfaces.nextElement()
+                if (iface.isLoopback || !iface.isUp) continue
+                val addrs = iface.inetAddresses
+                while (addrs.hasMoreElements()) {
+                    val addr = addrs.nextElement()
+                    if (!addr.isLoopbackAddress && addr is java.net.Inet4Address) {
+                        val ip = addr.hostAddress
+                        System.err.println("[WebBrowser] Found local address: $ip")
+                        return ip
+                    }
+                }
+            }
+        } catch (_: Exception) {}
+        // fallback
+        return "127.0.0.1"
+    }
+
     private fun startCdpProxy(cdpPort: Int): Int? {
         try {
-            val serverSocket = ServerSocket(0)
+            val serverSocket = ServerSocket(0, 50, InetAddress.getByName("0.0.0.0"))
             val proxyPort = serverSocket.localPort
             devToolsProxyServer = serverSocket
             devToolsProxyPort = proxyPort
-            System.err.println("[WebBrowser] Starting CDP TCP proxy: 127.0.0.1:$proxyPort -> 127.0.0.1:$cdpPort")
+            System.err.println("[WebBrowser] Starting CDP TCP proxy: 0.0.0.0:$proxyPort -> 127.0.0.1:$cdpPort")
 
             thread(name = "cdp-proxy-accept", isDaemon = true) {
                 try {

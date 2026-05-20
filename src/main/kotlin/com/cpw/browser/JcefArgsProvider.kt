@@ -9,5 +9,8 @@ import com.intellij.ui.jcef.JBCefAppRequiredArgumentsProvider
  */
 internal class JcefArgsProvider : JBCefAppRequiredArgumentsProvider {
 
-    override val options: List<String> = listOf("--remote-debugging-port=0")
+    override val options: List<String> = listOf(
+        "--remote-debugging-port=0",
+        "--allow-running-insecure-content",  // 允许 HTTPS 页面加载 WS 等非安全内容（DevTools CDN → CDP）
+    )
 }
