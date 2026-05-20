@@ -220,7 +220,9 @@ class BrowserToolWindowPanel(private val project: Project) {
                 if (devTools != null) {
                     updateBrowserContent(tab)
                 } else {
-                    statusLabel.text = "嵌入式 DevTools 加载失败，请使用独立窗口模式"
+                    // CDP 嵌入式失败时回退到弹出窗口
+                    statusLabel.text = "嵌入式 DevTools 不可用，已打开独立窗口"
+                    tab.openDevTools()
                 }
             }
         }

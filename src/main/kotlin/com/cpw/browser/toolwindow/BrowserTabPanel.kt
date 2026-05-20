@@ -192,8 +192,9 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
                     callback(null)
                 }
             }
-        } catch (e: Exception) {
-            System.err.println("[WebBrowser] Failed to get JBCefApp: ${e.message}")
+        } catch (t: Throwable) {
+            System.err.println("[WebBrowser] Failed to get JBCefApp/JBCefApp.getRemoteDebuggingPort: ${t.message}")
+            t.printStackTrace(System.err)
             callback(null)
         }
     }
