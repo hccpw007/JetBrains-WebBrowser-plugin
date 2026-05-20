@@ -35,6 +35,9 @@ class ToggleBrowserAction : AnAction(), DumbAware {
     }
 
     private fun toggleEditorMode(project: Project) {
+        // 确保侧边栏按钮隐藏
+        hideToolWindowStrip(project)
+
         val manager = FileEditorManager.getInstance(project)
 
         // 检查是否已有浏览器编辑器打开
@@ -89,8 +92,17 @@ class ToggleBrowserAction : AnAction(), DumbAware {
         val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("WebBrowser") ?: return
         if (toolWindow.isVisible) {
             toolWindow.hide()
+            toolWindow.setAvailable(false, null)
         } else {
+            toolWindow.setAvailable(true, null)
             toolWindow.show()
         }
+    }
+
+    // 工具方法: 确保侧边栏按钮隐藏（编辑区模式切换时调用）
+    private fun hideToolWindowStrip(project: Project) {
+        val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("WebBrowser") ?: return
+        if (toolWindow.isVisible) toolWindow.hide()
+        toolWindow.setAvailable(false, null)
     }
 }

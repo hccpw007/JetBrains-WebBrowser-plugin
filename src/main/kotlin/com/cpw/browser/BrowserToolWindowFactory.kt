@@ -22,6 +22,9 @@ class BrowserToolWindowFactory : ToolWindowFactory {
         val content = ContentFactory.getInstance().createContent(panel.getContent(), null, false)
         toolWindow.contentManager.addContent(content)
 
+        // 初始隐藏侧边栏按钮，由 ToggleBrowserAction 控制
+        toolWindow.setAvailable(false, null)
+
         // 注册键盘快捷键
         registerShortcuts(panel, toolWindow)
 
