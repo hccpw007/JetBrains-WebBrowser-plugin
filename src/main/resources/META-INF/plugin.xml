@@ -53,9 +53,6 @@
             text="Toggle Web Browser"
             description="Open or close the web browser tool window"
             icon="/icons/toolwindow.svg"> <!-- 复用你已有的工具窗口图标 -->
-
-            <!-- 新版UI（2020.3+）：添加到主工具栏最左侧 -->
-            <add-to-group group-id="MainToolbarLeft" anchor="first" />
         </action>
     </actions>
 </idea-plugin>
