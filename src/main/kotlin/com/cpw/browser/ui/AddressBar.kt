@@ -48,11 +48,11 @@ class AddressBar(
     init {
         // 自定义圆角边框：聚焦时不用蓝色
         val normalBorder = BorderFactory.createCompoundBorder(
-            RoundedBorder(JBColor(0xC0C0C0, 0x4A4A4A), 15),
+            RoundedBorder(JBColor(0xE0E0E0, 0x4A4A4A), 15),
             BorderFactory.createEmptyBorder(0, 4, 0, 22)
         )
         val focusBorder = BorderFactory.createCompoundBorder(
-            RoundedBorder(JBColor(0x909090, 0x888888), 15),
+            RoundedBorder(JBColor(0xB0B0B0, 0x888888), 15),
             BorderFactory.createEmptyBorder(0, 4, 0, 22)
         )
         urlField.border = normalBorder
