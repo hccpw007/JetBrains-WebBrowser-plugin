@@ -21,7 +21,7 @@ class BookmarkListCellRenderer : JPanel(BorderLayout()), ListCellRenderer<Any> {
         font = font.deriveFont(Font.PLAIN, 13f)
         foreground = JBColor(0xAAAAAA, 0x777777)
         cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
-        border = EmptyBorder(0, 4, 0, 2)
+        border = EmptyBorder(0, 4, 0, 6)
     }
 
     init {
@@ -37,7 +37,7 @@ class BookmarkListCellRenderer : JPanel(BorderLayout()), ListCellRenderer<Any> {
         isSelected: Boolean,
         cellHasFocus: Boolean
     ): Component {
-        background = if (isSelected) JBColor(0xD0E4F6, 0x3A4A5A) else JBColor.WHITE
+        background = JBColor.WHITE
         if (value is Bookmark) {
             titleLabel.text = value.title
             titleLabel.toolTipText = value.url

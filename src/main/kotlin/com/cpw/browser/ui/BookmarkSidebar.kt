@@ -38,6 +38,7 @@ import javax.swing.JList
 import javax.swing.JPanel
 import javax.swing.JPopupMenu
 import javax.swing.ListCellRenderer
+import javax.swing.ListSelectionModel
 import javax.swing.SwingConstants
 import javax.swing.border.EmptyBorder
 
@@ -52,6 +53,7 @@ class BookmarkSidebar(
     )
     private val bookmarkList = JBList(bookmarkListModel).apply {
         cellRenderer = BookmarkListCellRenderer()
+        selectionMode = 0
         addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
                 handleBookmarkClick(e)
@@ -64,6 +66,7 @@ class BookmarkSidebar(
     private val historyListModel = HistoryEntriesModel()
     private val historyList = JBList(historyListModel).apply {
         cellRenderer = HistoryListRenderer()
+        selectionMode = 0
         addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
                 handleHistoryClick(e)
@@ -358,7 +361,7 @@ class BookmarkSidebar(
             font = font.deriveFont(Font.PLAIN, 13f)
             foreground = JBColor(0xAAAAAA, 0x777777)
             cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
-            border = EmptyBorder(0, 4, 0, 2)
+            border = EmptyBorder(0, 4, 0, 6)
         }
 
         init {
@@ -374,7 +377,7 @@ class BookmarkSidebar(
             isSelected: Boolean,
             cellHasFocus: Boolean
         ): Component {
-            background = if (isSelected) JBColor(0xD0E4F6, 0x3A4A5A) else JBColor.WHITE
+            background = JBColor.WHITE
             when (value) {
                 is String -> {
                     titleLabel.text = value
