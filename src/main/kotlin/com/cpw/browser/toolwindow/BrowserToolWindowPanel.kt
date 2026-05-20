@@ -86,8 +86,8 @@ class BrowserToolWindowPanel(private val project: Project) {
 
         tabManager.onTabAdded = { tab -> addTabToStrip(tab) }
         tabManager.onTabRemoved = { tab ->
-            chromeTabs.remove(tab)
             removeTabFromStrip(tab)
+            chromeTabs.remove(tab)
         }
         tabManager.onActiveTabChanged = { tab -> onActiveTabChanged(tab) }
 
