@@ -65,7 +65,7 @@ class BrowserToolWindowPanel(private val project: Project) {
             val g2 = g.create() as Graphics2D
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
             g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_NORMALIZE)
-            g2.composite = AlphaComposite.SrcOver.derive(0.85f)
+            g2.composite = AlphaComposite.SrcOver.derive(0.65f)
             g2.color = bgColor
             g2.fillRoundRect(0, 0, width, height, 10, 10)
             g2.dispose()
