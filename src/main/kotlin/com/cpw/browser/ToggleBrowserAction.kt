@@ -34,6 +34,11 @@ class ToggleBrowserAction : AnAction(), DumbAware {
         val project = e.project ?: return
         val settings = BrowserSettingsState.getInstance()
 
+        Messages.showInfoMessage(
+            "actionPerformed 被调用!\ndisplayPosition=${settings.displayPosition}",
+            "调试 入口"
+        )
+
         if (settings.displayPosition == "editor") {
             toggleEditorMode(project)
         } else {
