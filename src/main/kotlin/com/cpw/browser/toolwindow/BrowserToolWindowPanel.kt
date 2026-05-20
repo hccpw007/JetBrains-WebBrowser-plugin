@@ -354,19 +354,9 @@ class BrowserToolWindowPanel(private val project: Project) {
     private fun toggleBookmark(url: String) {
         val bookmarkState = BookmarkPersistentState.getInstance()
         if (bookmarkState.contains(url)) {
-            val bookmark = bookmarkState.getBookmarks().find { it.url == url }
-            if (bookmark != null) {
-                val result = BookmarkSidebar.showBookmarkEditDialog(bookmark.title, bookmark.url)
-                if (result != null) {
-                    bookmarkState.updateBookmark(url, result.first, result.second)
-                    bookmarkSidebar.refreshBookmarks()
-                    addressBar.updateStarIcon(result.second)
-                }
-            } else {
-                bookmarkState.removeBookmark(url)
-                bookmarkSidebar.refreshBookmarks()
-                addressBar.updateStarIcon(url)
-            }
+            bookmarkState.removeBookmark(url)
+            bookmarkSidebar.refreshBookmarks()
+            addressBar.updateStarIcon(url)
         } else {
             val tab = tabManager.activeTab
             val defaultTitle = tab?.pageTitle?.ifBlank { url } ?: url
