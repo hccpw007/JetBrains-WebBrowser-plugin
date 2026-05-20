@@ -5,17 +5,12 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.PathManager
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.ui.jcef.JBCefBrowser
-import kotlin.concurrent.thread
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.handler.CefDisplayHandlerAdapter
 import org.cef.handler.CefLifeSpanHandlerAdapter
 import org.cef.handler.CefLoadHandler
 import org.cef.handler.CefLoadHandlerAdapter
-import java.net.InetAddress
-import java.net.NetworkInterface
-import java.net.ServerSocket
-import java.net.Socket
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
@@ -45,12 +40,11 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
     // 网页弹窗/新窗口回调 — 传入目标 URL
     var onPopupUrl: ((String) -> Unit)? = null
 
-    // 嵌入式 DevTools — 通过 CDP 远程调试端口实现
+    // 嵌入式 DevTools
     private var cdpDevTools: JBCefBrowser? = null
 
-    // TCP 隧道代理 — 解决远程 JCEF 子进程 WebSocket 直连 CDP 失败的问题
-    private var devToolsProxyServer: ServerSocket? = null
-    private var devToolsProxyPort: Int? = null
+    // WebSocket → CefDevToolsClient 桥接器（走 CEF 内部 IPC，不经过网络 WebSocket）
+    private var cdpBridge: CdpBridge? = null
 
     val isEmbeddedDevToolsOpen: Boolean get() = cdpDevTools != null
 
@@ -289,7 +283,6 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
                 }
             }
 
-            // 未精确匹配到则使用第一个 page 类型
             if (matchedPage == null) {
                 System.err.println("[WebBrowser] No page matched currentUrl='$currentUrl', using first available page")
                 for (page in pages) {
@@ -302,40 +295,31 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
             }
 
             if (matchedPage != null) {
-                // 优先使用 CDP 返回的 devtoolsFrontendUrl（从 Google CDN 加载 DevTools 前端），
-                // 如果 devtoolsFrontendUrl 不可用则自己构造 URL
                 var devToolsUrl = matchedPage.get("devtoolsFrontendUrl")?.asString
                 if (devToolsUrl.isNullOrBlank()) {
-                    // 备选：自己构造 URL，从 CDP HTTP 服务器加载前端
                     val pageId = matchedPage.get("id")?.asString
                     if (pageId != null) {
                         devToolsUrl = "http://127.0.0.1:$port/devtools/inspector.html?ws=127.0.0.1:$port/devtools/page/$pageId"
                     }
                 }
                 if (devToolsUrl.isNullOrBlank()) {
-                    System.err.println("[WebBrowser] Cannot construct DevTools URL, page has neither devtoolsFrontendUrl nor id")
+                    System.err.println("[WebBrowser] Cannot construct DevTools URL")
                     ApplicationManager.getApplication().invokeLater { callback(null) }
                     return
                 }
 
-                // 启动 TCP 隧道代理（监听 0.0.0.0 以接受来自任何接口的连接）
-                val proxyPort = startCdpProxy(port)
-                val finalUrl = if (proxyPort != null) {
-                    val localAddr = findLocalAddress()
-                    // 将 URL 中的 ws=127.0.0.1:PORT 替换为 ws=MACHINE_IP:PROXY_PORT
-                    // 使用非 loopback 地址使 CEF 子进程通过 JCEF 代理路由连接，避免直连失败
-                    val modified = devToolsUrl.replace(
-                        Regex("ws=(127\\.0\\.0\\.1|localhost):$port"),
-                        "ws=$localAddr:$proxyPort"
-                    )
-                    System.err.println("[WebBrowser] Using CDP proxy: ws=$localAddr:$proxyPort -> 127.0.0.1:$port")
-                    modified
-                } else {
-                    System.err.println("[WebBrowser] CDP proxy failed to start, falling back to direct connection")
-                    devToolsUrl
-                }
+                // 启动 WebSocket ↔ CefDevToolsClient 桥接器
+                val bridge = CdpBridge(browser.cefBrowser)
+                cdpBridge = bridge
+                System.err.println("[WebBrowser] CdpBridge started on port ${bridge.port}")
 
-                System.err.println("[WebBrowser] Opening embedded DevTools at: $finalUrl (port=$port)")
+                // 将 ws=127.0.0.1:PORT 替换为 ws=127.0.0.1:BRIDGE_PORT
+                val finalUrl = devToolsUrl.replace(
+                    Regex("=(127\\.0\\.0\\.1|localhost):$port"),
+                    "=127.0.0.1:${bridge.port}"
+                )
+                System.err.println("[WebBrowser] Opening embedded DevTools at: $finalUrl")
+
                 ApplicationManager.getApplication().invokeLater {
                     try {
                         val devBrowser = JBCefBrowser(finalUrl)
@@ -356,102 +340,9 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
         }
     }
 
-    /**
-     * 启动一个 TCP 隧道代理，将本地端口上的原始 TCP 连接转发到 CDP 端口。
-     * DevTools 前端（在远程 CEF 子进程中）通过 WebSocket 连接到该代理，
-     * 代理在主进程中直接与 CDP 服务器通信，避免跨进程 WebSocket 连接问题。
-     */
-    /**
-     * 查找本机非 loopback 的 IPv4 地址。
-     * 用于 DevTools WebSocket URL，使 CEF 子进程通过主进程代理路由连接而非直连 127.0.0.1。
-     */
-    private fun findLocalAddress(): String {
-        try {
-            val interfaces = NetworkInterface.getNetworkInterfaces()
-            while (interfaces.hasMoreElements()) {
-                val iface = interfaces.nextElement()
-                if (iface.isLoopback || !iface.isUp) continue
-                val addrs = iface.inetAddresses
-                while (addrs.hasMoreElements()) {
-                    val addr = addrs.nextElement()
-                    if (!addr.isLoopbackAddress && addr is java.net.Inet4Address) {
-                        val ip = addr.hostAddress
-                        System.err.println("[WebBrowser] Found local address: $ip")
-                        return ip
-                    }
-                }
-            }
-        } catch (_: Exception) {}
-        // fallback
-        return "127.0.0.1"
-    }
-
-    private fun startCdpProxy(cdpPort: Int): Int? {
-        try {
-            val serverSocket = ServerSocket(0, 50, InetAddress.getByName("0.0.0.0"))
-            val proxyPort = serverSocket.localPort
-            devToolsProxyServer = serverSocket
-            devToolsProxyPort = proxyPort
-            System.err.println("[WebBrowser] Starting CDP TCP proxy: 0.0.0.0:$proxyPort -> 127.0.0.1:$cdpPort")
-
-            thread(name = "cdp-proxy-accept", isDaemon = true) {
-                try {
-                    while (!serverSocket.isClosed && Thread.currentThread().isAlive) {
-                        val clientSocket = serverSocket.accept()
-                        thread(name = "cdp-proxy-session", isDaemon = true) {
-                            try {
-                                clientSocket.soTimeout = 30000
-                                val cdpSocket = Socket("127.0.0.1", cdpPort)
-                                cdpSocket.soTimeout = 30000
-                                // 双向转发：client -> cdp
-                                thread(name = "cdp-proxy-c2s", isDaemon = true) {
-                                    try {
-                                        clientSocket.getInputStream().copyTo(cdpSocket.getOutputStream())
-                                    } catch (_: Exception) {
-                                    } finally {
-                                        try { cdpSocket.close() } catch (_: Exception) {}
-                                        try { clientSocket.close() } catch (_: Exception) {}
-                                    }
-                                }
-                                // 双向转发：cdp -> client
-                                thread(name = "cdp-proxy-s2c", isDaemon = true) {
-                                    try {
-                                        cdpSocket.getInputStream().copyTo(clientSocket.getOutputStream())
-                                    } catch (_: Exception) {
-                                    } finally {
-                                        try { cdpSocket.close() } catch (_: Exception) {}
-                                        try { clientSocket.close() } catch (_: Exception) {}
-                                    }
-                                }
-                            } catch (e: Exception) {
-                                System.err.println("[WebBrowser] CDP proxy session error: ${e.message}")
-                                try { clientSocket.close() } catch (_: Exception) {}
-                            }
-                        }
-                    }
-                } catch (_: Exception) {
-                }
-            }
-            return proxyPort
-        } catch (e: Exception) {
-            System.err.println("[WebBrowser] Failed to start CDP proxy: ${e.message}")
-            return null
-        }
-    }
-
-    private fun stopCdpProxy() {
-        devToolsProxyPort = null
-        devToolsProxyServer?.let { server ->
-            try {
-                server.close()
-            } catch (_: Exception) {
-            }
-            devToolsProxyServer = null
-        }
-    }
-
     fun closeEmbeddedDevTools() {
-        stopCdpProxy()
+        cdpBridge?.close()
+        cdpBridge = null
         cdpDevTools?.let { devTools ->
             devTools.dispose()
             cdpDevTools = null
@@ -462,7 +353,6 @@ class BrowserTabPanel(private val initialUrl: String = "about:blank") {
 
     fun dispose() {
         closeEmbeddedDevTools()
-        stopCdpProxy()
         val disposeRunnable = Runnable {
             browser.dispose()
         }
