@@ -43,7 +43,7 @@ class ChromeTab(
 
     companion object {
         /** 标签页高度（不含 tabStrip 顶部内边距） */
-        const val TAB_HEIGHT = 34
+        const val TAB_HEIGHT = 30
         /** 顶部圆角半径 */
         private const val CR = 10
         /** 非活跃标签底部内凹幅度 */

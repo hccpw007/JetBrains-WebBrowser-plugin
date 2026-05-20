@@ -5,7 +5,6 @@ import com.cpw.browser.action.GoBackAction
 import com.cpw.browser.bookmark.BookmarkPersistentState
 import com.cpw.browser.action.GoForwardAction
 import com.cpw.browser.action.GoHomeAction
-import com.cpw.browser.action.NewTabAction
 import com.cpw.browser.action.OpenDevToolsAction
 import com.cpw.browser.action.RefreshAction
 import com.cpw.browser.browser.BrowserTabManager
@@ -22,6 +21,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import java.awt.BorderLayout
+import java.awt.Cursor
 import java.awt.Dimension
 import java.awt.FlowLayout
 import java.awt.Graphics
@@ -30,6 +30,7 @@ import java.awt.RenderingHints
 import java.net.URLEncoder
 import javax.swing.BorderFactory
 import javax.swing.BoxLayout
+import javax.swing.JButton
 import javax.swing.JPanel
 import javax.swing.SwingConstants
 
@@ -58,6 +59,18 @@ class BrowserToolWindowPanel(private val project: Project) {
     private val statusLabel = JBLabel("就绪", SwingConstants.LEFT)
     private val mainPanel = JBPanel<JBPanel<*>>(BorderLayout())
     private val chromeTabs = mutableMapOf<BrowserTabPanel, ChromeTab>()
+    private val addTabButton = JButton("+").apply {
+        isBorderPainted = false
+        isContentAreaFilled = false
+        isFocusPainted = false
+        font = font.deriveFont(16f)
+        cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        toolTipText = "新建标签页"
+        preferredSize = Dimension(28, ChromeTab.TAB_HEIGHT)
+        maximumSize = Dimension(28, ChromeTab.TAB_HEIGHT)
+        minimumSize = Dimension(28, ChromeTab.TAB_HEIGHT)
+        addActionListener { tabManager.createTab() }
+    }
 
     init {
         bookmarkSidebar = BookmarkSidebar { bookmark -> onBookmarkSelected(bookmark) }
@@ -89,13 +102,11 @@ class BrowserToolWindowPanel(private val project: Project) {
             .createActionToolbar("WebBrowser.NavBar", navGroup, true)
         navToolbar.setTargetComponent(navToolbar.component)
 
-        // url 右侧工具栏：开发者工具、书签侧边栏切换、新建标签页
+        // url 右侧工具栏：开发者工具、书签侧边栏切换
         val rightGroup = DefaultActionGroup().apply {
             add(OpenDevToolsAction(tabManager))
             addSeparator()
             add(ToggleBookmarkSidebarAction())
-            addSeparator()
-            add(NewTabAction(tabManager))
         }
         val rightToolbar = ActionManager.getInstance()
             .createActionToolbar("WebBrowser.RightActions", rightGroup, true)
@@ -119,6 +130,7 @@ class BrowserToolWindowPanel(private val project: Project) {
         mainPanel.add(centerPanel, BorderLayout.CENTER)
         mainPanel.add(statusLabel, BorderLayout.SOUTH)
 
+        tabStripPanel.add(addTabButton)
         tabManager.createTab()
     }
 
@@ -140,7 +152,7 @@ class BrowserToolWindowPanel(private val project: Project) {
 
     // 书签侧边栏切换 Action
     private inner class ToggleBookmarkSidebarAction : AnAction(
-        "显示书签", "显示或隐藏书签侧边栏", WebBrowserIcons.BookmarkAdd
+        "显示书签", "显示或隐藏书签侧边栏", WebBrowserIcons.ShowBookmark
     ), DumbAware {
         override fun actionPerformed(e: AnActionEvent) {
             bookmarkSidebar.isVisible = !bookmarkSidebar.isVisible
@@ -165,7 +177,7 @@ class BrowserToolWindowPanel(private val project: Project) {
         )
 
         chromeTabs[tab] = chromeTab
-        tabStripPanel.add(chromeTab)
+        tabStripPanel.add(chromeTab, tabStripPanel.componentCount - 1)
         tabStripPanel.revalidate()
         tabStripPanel.repaint()
         updateTabStripHighlight()
