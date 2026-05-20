@@ -165,7 +165,7 @@ class BrowserToolWindowPanel(private val project: Project) {
         val rightGroup = DefaultActionGroup().apply {
             add(ZoomInAction(tabManager))
             add(ZoomOutAction(tabManager))
-            add(OpenDevToolsAction(tabManager))
+            add(OpenDevToolsAction(tabManager) { openDevTools() })
             addSeparator()
             add(ToggleBookmarkSidebarAction())
             add(OpenInSystemBrowserAction())
