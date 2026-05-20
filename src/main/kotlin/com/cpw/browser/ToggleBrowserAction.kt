@@ -1,20 +1,22 @@
 package com.cpw.browser
 
 import com.cpw.browser.editor.BrowserFileEditor
-import com.cpw.browser.editor.BrowserVirtualFile
 import com.cpw.browser.settings.BrowserSettingsState
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.ToolWindowManager
+import java.io.File
 import java.util.WeakHashMap
 
 class ToggleBrowserAction : AnAction(), DumbAware {
 
     companion object {
-        private val virtualFiles = WeakHashMap<Project, BrowserVirtualFile>()
+        private val projectFiles = WeakHashMap<Project, VirtualFile>()
     }
 
     override fun update(e: AnActionEvent) {
@@ -45,13 +47,24 @@ class ToggleBrowserAction : AnAction(), DumbAware {
         val existing = manager.allEditors.find { it is BrowserFileEditor }
         if (existing != null) {
             // 已打开，关闭它
-            val vf = virtualFiles.remove(project)
-            if (vf != null) manager.closeFile(vf)
+            val vf = projectFiles.remove(project)
+            if (vf != null && vf.isValid) {
+                manager.closeFile(vf)
+                // 清理临时文件
+                val localFile = vf.toNioPath().toFile()
+                if (localFile.exists()) localFile.delete()
+            }
         } else {
-            // 未打开，新建
-            val vf = BrowserVirtualFile()
-            virtualFiles[project] = vf
-            manager.openFile(vf, /* focusEditor = */ true)
+            // 创建临时文件作为标记，用于在编辑区打开浏览器
+            val tempFile = File.createTempFile("webbrowser", ".webbrowser")
+            tempFile.deleteOnExit()
+            // 写入一点内容让编辑器知道这不是空文件
+            tempFile.writeText("WebBrowser")
+            val vf = LocalFileSystem.getInstance().refreshAndFindFileByPath(tempFile.absolutePath)
+            if (vf != null) {
+                projectFiles[project] = vf
+                manager.openFile(vf, /* focusEditor = */ true)
+            }
         }
     }
 
