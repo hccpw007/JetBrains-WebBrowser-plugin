@@ -2,25 +2,29 @@ package com.cpw.browser;
 
 import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.startup.StartupActivity;
+import com.intellij.openapi.startup.ProjectActivity;
 import com.intellij.openapi.ui.Messages;
+import kotlin.Unit;
+import kotlin.coroutines.Continuation;
 import org.jetbrains.annotations.NotNull;
 
 // 插件安装后首次打开项目时，弹窗提示用户重启 IDE
-public class PluginFirstRunActivity implements StartupActivity {
+public class PluginFirstRunActivity implements ProjectActivity, DumbAware {
 
     // PropertiesComponent 中标识是否已首次运行的键名
     private static final String FIRST_RUN_KEY = "com.cpw.browser.firstRun";
 
     // 执行首次运行活动：检测首次运行并提示重启
     @Override
-    public void runActivity(@NotNull Project project) {
+    public @NotNull Object execute(@NotNull Project project, @NotNull Continuation<? super Unit> continuation) {
         // 检查是否为首次运行
         if (isFirstRun(project)) {
             markFirstRunDone(project);
             showRestartDialog(project);
         }
+        return Unit.INSTANCE;
     }
 
     // 判断是否为首次运行
