@@ -19,10 +19,15 @@ import java.util.Objects;
 
 public class BrowserSettingsPage implements Configurable {
 
+    // 主页 URL 输入框
     private JBTextField homePageField;
+    // 新标签页打开主页复选框
     private JBCheckBox openHomeCheckBox;
+    // 历史记录最多保存天数字段
     private JBTextField maxHistoryDaysField;
+    // 历史记录最多保存条数字段
     private JBTextField maxHistoryCountField;
+    // 显示位置下拉框
     private JComboBox<String> displayPositionCombo;
 
     @Override

@@ -18,6 +18,7 @@ public class BrowsingHistoryState implements PersistentStateComponent<BrowsingHi
 
     // 浏览历史状态内部数据类
     public static class State {
+        // 历史记录条目集合
         private List<HistoryEntry> entries = new ArrayList<>();
 
         public List<HistoryEntry> getEntries() {
@@ -29,7 +30,9 @@ public class BrowsingHistoryState implements PersistentStateComponent<BrowsingHi
         }
     }
 
+    // 浏览历史状态对象
     private State state = new State();
+
 
     // 获取持久化状态
     @Override

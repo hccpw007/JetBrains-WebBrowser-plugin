@@ -4,8 +4,11 @@ package com.cpw.browser.bookmark;
 import java.util.Objects;
 
 public class Bookmark {
+    // 书签标题
     private final String title;
+    // 书签 URL
     private final String url;
+    // 书签创建时间戳
     private final long createdAt;
 
     // 全参构造

@@ -15,6 +15,7 @@ public class BookmarkPersistentState implements PersistentStateComponent<Bookmar
 
     // 书签持久化状态内部数据类
     public static class State {
+        // 书签集合
         private List<Bookmark> bookmarks = new ArrayList<>();
 
         public List<Bookmark> getBookmarks() {
@@ -26,6 +27,7 @@ public class BookmarkPersistentState implements PersistentStateComponent<Bookmar
         }
     }
 
+    // 书签持久化状态对象
     private State state = new State();
 
     // 获取持久化状态

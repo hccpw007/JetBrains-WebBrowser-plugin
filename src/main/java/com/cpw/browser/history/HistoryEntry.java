@@ -4,9 +4,12 @@ package com.cpw.browser.history;
 import java.util.Objects;
 
 public class HistoryEntry {
+    // 访问的 URL
     private final String url;
+    // 页面标题
     private final String title;
-    private final long timestamp; // epoch millis
+    // 访问时间戳（毫秒）
+    private final long timestamp;
 
     // 全参构造，创建历史记录条目
     public HistoryEntry(String url, String title, long timestamp) {

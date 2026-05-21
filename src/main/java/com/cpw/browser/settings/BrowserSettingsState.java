@@ -13,10 +13,15 @@ public class BrowserSettingsState implements PersistentStateComponent<BrowserSet
 
     // 设置状态内部数据类
     public static class State {
+        // 主页 URL 默认值
         private String homePageUrl = "https://www.google.com";
+        // 新标签页是否打开主页
         private boolean openHomeOnNewTab = false;
+        // 历史记录最多保存天数
         private int maxHistoryDays = 30;
+        // 历史记录最多保存条数
         private int maxHistoryCount = 200;
+        // 显示位置（toolbar/editor）
         private String displayPosition = "toolbar";
 
         // 获取主页 URL
@@ -70,6 +75,7 @@ public class BrowserSettingsState implements PersistentStateComponent<BrowserSet
         }
     }
 
+    // 浏览器设置持久化状态对象
     private State state = new State();
 
     // 获取持久化状态

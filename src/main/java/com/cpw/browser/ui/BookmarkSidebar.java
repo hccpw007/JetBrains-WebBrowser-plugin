@@ -62,27 +62,43 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
     private static final int TAB_HISTORY = 1;
 
     // ---- 书签 ----
+    // 书签列表数据模型
     private final CollectionListModel<Bookmark> bookmarkListModel;
+    // 书签列表组件
     private final JBList<Bookmark> bookmarkList;
+    // 书签列表滚动面板
     private final JBScrollPane bookmarkScroll;
 
     // ---- 历史 ----
+    // 历史列表数据模型
     private final HistoryEntriesModel historyListModel;
+    // 历史列表组件
     private final JBList<Object> historyList;
+    // 历史列表滚动面板
     private final JBScrollPane historyScroll;
 
     // ---- 布局 ----
+    // 卡片布局内容面板
     private final JPanel contentPanel;
+    // 历史记录面板
     private final JPanel historyPanel;
+    // 分段切换器宽度
     private final int segmentWidth = 140;
+    // 分段切换器高度
     private final int segmentHeight = 24;
 
     // ---- 分段切换器 (Element Plus 风格) ----
+    // 当前选中的标签页索引
     private int currentTab = TAB_BOOKMARKS;
+    // 分段切换器面板
     private final JPanel segmentBar;
+    // 书签标签文字
     private final JLabel bookmarkLabel;
+    // 历史标签文字
     private final JLabel historyLabel;
+    // 清空历史记录标签
     private final JBLabel clearLabel;
+    // 选中态白色滑块
     private final JLabel activeBg;
 
     // 书签选中回调
@@ -390,6 +406,7 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
         // 历史分组：以前的条目标题
         private static final String HEADER_OLDER = "以前";
 
+        // 历史列表数据项（包含分组标题和历史条目）
         private List<Object> items = buildItems();
 
         // 刷新历史列表数据
@@ -469,9 +486,13 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
     // ---- 历史列表渲染器，支持 String 分组标题、DayOfWeek 星期标题和 HistoryEntry 条目 ----
     private class HistoryListRenderer extends JPanel implements ListCellRenderer<Object> {
 
+        // 历史条目标题标签
         private final JBLabel titleLabel;
+        // 历史条目时间标签
         private final JBLabel timeLabel;
+        // 内容容器面板
         private final JPanel contentPanel;
+        // 删除按钮标签
         private final JLabel deleteLabel;
 
         // 构造历史列表项渲染器
