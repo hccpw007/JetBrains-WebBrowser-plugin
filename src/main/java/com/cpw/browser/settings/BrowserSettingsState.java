@@ -27,6 +27,8 @@ public class BrowserSettingsState implements PersistentStateComponent<BrowserSet
         private String devToolsMode = "split";
         // 界面语言（default=跟随系统/zh=中文/en=英语/ja=日语/ko=韩语/fr=法语/de=德语）
         private String language = "default";
+        // 默认搜索引擎
+        private String searchEngine = "google";
 
         // 获取主页 URL
         public String getHomePageUrl() {
@@ -96,6 +98,16 @@ public class BrowserSettingsState implements PersistentStateComponent<BrowserSet
         // 设置界面语言
         public void setLanguage(String language) {
             this.language = language;
+        }
+
+        // 获取默认搜索引擎
+        public String getSearchEngine() {
+            return searchEngine;
+        }
+
+        // 设置默认搜索引擎
+        public void setSearchEngine(String searchEngine) {
+            this.searchEngine = searchEngine;
         }
     }
 
@@ -182,6 +194,16 @@ public class BrowserSettingsState implements PersistentStateComponent<BrowserSet
     // 设置界面语言
     public void setLanguage(String language) {
         state.setLanguage(language);
+    }
+
+    // 获取默认搜索引擎
+    public String getSearchEngine() {
+        return state.getSearchEngine();
+    }
+
+    // 设置默认搜索引擎
+    public void setSearchEngine(String searchEngine) {
+        state.setSearchEngine(searchEngine);
     }
 
     // 获取 BrowserSettingsState 单例

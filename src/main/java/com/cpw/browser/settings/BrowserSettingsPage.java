@@ -34,6 +34,8 @@ public class BrowserSettingsPage implements Configurable {
     private JComboBox<String> devToolsModeCombo;
     // 界面语言下拉框
     private JComboBox<String> languageCombo;
+    // 默认搜索引擎下拉框
+    private JComboBox<String> searchEngineCombo;
 
     // 用于语言切换后刷新标签的字段
     private JLabel homePageLabel;
@@ -45,6 +47,7 @@ public class BrowserSettingsPage implements Configurable {
     private JLabel displayPositionLabel;
     private TitledSeparator languageSeparator;
     private JLabel languageLabel;
+    private JLabel searchEngineLabel;
     private JLabel developerLabel;
 
     // 语言代码数组
@@ -114,8 +117,29 @@ public class BrowserSettingsPage implements Configurable {
         openHomeCheckBox = new JBCheckBox(TranslationUtil.getText("settings.homepage.open"));
         panel.add(openHomeCheckBox, c);
 
-        // Row 4: 分隔线 — 历史记录
+        // Row 4: 默认搜索引擎
         c.gridy = 4;
+        c.gridx = 0;
+        c.gridwidth = 1;
+        c.fill = GridBagConstraints.NONE;
+        c.weightx = 0.0;
+        c.insets = new Insets(8, 0, 0, 8);
+        searchEngineLabel = new JLabel(TranslationUtil.getText("settings.search.engine") + ":");
+        panel.add(searchEngineLabel, c);
+        c.gridx = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1.0;
+        c.insets = new Insets(8, 0, 0, 0);
+        searchEngineCombo = new JComboBox<>(new String[]{
+                "Google",
+                "Bing",
+                "DuckDuckGo",
+                "Baidu"
+        });
+        panel.add(searchEngineCombo, c);
+
+        // Row 5: 分隔线 — 历史记录
+        c.gridy = 5;
         c.gridwidth = 2;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.insets = new Insets(12, 0, 8, 0);
@@ -123,8 +147,8 @@ public class BrowserSettingsPage implements Configurable {
         historySeparator = new TitledSeparator(TranslationUtil.getText("settings.history"));
         panel.add(historySeparator, c);
 
-        // Row 5: 最多保存天数
-        c.gridy = 5;
+        // Row 6: 最多保存天数
+        c.gridy = 6;
         c.gridx = 0;
         c.gridwidth = 1;
         c.fill = GridBagConstraints.NONE;
@@ -140,8 +164,8 @@ public class BrowserSettingsPage implements Configurable {
         maxHistoryDaysField.setColumns(4);
         panel.add(maxHistoryDaysField, c);
 
-        // Row 6: 最多记录条数
-        c.gridy = 6;
+        // Row 7: 最多记录条数
+        c.gridy = 7;
         c.gridx = 0;
         c.fill = GridBagConstraints.NONE;
         c.weightx = 0.0;
@@ -156,8 +180,8 @@ public class BrowserSettingsPage implements Configurable {
         maxHistoryCountField.setColumns(4);
         panel.add(maxHistoryCountField, c);
 
-        // Row 7: 分隔线 — 开发者工具
-        c.gridy = 7;
+        // Row 8: 分隔线 — 开发者工具
+        c.gridy = 8;
         c.gridx = 0;
         c.gridwidth = 2;
         c.fill = GridBagConstraints.HORIZONTAL;
@@ -185,8 +209,8 @@ public class BrowserSettingsPage implements Configurable {
         });
         panel.add(devToolsModeCombo, c);
 
-        // Row 9: 显示位置
-        c.gridy = 9;
+        // Row 10: 显示位置
+        c.gridy = 10;
         c.gridx = 0;
         c.fill = GridBagConstraints.NONE;
         c.weightx = 0.0;
@@ -203,8 +227,8 @@ public class BrowserSettingsPage implements Configurable {
         });
         panel.add(displayPositionCombo, c);
 
-        // Row 10: 右下角签名
-        c.gridy = 10;
+        // Row 11: 右下角签名
+        c.gridy = 11;
         c.gridx = 1;
         c.gridwidth = 1;
         c.weightx = 1.0;
@@ -239,6 +263,7 @@ public class BrowserSettingsPage implements Configurable {
         String position = displayPositionCombo != null ? positionIndexToSetting(displayPositionCombo.getSelectedIndex()) : null;
         String devToolsMode = devToolsModeCombo != null ? devToolsIndexToSetting(devToolsModeCombo.getSelectedIndex()) : null;
         String lang = languageCombo != null ? languageDisplayIndexToCode(languageCombo.getSelectedIndex()) : null;
+        String searchEngine = searchEngineCombo != null ? searchEngineIndexToCode(searchEngineCombo.getSelectedIndex()) : null;
 
         return !Objects.equals(homeText, state.getHomePageUrl())
                 || !Objects.equals(openHome, state.isOpenHomeOnNewTab())
@@ -246,7 +271,8 @@ public class BrowserSettingsPage implements Configurable {
                 || !Objects.equals(count, state.getMaxHistoryCount())
                 || !Objects.equals(position, state.getDisplayPosition())
                 || !Objects.equals(devToolsMode, state.getDevToolsMode())
-                || !Objects.equals(lang, state.getLanguage());
+                || !Objects.equals(lang, state.getLanguage())
+                || !Objects.equals(searchEngine, state.getSearchEngine());
     }
 
     @Override
@@ -282,6 +308,9 @@ public class BrowserSettingsPage implements Configurable {
         if (languageCombo != null) {
             state.setLanguage(languageDisplayIndexToCode(languageCombo.getSelectedIndex()));
         }
+        if (searchEngineCombo != null) {
+            state.setSearchEngine(searchEngineIndexToCode(searchEngineCombo.getSelectedIndex()));
+        }
 
         // 语言发生变更则刷新当前页面标签并通知所有 UI 组件
         String newLang = state.getLanguage();
@@ -296,9 +325,11 @@ public class BrowserSettingsPage implements Configurable {
         int posIdx = displayPositionCombo.getSelectedIndex();
         int devIdx = devToolsModeCombo.getSelectedIndex();
         int langIdx = languageCombo.getSelectedIndex();
+        int searchIdx = searchEngineCombo.getSelectedIndex();
 
         homePageLabel.setText(TranslationUtil.getText("settings.homepage.url"));
         openHomeCheckBox.setText(TranslationUtil.getText("settings.homepage.open"));
+        searchEngineLabel.setText(TranslationUtil.getText("settings.search.engine") + ":");
         historySeparator.setText(TranslationUtil.getText("settings.history"));
         historyDaysLabel.setText(TranslationUtil.getText("settings.history.days"));
         historyCountLabel.setText(TranslationUtil.getText("settings.history.entries"));
@@ -325,6 +356,9 @@ public class BrowserSettingsPage implements Configurable {
         languageCombo.removeItemAt(0);
         languageCombo.insertItemAt(TranslationUtil.getText("settings.language.default"), 0);
         languageCombo.setSelectedIndex(Math.max(0, Math.min(langIdx, LANGUAGE_CODES.length - 1)));
+
+        // 恢复搜索引擎下拉框选中项
+        searchEngineCombo.setSelectedIndex(Math.max(0, Math.min(searchIdx, 3)));
     }
 
     @Override
@@ -350,6 +384,9 @@ public class BrowserSettingsPage implements Configurable {
         }
         if (languageCombo != null) {
             languageCombo.setSelectedIndex(codeToLanguageDisplayIndex(state.getLanguage()));
+        }
+        if (searchEngineCombo != null) {
+            searchEngineCombo.setSelectedIndex(codeToSearchEngineIndex(state.getSearchEngine()));
         }
     }
 
@@ -385,6 +422,27 @@ public class BrowserSettingsPage implements Configurable {
     private static int codeToLanguageDisplayIndex(String code) {
         for (int i = 0; i < LANGUAGE_CODES.length; i++) {
             if (LANGUAGE_CODES[i].equals(code)) {
+                return i;
+            }
+        }
+        return 0;
+    }
+
+    // 搜索引擎代码列表
+    private static final String[] SEARCH_ENGINE_CODES = {"google", "bing", "duckduckgo", "baidu"};
+
+    // 搜索引擎下拉索引 -> 代码
+    private static String searchEngineIndexToCode(int index) {
+        if (index >= 0 && index < SEARCH_ENGINE_CODES.length) {
+            return SEARCH_ENGINE_CODES[index];
+        }
+        return "google";
+    }
+
+    // 搜索引擎代码 -> 下拉索引
+    private static int codeToSearchEngineIndex(String code) {
+        for (int i = 0; i < SEARCH_ENGINE_CODES.length; i++) {
+            if (SEARCH_ENGINE_CODES[i].equals(code)) {
                 return i;
             }
         }
