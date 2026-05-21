@@ -34,8 +34,8 @@ public class Bookmark {
         return title != null ? title : "";
     }
 
-    // 设置书签标题（XmlSerializer 反序列化时使用）
-    private void setTitle(String title) {
+    // 设置书签标题（XmlSerializer 通过 public setter 反序列化）
+    public void setTitle(String title) {
         this.title = title != null ? title : "";
     }
 
@@ -44,8 +44,8 @@ public class Bookmark {
         return url != null ? url : "";
     }
 
-    // 设置书签 URL（XmlSerializer 反序列化时使用）
-    private void setUrl(String url) {
+    // 设置书签 URL（XmlSerializer 通过 public setter 反序列化）
+    public void setUrl(String url) {
         this.url = url != null ? url : "";
     }
 
@@ -54,8 +54,8 @@ public class Bookmark {
         return createdAt;
     }
 
-    // 设置书签创建时间戳（XmlSerializer 反序列化时使用）
-    private void setCreatedAt(long createdAt) {
+    // 设置书签创建时间戳（XmlSerializer 通过 public setter 反序列化）
+    public void setCreatedAt(long createdAt) {
         this.createdAt = createdAt;
     }
 

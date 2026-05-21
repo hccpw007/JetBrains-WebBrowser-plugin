@@ -29,8 +29,8 @@ public class HistoryEntry {
         return url != null ? url : "";
     }
 
-    // 设置 URL（XmlSerializer 反序列化时使用）
-    private void setUrl(String url) {
+    // 设置 URL（XmlSerializer 通过 public setter 反序列化）
+    public void setUrl(String url) {
         this.url = url != null ? url : "";
     }
 
@@ -39,8 +39,8 @@ public class HistoryEntry {
         return title != null ? title : "";
     }
 
-    // 设置标题（XmlSerializer 反序列化时使用）
-    private void setTitle(String title) {
+    // 设置标题（XmlSerializer 通过 public setter 反序列化）
+    public void setTitle(String title) {
         this.title = title != null ? title : "";
     }
 
@@ -49,8 +49,8 @@ public class HistoryEntry {
         return timestamp;
     }
 
-    // 设置访问时间戳（XmlSerializer 反序列化时使用）
-    private void setTimestamp(long timestamp) {
+    // 设置访问时间戳（XmlSerializer 通过 public setter 反序列化）
+    public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
     }
 
