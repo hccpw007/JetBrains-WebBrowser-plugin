@@ -348,6 +348,22 @@ public class BrowserTabPanel {
         return autoRefreshTimer != null && autoRefreshTimer.isRunning();
     }
 
+    // 获取自动刷新间隔（秒）
+    public int getAutoRefreshInterval() {
+        return autoRefreshInterval;
+    }
+
+    // 设置自动刷新间隔（秒），最小为 1 秒
+    public void setAutoRefreshInterval(int seconds) {
+        this.autoRefreshInterval = Math.max(1, seconds);
+        // 如果定时器正在运行，重新启动以应用新间隔
+        if (autoRefreshTimer != null && autoRefreshTimer.isRunning()) {
+            autoRefreshTimer.stop();
+            autoRefreshTimer = new Timer(autoRefreshInterval * 1000, e -> refresh());
+            autoRefreshTimer.start();
+        }
+    }
+
     // 切换自动刷新
     public void setAutoRefresh(boolean enabled) {
         if (autoRefreshTimer != null) {

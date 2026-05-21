@@ -9,6 +9,7 @@ import com.cpw.browser.ui.BookmarkSidebar;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.ActionGroup;
 import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.DefaultActionGroup;
 import com.intellij.openapi.options.ShowSettingsUtil;
@@ -131,9 +132,29 @@ public final class PanelActions {
             // 无活跃标签页则直接返回
             if (tab == null) return;
             boolean enabled = !tab.isAutoRefreshEnabled();
-            tab.setAutoRefresh(enabled);
-            e.getPresentation().setText(enabled ? "停止刷新" : "定时刷新");
-            e.getPresentation().setDescription(enabled ? "停止自动刷新" : "每 30 秒自动刷新当前页面");
+            if (enabled) {
+                // 启动定时刷新：弹出输入框让用户设置间隔秒数
+                String input = Messages.showInputDialog("请输入刷新间隔（秒）:", "定时刷新", null, "30", null);
+                // 用户取消则不做任何操作
+                if (input == null) return;
+                try {
+                    int seconds = Integer.parseInt(input.trim());
+                    if (seconds < 1) return;
+                    tab.setAutoRefreshInterval(seconds);
+                } catch (NumberFormatException ex) {
+                    return;
+                }
+                tab.setAutoRefresh(true);
+                e.getPresentation().setText("停止刷新");
+                e.getPresentation().setDescription("停止自动刷新（每 " + tab.getAutoRefreshInterval() + " 秒）");
+            } else {
+                // 停止定时刷新：弹出确认对话框
+                int result = Messages.showYesNoDialog("确定停止自动刷新吗？", "停止定时刷新", null);
+                if (result != Messages.YES) return;
+                tab.setAutoRefresh(false);
+                e.getPresentation().setText("定时刷新");
+                e.getPresentation().setDescription("每 30 秒自动刷新当前页面");
+            }
         }
 
         @Override
@@ -144,7 +165,7 @@ public final class PanelActions {
             if (enabled) {
                 boolean running = tab.isAutoRefreshEnabled();
                 e.getPresentation().setText(running ? "停止刷新" : "定时刷新");
-                e.getPresentation().setDescription(running ? "停止自动刷新" : "每 30 秒自动刷新当前页面");
+                e.getPresentation().setDescription(running ? "停止自动刷新（每 " + tab.getAutoRefreshInterval() + " 秒）" : "每 30 秒自动刷新当前页面");
             }
         }
     }
@@ -166,6 +187,8 @@ public final class PanelActions {
             // 无活跃标签页则直接返回
             if (tab == null) return;
             tab.clearCache();
+            // 清空缓存后刷新页面，使缓存清理立即生效
+            tab.refresh();
         }
 
         @Override
