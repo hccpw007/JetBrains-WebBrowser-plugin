@@ -32,6 +32,7 @@ class BrowserFileEditor(project: Project, private val file: VirtualFile) : FileE
         }
     }
 
+    override fun getFile(): VirtualFile = file
     override fun getComponent(): JComponent = browserPanel.getContent()
     override fun getPreferredFocusedComponent(): JComponent? = browserPanel.getContent()
     override fun getName(): String = "WebBrowser"
