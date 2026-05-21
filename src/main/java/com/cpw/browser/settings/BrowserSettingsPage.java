@@ -28,13 +28,12 @@ import java.util.Objects;
 public class BrowserSettingsPage implements Configurable {
 
     // 卡片圆角半径
-    private static final int CARD_ARC = 10;
+    private static final int CARD_ARC = 8;
     // 卡片左侧装饰条宽度
-    private static final int ACCENT_WIDTH = 4;
+    private static final int ACCENT_WIDTH = 3;
 
     // 色板—琥珀色主色调，冷暖互补
     private static final Color ACCENT_AMBER = new JBColor(0xC9902B, 0xD4A02B);
-    private static final Color ACCENT_AMBER_DIM = new JBColor(0xE8D5A8, 0x8A6D2B);
     private static final Color CARD_BG = new JBColor(0xF8F6F2, 0x242538);
     private static final Color CARD_BORDER = new JBColor(0xE8E4DC, 0x2E2F45);
     private static final Color PAGE_BG = new JBColor(0xF0EEE8, 0x1A1B2E);
@@ -59,7 +58,7 @@ public class BrowserSettingsPage implements Configurable {
     public JComponent createComponent() {
         JPanel page = new JPanel(new BorderLayout());
         page.setBackground(PAGE_BG);
-        page.setBorder(BorderFactory.createEmptyBorder(28, 32, 20, 32));
+        page.setBorder(BorderFactory.createEmptyBorder(16, 24, 12, 24));
 
         // 中间对齐的内容列
         JPanel centerCol = new JPanel();
@@ -76,22 +75,22 @@ public class BrowserSettingsPage implements Configurable {
 
         // ---- 卡片 1: 常规 ----
         gc.gridy = 1;
-        gc.insets = new Insets(20, 0, 0, 0);
+        gc.insets = new Insets(14, 0, 0, 0);
         centerCol.add(createGeneralCard(), gc);
 
         // ---- 卡片 2: 历史记录 ----
         gc.gridy = 2;
-        gc.insets = new Insets(14, 0, 0, 0);
+        gc.insets = new Insets(8, 0, 0, 0);
         centerCol.add(createHistoryCard(), gc);
 
         // ---- 卡片 3: 界面 ----
         gc.gridy = 3;
-        gc.insets = new Insets(14, 0, 0, 0);
+        gc.insets = new Insets(8, 0, 0, 0);
         centerCol.add(createDisplayCard(), gc);
 
         // ---- 页脚 ----
         gc.gridy = 4;
-        gc.insets = new Insets(20, 0, 0, 0);
+        gc.insets = new Insets(12, 0, 0, 0);
         gc.weighty = 1.0;
         gc.anchor = GridBagConstraints.SOUTH;
         centerCol.add(createFooter(), gc);
@@ -106,11 +105,11 @@ public class BrowserSettingsPage implements Configurable {
         header.setOpaque(false);
 
         JBLabel title = new JBLabel("WebBrowser", SwingConstants.LEFT);
-        title.setFont(title.getFont().deriveFont(Font.BOLD, 22f));
+        title.setFont(title.getFont().deriveFont(Font.BOLD, 18f));
         header.add(title, BorderLayout.WEST);
 
         JBLabel ver = new JBLabel("1.0.0", SwingConstants.RIGHT);
-        ver.setFont(ver.getFont().deriveFont(12f));
+        ver.setFont(ver.getFont().deriveFont(11f));
         ver.setForeground(TEXT_SECONDARY);
         header.add(ver, BorderLayout.EAST);
 
@@ -134,7 +133,7 @@ public class BrowserSettingsPage implements Configurable {
 
                 // 左侧饰条
                 g2.setColor(ACCENT_AMBER);
-                g2.fillRoundRect(0, 8, ACCENT_WIDTH, h - 16, 3, 3);
+                g2.fillRoundRect(0, 6, ACCENT_WIDTH, h - 12, 2, 2);
 
                 // 边框
                 g2.setColor(CARD_BORDER);
@@ -145,21 +144,21 @@ public class BrowserSettingsPage implements Configurable {
             }
         };
         card.setOpaque(false);
-        card.setBorder(BorderFactory.createEmptyBorder(18, 22, 20, 22));
+        card.setBorder(BorderFactory.createEmptyBorder(12, 16, 14, 16));
 
         // 卡片标题行
         JPanel headerRow = new JPanel(new BorderLayout());
         headerRow.setOpaque(false);
 
-        JPanel titleWrap = new JPanel(new BorderLayout(8, 0));
+        JPanel titleWrap = new JPanel(new BorderLayout(6, 0));
         titleWrap.setOpaque(false);
 
         JBLabel iconLbl = new JBLabel(icon);
-        iconLbl.setFont(iconLbl.getFont().deriveFont(16f));
+        iconLbl.setFont(iconLbl.getFont().deriveFont(13f));
         titleWrap.add(iconLbl, BorderLayout.WEST);
 
         JBLabel titleLbl = new JBLabel(title);
-        titleLbl.setFont(titleLbl.getFont().deriveFont(Font.BOLD, 13f));
+        titleLbl.setFont(titleLbl.getFont().deriveFont(Font.BOLD, 12f));
         titleWrap.add(titleLbl, BorderLayout.CENTER);
 
         headerRow.add(titleWrap, BorderLayout.WEST);
@@ -168,7 +167,7 @@ public class BrowserSettingsPage implements Configurable {
         // 正文
         JPanel bodyWrap = new JPanel(new BorderLayout());
         bodyWrap.setOpaque(false);
-        bodyWrap.setBorder(BorderFactory.createEmptyBorder(14, 24, 0, 0));
+        bodyWrap.setBorder(BorderFactory.createEmptyBorder(10, 20, 0, 0));
         bodyWrap.add(body, BorderLayout.CENTER);
         card.add(bodyWrap, BorderLayout.CENTER);
 
@@ -188,35 +187,35 @@ public class BrowserSettingsPage implements Configurable {
 
         // 主页 URL 标签
         JBLabel urlLabel = new JBLabel("主页地址");
-        urlLabel.setFont(urlLabel.getFont().deriveFont(12f));
+        urlLabel.setFont(urlLabel.getFont().deriveFont(11f));
         body.add(urlLabel, c);
 
         // 主页 URL 输入框
         c.gridy = 1;
-        c.insets = new Insets(4, 0, 0, 0);
+        c.insets = new Insets(3, 0, 0, 0);
         c.weightx = 1.0;
         homePageField = new JBTextField();
         homePageField.setBackground(FIELD_BG);
         homePageField.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(FIELD_BORDER, 1, true),
-                BorderFactory.createEmptyBorder(6, 10, 6, 10)
+                BorderFactory.createEmptyBorder(4, 8, 4, 8)
         ));
         body.add(homePageField, c);
 
         // 提示文字
         c.gridy = 2;
         c.weightx = 0.0;
-        c.insets = new Insets(3, 0, 0, 0);
+        c.insets = new Insets(2, 0, 0, 0);
         JBLabel hint = new JBLabel("首次启动或新建标签页时打开的页面");
-        hint.setFont(hint.getFont().deriveFont(11f));
+        hint.setFont(hint.getFont().deriveFont(10f));
         hint.setForeground(TEXT_SECONDARY);
         body.add(hint, c);
 
         // 复选框
         c.gridy = 3;
-        c.insets = new Insets(10, 0, 0, 0);
+        c.insets = new Insets(6, 0, 0, 0);
         openHomeCheckBox = new JBCheckBox("新标签页时前往主页");
-        openHomeCheckBox.setFont(openHomeCheckBox.getFont().deriveFont(12f));
+        openHomeCheckBox.setFont(openHomeCheckBox.getFont().deriveFont(11f));
         openHomeCheckBox.setOpaque(false);
         body.add(openHomeCheckBox, c);
 
@@ -234,49 +233,49 @@ public class BrowserSettingsPage implements Configurable {
         c.gridx = 0;
         c.gridy = 0;
         JBLabel daysLabel = new JBLabel("保留天数");
-        daysLabel.setFont(daysLabel.getFont().deriveFont(12f));
+        daysLabel.setFont(daysLabel.getFont().deriveFont(11f));
         body.add(daysLabel, c);
 
         c.gridx = 1;
-        c.insets = new Insets(0, 24, 0, 0);
+        c.insets = new Insets(0, 16, 0, 0);
         JBLabel countLabel = new JBLabel("最大条数");
-        countLabel.setFont(countLabel.getFont().deriveFont(12f));
+        countLabel.setFont(countLabel.getFont().deriveFont(11f));
         body.add(countLabel, c);
 
         c.gridx = 0;
         c.gridy = 1;
-        c.insets = new Insets(4, 0, 0, 0);
+        c.insets = new Insets(3, 0, 0, 0);
         c.fill = GridBagConstraints.HORIZONTAL;
         c.weightx = 0.3;
         maxHistoryDaysField = new JBTextField();
         maxHistoryDaysField.setBackground(FIELD_BG);
         maxHistoryDaysField.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(FIELD_BORDER, 1, true),
-                BorderFactory.createEmptyBorder(6, 10, 6, 10)
+                BorderFactory.createEmptyBorder(4, 8, 4, 8)
         ));
-        maxHistoryDaysField.setPreferredSize(new Dimension(100, maxHistoryDaysField.getPreferredSize().height));
+        maxHistoryDaysField.setPreferredSize(new Dimension(80, maxHistoryDaysField.getPreferredSize().height));
         body.add(maxHistoryDaysField, c);
 
         c.gridx = 1;
-        c.insets = new Insets(4, 24, 0, 0);
+        c.insets = new Insets(3, 16, 0, 0);
         c.weightx = 0.3;
         maxHistoryCountField = new JBTextField();
         maxHistoryCountField.setBackground(FIELD_BG);
         maxHistoryCountField.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(FIELD_BORDER, 1, true),
-                BorderFactory.createEmptyBorder(6, 10, 6, 10)
+                BorderFactory.createEmptyBorder(4, 8, 4, 8)
         ));
-        maxHistoryCountField.setPreferredSize(new Dimension(100, maxHistoryCountField.getPreferredSize().height));
+        maxHistoryCountField.setPreferredSize(new Dimension(80, maxHistoryCountField.getPreferredSize().height));
         body.add(maxHistoryCountField, c);
 
         // 提示行
         c.gridx = 0;
         c.gridy = 2;
         c.gridwidth = 2;
-        c.insets = new Insets(6, 0, 0, 0);
+        c.insets = new Insets(4, 0, 0, 0);
         c.weightx = 1.0;
         JBLabel hint = new JBLabel("设为 0 表示不限制");
-        hint.setFont(hint.getFont().deriveFont(11f));
+        hint.setFont(hint.getFont().deriveFont(10f));
         hint.setForeground(TEXT_SECONDARY);
         body.add(hint, c);
 
@@ -290,19 +289,19 @@ public class BrowserSettingsPage implements Configurable {
         GridBagConstraints c = new GridBagConstraints();
         c.anchor = GridBagConstraints.WEST;
         c.fill = GridBagConstraints.HORIZONTAL;
+        c.gridwidth = 1;
 
         // 开发者工具
         c.gridx = 0;
         c.gridy = 0;
         c.insets = new Insets(0, 0, 0, 0);
         c.weightx = 0.0;
-        c.gridwidth = 1;
         JBLabel dtLabel = new JBLabel("开发者工具");
-        dtLabel.setFont(dtLabel.getFont().deriveFont(12f));
+        dtLabel.setFont(dtLabel.getFont().deriveFont(11f));
         body.add(dtLabel, c);
 
         c.gridx = 1;
-        c.insets = new Insets(0, 16, 0, 0);
+        c.insets = new Insets(0, 12, 0, 0);
         c.weightx = 1.0;
         devToolsModeCombo = new JComboBox<>(new String[]{"当前页面下方", "独立窗口"});
         devToolsModeCombo.setBackground(FIELD_BG);
@@ -311,14 +310,14 @@ public class BrowserSettingsPage implements Configurable {
         // 显示位置
         c.gridx = 0;
         c.gridy = 1;
-        c.insets = new Insets(12, 0, 0, 0);
+        c.insets = new Insets(8, 0, 0, 0);
         c.weightx = 0.0;
         JBLabel posLabel = new JBLabel("显示位置");
-        posLabel.setFont(posLabel.getFont().deriveFont(12f));
+        posLabel.setFont(posLabel.getFont().deriveFont(11f));
         body.add(posLabel, c);
 
         c.gridx = 1;
-        c.insets = new Insets(12, 16, 0, 0);
+        c.insets = new Insets(8, 12, 0, 0);
         c.weightx = 1.0;
         displayPositionCombo = new JComboBox<>(new String[]{"工具栏", "编辑区"});
         displayPositionCombo.setBackground(FIELD_BG);
@@ -328,10 +327,10 @@ public class BrowserSettingsPage implements Configurable {
         c.gridx = 0;
         c.gridy = 2;
         c.gridwidth = 2;
-        c.insets = new Insets(6, 0, 0, 0);
+        c.insets = new Insets(5, 0, 0, 0);
         c.weightx = 1.0;
         JBLabel hint = new JBLabel("更改后需要重启 IDE 才能生效");
-        hint.setFont(hint.getFont().deriveFont(11f));
+        hint.setFont(hint.getFont().deriveFont(10f));
         hint.setForeground(TEXT_SECONDARY);
         body.add(hint, c);
 
@@ -344,7 +343,7 @@ public class BrowserSettingsPage implements Configurable {
         footer.setOpaque(false);
 
         JBLabel devLabel = new JBLabel("Developed by 陈彭伟", SwingConstants.RIGHT);
-        devLabel.setFont(devLabel.getFont().deriveFont(11f));
+        devLabel.setFont(devLabel.getFont().deriveFont(10f));
         devLabel.setForeground(TEXT_SECONDARY);
         footer.add(devLabel, BorderLayout.EAST);
 
