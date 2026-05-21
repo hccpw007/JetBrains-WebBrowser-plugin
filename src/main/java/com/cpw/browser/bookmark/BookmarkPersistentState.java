@@ -37,11 +37,9 @@ public class BookmarkPersistentState implements PersistentStateComponent<Bookmar
         return state;
     }
 
-    // 加载持久化状态
+    // 加载持久化状态（Bookmark 的无参构造和 setter 已确保字段不出现 null）
     @Override
     public void loadState(@NotNull State state) {
-        // 清理 URL 为空的无效书签（XML 反序列化产生的空记录，getter 已保证不返回 null）
-        state.getBookmarks().removeIf(b -> b.getUrl().isBlank());
         this.state = state;
     }
 

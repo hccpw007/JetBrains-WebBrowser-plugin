@@ -11,8 +11,10 @@ public class HistoryEntry {
     // 访问时间戳（毫秒）
     private long timestamp;
 
-    // 无参构造，用于 XML 反序列化
+    // 无参构造，用于 XML 反序列化（初始化字段防止 null）
     private HistoryEntry() {
+        this.url = "";
+        this.title = "";
     }
 
     // 全参构造，创建历史记录条目
@@ -27,9 +29,19 @@ public class HistoryEntry {
         return url != null ? url : "";
     }
 
+    // 设置 URL（XmlSerializer 反序列化时使用）
+    private void setUrl(String url) {
+        this.url = url != null ? url : "";
+    }
+
     // 获取页面标题
     public String getTitle() {
         return title != null ? title : "";
+    }
+
+    // 设置标题（XmlSerializer 反序列化时使用）
+    private void setTitle(String title) {
+        this.title = title != null ? title : "";
     }
 
     // 获取访问时间戳
