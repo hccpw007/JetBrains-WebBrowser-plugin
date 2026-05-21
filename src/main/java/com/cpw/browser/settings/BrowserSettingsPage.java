@@ -29,6 +29,8 @@ public class BrowserSettingsPage implements Configurable {
     private JBTextField maxHistoryCountField;
     // 显示位置下拉框
     private JComboBox<String> displayPositionCombo;
+    // 开发者工具打开方式下拉框
+    private JComboBox<String> devToolsModeCombo;
 
     @Override
     public String getDisplayName() {
@@ -104,8 +106,29 @@ public class BrowserSettingsPage implements Configurable {
         c.weightx = 0.0;
         panel.add(new TitledSeparator("显示"), c);
 
-        // 位置 — 下拉框
+        // 开发者工具 — 分隔线
         c.gridy = 7;
+        c.gridx = 0;
+        c.gridwidth = 2;
+        c.fill = GridBagConstraints.NONE;
+        c.insets = new Insets(12, 0, 4, 0);
+        c.weightx = 0.0;
+        panel.add(new TitledSeparator("开发者工具"), c);
+
+        // 开发者工具 — 下拉框
+        c.gridy = 8;
+        c.gridx = 0;
+        c.gridwidth = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = new Insets(0, 0, 0, 0);
+        c.weightx = 0.0;
+        panel.add(new JLabel("打开方式:"), c);
+        c.gridx = 1;
+        devToolsModeCombo = new JComboBox<>(new String[]{"当前页面下方", "独立窗口"});
+        panel.add(devToolsModeCombo, c);
+
+        // 位置 — 分隔线
+        c.gridy = 9;
         c.gridx = 0;
         c.gridwidth = 1;
         c.fill = GridBagConstraints.HORIZONTAL;
@@ -117,7 +140,7 @@ public class BrowserSettingsPage implements Configurable {
         panel.add(displayPositionCombo, c);
 
         // 右下角签名
-        c.gridy = 8;
+        c.gridy = 10;
         c.gridx = 1;
         c.weightx = 1.0;
         c.anchor = GridBagConstraints.LAST_LINE_END;
@@ -143,12 +166,15 @@ public class BrowserSettingsPage implements Configurable {
         Integer count = maxHistoryCountField != null ? parseNullableInt(maxHistoryCountField.getText()) : null;
         String selectedItem = displayPositionCombo != null ? (String) displayPositionCombo.getSelectedItem() : null;
         String position = selectedItem != null ? positionToSetting(selectedItem) : null;
+        String devToolsItem = devToolsModeCombo != null ? (String) devToolsModeCombo.getSelectedItem() : null;
+        String devToolsMode = devToolsItem != null ? devToolsModeToSetting(devToolsItem) : null;
 
         return !Objects.equals(homeText, state.getHomePageUrl())
                 || !Objects.equals(openHome, state.isOpenHomeOnNewTab())
                 || !Objects.equals(days, state.getMaxHistoryDays())
                 || !Objects.equals(count, state.getMaxHistoryCount())
-                || !Objects.equals(position, state.getDisplayPosition());
+                || !Objects.equals(position, state.getDisplayPosition())
+                || !Objects.equals(devToolsMode, state.getDevToolsMode());
     }
 
     // 应用设置并保存到持久化状态
@@ -184,6 +210,11 @@ public class BrowserSettingsPage implements Configurable {
             String selected = (String) displayPositionCombo.getSelectedItem();
             state.setDisplayPosition(positionToSetting(selected));
         }
+        // 开发者工具下拉框存在时保存
+        if (devToolsModeCombo != null) {
+            String selected = (String) devToolsModeCombo.getSelectedItem();
+            state.setDevToolsMode(devToolsModeToSetting(selected));
+        }
     }
 
     // 重置 UI 控件为当前持久化设置的值
@@ -210,6 +241,10 @@ public class BrowserSettingsPage implements Configurable {
         if (displayPositionCombo != null) {
             displayPositionCombo.setSelectedItem(settingToPosition(state.getDisplayPosition()));
         }
+        // 开发者工具下拉框存在时恢复
+        if (devToolsModeCombo != null) {
+            devToolsModeCombo.setSelectedItem(settingToDevToolsMode(state.getDevToolsMode()));
+        }
     }
 
     // 将显示文本转换为设置值
@@ -226,6 +261,22 @@ public class BrowserSettingsPage implements Configurable {
             return "编辑区";
         }
         return "工具栏";
+    }
+
+    // 将显示文本转换为设置值
+    private static String devToolsModeToSetting(String display) {
+        if ("独立窗口".equals(display)) {
+            return "window";
+        }
+        return "split";
+    }
+
+    // 将设置值转换为显示文本
+    private static String settingToDevToolsMode(String setting) {
+        if ("window".equals(setting)) {
+            return "独立窗口";
+        }
+        return "当前页面下方";
     }
 
     // 安全地将文本解析为整数，解析失败时返回 null

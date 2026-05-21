@@ -11,6 +11,7 @@ import com.cpw.browser.bookmark.Bookmark;
 import com.cpw.browser.bookmark.BookmarkPersistentState;
 import com.cpw.browser.history.BrowsingHistoryState;
 import com.cpw.browser.settings.BrowserSettingsPage;
+import com.cpw.browser.settings.BrowserSettingsState;
 import com.cpw.browser.ui.AddressBar;
 import com.cpw.browser.ui.BookmarkSidebar;
 import com.cpw.browser.ui.ChromeTab;
@@ -292,11 +293,18 @@ public class BrowserToolWindowPanel {
         BrowserTabPanel tab = tabManager.getActiveTab();
         // 无活跃标签页则直接返回
         if (tab == null) return;
-        // 根据 DevTools 当前状态决定打开或关闭
+        // 如果嵌入式 DevTools 已打开，先关闭
         if (tab.isEmbeddedDevToolsOpen()) {
             tab.closeEmbeddedDevTools();
             updateBrowserContent(tab);
-        } else { // 打开嵌入式 DevTools
+            return;
+        }
+        // 获取用户设置的首选打开方式
+        String mode = BrowserSettingsState.getInstance().getDevToolsMode();
+        // 设置为"独立窗口"时直接弹出独立 DevTools 窗口
+        if ("window".equals(mode)) {
+            tab.openDevTools();
+        } else { // 默认"当前页面下方"：尝试嵌入面板
             tab.openEmbeddedDevTools(devTools -> {
                 // DevTools 组件创建成功则更新界面
                 if (devTools != null) {

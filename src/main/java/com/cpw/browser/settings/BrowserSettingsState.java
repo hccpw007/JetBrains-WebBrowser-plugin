@@ -23,6 +23,8 @@ public class BrowserSettingsState implements PersistentStateComponent<BrowserSet
         private int maxHistoryCount = 200;
         // 显示位置（toolbar/editor）
         private String displayPosition = "toolbar";
+        // 开发者工具打开方式（split=当前页面下方/window=独立窗口）
+        private String devToolsMode = "split";
 
         // 获取主页 URL
         public String getHomePageUrl() {
@@ -72,6 +74,16 @@ public class BrowserSettingsState implements PersistentStateComponent<BrowserSet
         // 设置显示位置
         public void setDisplayPosition(String displayPosition) {
             this.displayPosition = displayPosition;
+        }
+
+        // 获取开发者工具打开方式
+        public String getDevToolsMode() {
+            return devToolsMode;
+        }
+
+        // 设置开发者工具打开方式
+        public void setDevToolsMode(String devToolsMode) {
+            this.devToolsMode = devToolsMode;
         }
     }
 
@@ -138,6 +150,16 @@ public class BrowserSettingsState implements PersistentStateComponent<BrowserSet
     // 设置显示位置
     public void setDisplayPosition(String displayPosition) {
         state.setDisplayPosition(displayPosition);
+    }
+
+    // 获取开发者工具打开方式
+    public String getDevToolsMode() {
+        return state.getDevToolsMode();
+    }
+
+    // 设置开发者工具打开方式
+    public void setDevToolsMode(String devToolsMode) {
+        state.setDevToolsMode(devToolsMode);
     }
 
     // 获取 BrowserSettingsState 单例
