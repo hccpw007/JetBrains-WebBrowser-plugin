@@ -34,6 +34,8 @@ public final class BookmarkActions {
 
         @Override
         public void update(AnActionEvent e) {
+            e.getPresentation().setText(TranslationUtil.getText("bookmark.add.title"));
+            e.getPresentation().setDescription(TranslationUtil.getText("action.add.bookmark.desc"));
             e.getPresentation().setEnabled(tabManager.getActiveTab() != null);
         }
 
@@ -70,6 +72,8 @@ public final class BookmarkActions {
 
         @Override
         public void update(AnActionEvent e) {
+            e.getPresentation().setText(TranslationUtil.getText("action.remove.bookmark"));
+            e.getPresentation().setDescription(TranslationUtil.getText("action.remove.bookmark.desc"));
             e.getPresentation().setEnabled(getSelectedBookmarkUrl.get() != null);
         }
 

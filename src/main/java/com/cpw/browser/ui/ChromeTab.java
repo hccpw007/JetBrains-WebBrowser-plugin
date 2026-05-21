@@ -53,6 +53,9 @@ public class ChromeTab extends JPanel {
     // 标签标题文本
     public final JBLabel titleLabel;
 
+    // 关闭按钮
+    private final JButton closeBtn;
+
     // 鼠标是否悬停在标签上
     private boolean hovered;
 
@@ -80,7 +83,7 @@ public class ChromeTab extends JPanel {
         add(Box.createRigidArea(new Dimension(3, 0)));
 
         // 关闭按钮
-        JButton closeBtn = new JButton("×");
+        closeBtn = new JButton("×");
         closeBtn.setBorderPainted(false);
         closeBtn.setContentAreaFilled(false);
         closeBtn.setFocusPainted(false);
@@ -189,6 +192,11 @@ public class ChromeTab extends JPanel {
         }
 
         g2.dispose();
+    }
+
+    // 刷新关闭按钮的 tooltip 文本，用于语言切换时更新
+    public void refreshTooltip() {
+        closeBtn.setToolTipText(TranslationUtil.getText("tab.close.tooltip"));
     }
 
     // 构建 Chrome 风格标签的外形路径

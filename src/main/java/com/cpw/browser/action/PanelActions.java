@@ -37,6 +37,12 @@ public final class PanelActions {
         }
 
         @Override
+        public void update(AnActionEvent e) {
+            e.getPresentation().setText(TranslationUtil.getText("action.zoom.in"));
+            e.getPresentation().setDescription(TranslationUtil.getText("action.zoom.in.desc"));
+        }
+
+        @Override
         public void actionPerformed(AnActionEvent e) {
             tabManager.zoomIn();
             BrowserTabPanel activeTab = tabManager.getActiveTab();
@@ -55,6 +61,12 @@ public final class PanelActions {
             super(TranslationUtil.getText("action.zoom.out"), TranslationUtil.getText("action.zoom.out.desc"), WebBrowserIcons.ZOOM_OUT);
             this.tabManager = tabManager;
             this.showZoomToast = showZoomToast;
+        }
+
+        @Override
+        public void update(AnActionEvent e) {
+            e.getPresentation().setText(TranslationUtil.getText("action.zoom.out"));
+            e.getPresentation().setDescription(TranslationUtil.getText("action.zoom.out.desc"));
         }
 
         @Override
@@ -79,15 +91,16 @@ public final class PanelActions {
         }
 
         @Override
+        public void update(AnActionEvent e) {
+            e.getPresentation().setText(TranslationUtil.getText("action.show.bookmark"));
+            e.getPresentation().setDescription(TranslationUtil.getText("action.show.bookmark.desc"));
+        }
+
+        @Override
         public void actionPerformed(AnActionEvent e) {
             bookmarkSidebar.setVisible(!bookmarkSidebar.isVisible());
             centerPanel.revalidate();
             centerPanel.repaint();
-            e.getPresentation().setDescription(
-                    bookmarkSidebar.isVisible()
-                            ? TranslationUtil.getText("action.hide.bookmark.desc")
-                            : TranslationUtil.getText("action.show.bookmark.desc")
-            );
         }
     }
 
@@ -104,6 +117,12 @@ public final class PanelActions {
             add(new NavigationActions.OpenDevTools(tabManager, openDevTools));
             add(new AutoRefresh(tabManager));
             add(new ClearCache(tabManager));
+        }
+
+        @Override
+        public void update(AnActionEvent e) {
+            e.getPresentation().setText(TranslationUtil.getText("action.more"));
+            e.getPresentation().setDescription(TranslationUtil.getText("action.more.desc"));
         }
     }
 
@@ -137,7 +156,7 @@ public final class PanelActions {
                 tab.setAutoRefresh(true);
                 e.getPresentation().setText(TranslationUtil.getText("action.stop.refresh"));
                 e.getPresentation().setDescription(
-                        TranslationUtil.getText("action.stop.refresh.desc") + "（" + tab.getAutoRefreshInterval() + "s）");
+                        TranslationUtil.getText("action.stop.refresh.desc") + "(" + tab.getAutoRefreshInterval() + "s)");
             } else {
                 int result = Messages.showYesNoDialog(
                         TranslationUtil.getText("auto.refresh.stop.confirm"),
@@ -160,8 +179,11 @@ public final class PanelActions {
                         ? TranslationUtil.getText("action.stop.refresh")
                         : TranslationUtil.getText("action.auto.refresh"));
                 e.getPresentation().setDescription(running
-                        ? TranslationUtil.getText("action.stop.refresh.desc") + "（" + tab.getAutoRefreshInterval() + "s）"
+                        ? TranslationUtil.getText("action.stop.refresh.desc") + "(" + tab.getAutoRefreshInterval() + "s)"
                         : TranslationUtil.getText("action.auto.refresh.desc"));
+            } else {
+                e.getPresentation().setText(TranslationUtil.getText("action.auto.refresh"));
+                e.getPresentation().setDescription(TranslationUtil.getText("action.auto.refresh.desc"));
             }
         }
     }
@@ -177,16 +199,18 @@ public final class PanelActions {
         }
 
         @Override
+        public void update(AnActionEvent e) {
+            e.getPresentation().setText(TranslationUtil.getText("action.clear.cache"));
+            e.getPresentation().setDescription(TranslationUtil.getText("action.clear.cache.desc"));
+            e.getPresentation().setEnabled(tabManager.getActiveTab() != null);
+        }
+
+        @Override
         public void actionPerformed(AnActionEvent e) {
             BrowserTabPanel tab = tabManager.getActiveTab();
             if (tab == null) return;
             tab.clearCache();
             tab.refresh();
-        }
-
-        @Override
-        public void update(AnActionEvent e) {
-            e.getPresentation().setEnabled(tabManager.getActiveTab() != null);
         }
     }
 
@@ -201,6 +225,15 @@ public final class PanelActions {
         }
 
         @Override
+        public void update(AnActionEvent e) {
+            e.getPresentation().setText(TranslationUtil.getText("action.open.system"));
+            e.getPresentation().setDescription(TranslationUtil.getText("action.open.system.desc"));
+            BrowserTabPanel tab = tabManager.getActiveTab();
+            String url = tab != null ? tab.getCurrentUrl() : null;
+            e.getPresentation().setEnabled(url != null && !url.isBlank() && !"about:blank".equals(url));
+        }
+
+        @Override
         public void actionPerformed(AnActionEvent e) {
             BrowserTabPanel tab = tabManager.getActiveTab();
             String url = tab != null ? tab.getCurrentUrl() : null;
@@ -208,16 +241,8 @@ public final class PanelActions {
                 try {
                     java.awt.Desktop.getDesktop().browse(new java.net.URI(url));
                 } catch (Exception ex) {
-                    // 静默失败
                 }
             }
-        }
-
-        @Override
-        public void update(AnActionEvent e) {
-            BrowserTabPanel tab = tabManager.getActiveTab();
-            String url = tab != null ? tab.getCurrentUrl() : null;
-            e.getPresentation().setEnabled(url != null && !url.isBlank() && !"about:blank".equals(url));
         }
     }
 
@@ -229,6 +254,12 @@ public final class PanelActions {
         public Settings(Project project) {
             super(TranslationUtil.getText("action.settings"), TranslationUtil.getText("action.settings.desc"), AllIcons.General.Settings);
             this.project = project;
+        }
+
+        @Override
+        public void update(AnActionEvent e) {
+            e.getPresentation().setText(TranslationUtil.getText("action.settings"));
+            e.getPresentation().setDescription(TranslationUtil.getText("action.settings.desc"));
         }
 
         @Override

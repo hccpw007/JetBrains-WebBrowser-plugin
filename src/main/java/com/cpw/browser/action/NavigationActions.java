@@ -27,6 +27,8 @@ public final class NavigationActions {
 
         @Override
         public void update(AnActionEvent e) {
+            e.getPresentation().setText(TranslationUtil.getText("action.back"));
+            e.getPresentation().setDescription(TranslationUtil.getText("action.back.desc"));
             BrowserTabPanel activeTab = tabManager.getActiveTab();
             e.getPresentation().setEnabled(activeTab != null && activeTab.canGoBack());
         }
@@ -53,6 +55,8 @@ public final class NavigationActions {
 
         @Override
         public void update(AnActionEvent e) {
+            e.getPresentation().setText(TranslationUtil.getText("action.forward"));
+            e.getPresentation().setDescription(TranslationUtil.getText("action.forward.desc"));
             BrowserTabPanel activeTab = tabManager.getActiveTab();
             e.getPresentation().setEnabled(activeTab != null && activeTab.canGoForward());
         }
@@ -79,6 +83,8 @@ public final class NavigationActions {
 
         @Override
         public void update(AnActionEvent e) {
+            e.getPresentation().setText(TranslationUtil.getText("action.home"));
+            e.getPresentation().setDescription(TranslationUtil.getText("action.home.desc"));
             e.getPresentation().setEnabled(tabManager.getActiveTab() != null);
         }
 
@@ -106,6 +112,8 @@ public final class NavigationActions {
 
         @Override
         public void update(AnActionEvent e) {
+            e.getPresentation().setText(TranslationUtil.getText("action.refresh"));
+            e.getPresentation().setDescription(TranslationUtil.getText("action.refresh.desc"));
             e.getPresentation().setEnabled(tabManager.getActiveTab() != null);
         }
 
@@ -130,6 +138,12 @@ public final class NavigationActions {
         }
 
         @Override
+        public void update(AnActionEvent e) {
+            e.getPresentation().setText(TranslationUtil.getText("action.new.tab"));
+            e.getPresentation().setDescription(TranslationUtil.getText("action.new.tab.desc"));
+        }
+
+        @Override
         public void actionPerformed(AnActionEvent e) {
             tabManager.createTab();
         }
@@ -151,6 +165,8 @@ public final class NavigationActions {
 
         @Override
         public void update(AnActionEvent e) {
+            e.getPresentation().setText(TranslationUtil.getText("action.dev.tools"));
+            e.getPresentation().setDescription(TranslationUtil.getText("action.dev.tools.desc"));
             e.getPresentation().setEnabled(tabManager.getActiveTab() != null);
         }
 

@@ -63,24 +63,50 @@ public class BrowserSettingsPage implements Configurable {
         GridBagConstraints c = new GridBagConstraints();
         c.anchor = GridBagConstraints.WEST;
 
-        // Row 0: 主页 URL
+        // Row 0: 分隔线 — 语言（放在最上面）
         c.gridx = 0;
         c.gridy = 0;
+        c.gridwidth = 2;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = new Insets(0, 0, 8, 0);
+        c.weightx = 0.0;
+        languageSeparator = new TitledSeparator(TranslationUtil.getText("settings.language"));
+        panel.add(languageSeparator, c);
+
+        // Row 1: 语言下拉框
+        c.gridy = 1;
+        c.gridx = 0;
+        c.gridwidth = 1;
         c.fill = GridBagConstraints.NONE;
         c.weightx = 0.0;
         c.insets = new Insets(0, 0, 0, 8);
+        languageLabel = new JLabel(TranslationUtil.getText("settings.language") + ":");
+        panel.add(languageLabel, c);
+        c.gridx = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1.0;
+        c.insets = new Insets(0, 0, 0, 0);
+        languageCombo = new JComboBox<>(buildLanguageDisplayItems());
+        panel.add(languageCombo, c);
+
+        // Row 2: 主页 URL
+        c.gridy = 2;
+        c.gridx = 0;
+        c.fill = GridBagConstraints.NONE;
+        c.weightx = 0.0;
+        c.insets = new Insets(12, 0, 0, 8);
         homePageLabel = new JLabel(TranslationUtil.getText("settings.homepage.url") + ":");
         panel.add(homePageLabel, c);
         c.gridx = 1;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.weightx = 1.0;
-        c.insets = new Insets(0, 0, 0, 0);
+        c.insets = new Insets(12, 0, 0, 0);
         homePageField = new JBTextField();
         panel.add(homePageField, c);
 
-        // Row 1: 新标签页时打开主页
+        // Row 3: 新标签页时打开主页
         c.gridx = 0;
-        c.gridy = 1;
+        c.gridy = 3;
         c.gridwidth = 2;
         c.fill = GridBagConstraints.NONE;
         c.weightx = 0.0;
@@ -88,8 +114,8 @@ public class BrowserSettingsPage implements Configurable {
         openHomeCheckBox = new JBCheckBox(TranslationUtil.getText("settings.homepage.open"));
         panel.add(openHomeCheckBox, c);
 
-        // Row 2: 分隔线 — 历史记录
-        c.gridy = 2;
+        // Row 4: 分隔线 — 历史记录
+        c.gridy = 4;
         c.gridwidth = 2;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.insets = new Insets(12, 0, 8, 0);
@@ -97,8 +123,8 @@ public class BrowserSettingsPage implements Configurable {
         historySeparator = new TitledSeparator(TranslationUtil.getText("settings.history"));
         panel.add(historySeparator, c);
 
-        // Row 3: 最多保存天数
-        c.gridy = 3;
+        // Row 5: 最多保存天数
+        c.gridy = 5;
         c.gridx = 0;
         c.gridwidth = 1;
         c.fill = GridBagConstraints.NONE;
@@ -114,8 +140,8 @@ public class BrowserSettingsPage implements Configurable {
         maxHistoryDaysField.setColumns(4);
         panel.add(maxHistoryDaysField, c);
 
-        // Row 4: 最多记录条数
-        c.gridy = 4;
+        // Row 6: 最多记录条数
+        c.gridy = 6;
         c.gridx = 0;
         c.fill = GridBagConstraints.NONE;
         c.weightx = 0.0;
@@ -130,8 +156,8 @@ public class BrowserSettingsPage implements Configurable {
         maxHistoryCountField.setColumns(4);
         panel.add(maxHistoryCountField, c);
 
-        // Row 5: 分隔线 — 开发者工具
-        c.gridy = 5;
+        // Row 7: 分隔线 — 开发者工具
+        c.gridy = 7;
         c.gridx = 0;
         c.gridwidth = 2;
         c.fill = GridBagConstraints.HORIZONTAL;
@@ -140,8 +166,8 @@ public class BrowserSettingsPage implements Configurable {
         devToolsSeparator = new TitledSeparator(TranslationUtil.getText("settings.devtools"));
         panel.add(devToolsSeparator, c);
 
-        // Row 6: 打开方式
-        c.gridy = 6;
+        // Row 8: 打开方式
+        c.gridy = 8;
         c.gridx = 0;
         c.gridwidth = 1;
         c.fill = GridBagConstraints.NONE;
@@ -159,8 +185,8 @@ public class BrowserSettingsPage implements Configurable {
         });
         panel.add(devToolsModeCombo, c);
 
-        // Row 7: 显示位置
-        c.gridy = 7;
+        // Row 9: 显示位置
+        c.gridy = 9;
         c.gridx = 0;
         c.fill = GridBagConstraints.NONE;
         c.weightx = 0.0;
@@ -176,32 +202,6 @@ public class BrowserSettingsPage implements Configurable {
                 TranslationUtil.getText("settings.position.editor")
         });
         panel.add(displayPositionCombo, c);
-
-        // Row 8: 分隔线 — 语言
-        c.gridy = 8;
-        c.gridx = 0;
-        c.gridwidth = 2;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.insets = new Insets(12, 0, 8, 0);
-        c.weightx = 0.0;
-        languageSeparator = new TitledSeparator(TranslationUtil.getText("settings.language"));
-        panel.add(languageSeparator, c);
-
-        // Row 9: 语言下拉框
-        c.gridy = 9;
-        c.gridx = 0;
-        c.gridwidth = 1;
-        c.fill = GridBagConstraints.NONE;
-        c.weightx = 0.0;
-        c.insets = new Insets(0, 0, 0, 8);
-        languageLabel = new JLabel(TranslationUtil.getText("settings.language") + ":");
-        panel.add(languageLabel, c);
-        c.gridx = 1;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.weightx = 1.0;
-        c.insets = new Insets(0, 0, 0, 0);
-        languageCombo = new JComboBox<>(buildLanguageDisplayItems());
-        panel.add(languageCombo, c);
 
         // Row 10: 右下角签名
         c.gridy = 10;
@@ -283,10 +283,11 @@ public class BrowserSettingsPage implements Configurable {
             state.setLanguage(languageDisplayIndexToCode(languageCombo.getSelectedIndex()));
         }
 
-        // 语言发生变更则刷新当前窗口标签
+        // 语言发生变更则刷新当前页面标签并通知所有 UI 组件
         String newLang = state.getLanguage();
         if (!Objects.equals(oldLang, newLang)) {
             refreshLabels();
+            TranslationUtil.notifyLanguageChanged();
         }
     }
 

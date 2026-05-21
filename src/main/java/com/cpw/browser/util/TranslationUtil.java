@@ -7,7 +7,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
@@ -22,6 +24,34 @@ public final class TranslationUtil {
     private static final String BUNDLE_SUFFIX = ".properties";
 
     private TranslationUtil() {
+    }
+
+    // 语言变更监听器
+    public interface LanguageChangeListener {
+        void onLanguageChanged();
+    }
+
+    // 语言变更监听器列表
+    private static final List<LanguageChangeListener> listeners = new ArrayList<>();
+
+    // 注册语言变更监听
+    public static void addListener(LanguageChangeListener listener) {
+        listeners.add(listener);
+    }
+
+    // 移除语言变更监听
+    public static void removeListener(LanguageChangeListener listener) {
+        listeners.remove(listener);
+    }
+
+    // 通知所有监听器语言已变更
+    public static void notifyLanguageChanged() {
+        // 清除缓存，下次 getProperties 时重新加载
+        currentLang = null;
+        bundleCache.clear();
+        for (LanguageChangeListener l : listeners) {
+            l.onLanguageChanged();
+        }
     }
 
     // 缓存：语言代码 -> Properties

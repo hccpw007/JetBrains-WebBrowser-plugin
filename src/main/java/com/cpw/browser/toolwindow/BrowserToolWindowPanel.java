@@ -250,6 +250,16 @@ public class BrowserToolWindowPanel {
 
         tabStripPanel.add(addTabButton);
         tabManager.createTab();
+
+        // 注册语言变更监听，刷新 UI 文本
+        TranslationUtil.addListener(() -> {
+            statusLabel.setText(TranslationUtil.getText("status.ready"));
+            addTabButton.setToolTipText(TranslationUtil.getText("tab.new.tab"));
+            // 刷新所有标签页中的 ChromeTab 关闭按钮提示
+            for (Map.Entry<BrowserTabPanel, ChromeTab> entry : chromeTabs.entrySet()) {
+                entry.getValue().refreshTooltip();
+            }
+        });
     }
 
     // 获取标题变更回调
