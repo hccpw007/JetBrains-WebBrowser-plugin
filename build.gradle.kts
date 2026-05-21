@@ -20,3 +20,7 @@ dependencies {
         bundledModule("intellij.platform.ide.impl")
     }
 }
+
+tasks.withType<Jar> {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
