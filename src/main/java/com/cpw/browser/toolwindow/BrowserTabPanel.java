@@ -207,6 +207,8 @@ public class BrowserTabPanel {
 
     // 导航到指定 URL
     public void navigate(String url) {
+        // 忽略 null 或空 URL，防止 ArrayDeque.addLast 抛 NPE
+        if (url == null || url.isBlank()) return;
         pushHistory(url);
         browser.loadURL(url);
     }
