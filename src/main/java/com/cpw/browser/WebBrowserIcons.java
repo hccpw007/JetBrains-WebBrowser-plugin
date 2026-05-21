@@ -34,6 +34,8 @@ public final class WebBrowserIcons {
     public static final Icon ZOOM_OUT = load("zoom-out");
     // Google 图标
     public static final Icon GOOGLE = load("google");
+    // 更多菜单图标（三个竖点）
+    public static final Icon MORE = load("more");
 
     private WebBrowserIcons() {
         // 工具类，禁止实例化

@@ -10,6 +10,7 @@ import org.cef.handler.CefLoadHandler;
 import org.cef.handler.CefLoadHandlerAdapter;
 
 import javax.swing.JComponent;
+import javax.swing.Timer;
 import java.util.ArrayDeque;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -335,6 +336,42 @@ public class BrowserTabPanel {
     // 打开独立 DevTools 弹出窗口
     public void openDevTools() {
         browser.openDevtools();
+    }
+
+    // 自动刷新定时器（null 表示未启用）
+    private Timer autoRefreshTimer;
+    // 自动刷新间隔（秒）
+    private int autoRefreshInterval = 30;
+
+    // 获取自动刷新状态
+    public boolean isAutoRefreshEnabled() {
+        return autoRefreshTimer != null && autoRefreshTimer.isRunning();
+    }
+
+    // 切换自动刷新
+    public void setAutoRefresh(boolean enabled) {
+        if (autoRefreshTimer != null) {
+            autoRefreshTimer.stop();
+            autoRefreshTimer = null;
+        }
+        if (enabled) {
+            autoRefreshTimer = new Timer(autoRefreshInterval * 1000, e -> refresh());
+            autoRefreshTimer.start();
+        }
+    }
+
+    // 清除浏览器缓存和 Cookie
+    public void clearCache() {
+        // 清除 localStorage 和 sessionStorage
+        browser.getCefBrowser().executeJavaScript(
+                "localStorage.clear();sessionStorage.clear();" +
+                "caches.keys().then(function(ks){ks.forEach(function(k){caches.delete(k)})})",
+                "", 0);
+        // 清除 Cookie
+        browser.getCefBrowser().executeJavaScript(
+                "document.cookie.split(';').forEach(function(c){" +
+                "document.cookie=c.trim().split('=')[0]+'=;expires=Thu,01 Jan 1970 00:00:00 UTC;path=/'})",
+                "", 0);
     }
 
     // 获取标签页显示标题（截断超过 20 字符的长标题）

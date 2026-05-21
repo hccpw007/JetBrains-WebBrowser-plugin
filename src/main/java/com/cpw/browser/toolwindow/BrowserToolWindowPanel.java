@@ -219,15 +219,14 @@ public class BrowserToolWindowPanel {
         ActionToolbar navToolbar = ActionManager.getInstance().createActionToolbar("WebBrowser.NavBar", navGroup, true);
         navToolbar.setTargetComponent(navToolbar.getComponent());
 
-        // url 右侧工具栏：缩放、开发者工具、书签侧边栏切换、系统打开、设置
+        // url 右侧工具栏：缩放、书签侧边栏、系统打开、更多菜单
         DefaultActionGroup rightGroup = new DefaultActionGroup();
         rightGroup.add(new PanelActions.ZoomIn(tabManager, this::showZoomToast));
         rightGroup.add(new PanelActions.ZoomOut(tabManager, this::showZoomToast));
-        rightGroup.add(new NavigationActions.OpenDevTools(tabManager, this::openDevTools));
         rightGroup.addSeparator();
         rightGroup.add(new PanelActions.ToggleBookmarkSidebar(bookmarkSidebar, centerPanel));
         rightGroup.add(new PanelActions.OpenInSystemBrowser(tabManager));
-        rightGroup.add(new PanelActions.Settings(project));
+        rightGroup.add(new PanelActions.MoreMenu(project, tabManager, this::openDevTools));
         ActionToolbar rightToolbar = ActionManager.getInstance().createActionToolbar("WebBrowser.RightActions", rightGroup, true);
         rightToolbar.setTargetComponent(rightToolbar.getComponent());
 

@@ -7,8 +7,10 @@ import com.cpw.browser.toolwindow.BrowserTabManager;
 import com.cpw.browser.toolwindow.BrowserTabPanel;
 import com.cpw.browser.ui.BookmarkSidebar;
 import com.intellij.icons.AllIcons;
+import com.intellij.openapi.actionSystem.ActionGroup;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.actionSystem.DefaultActionGroup;
 import com.intellij.openapi.options.ShowSettingsUtil;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
@@ -89,6 +91,86 @@ public final class PanelActions {
             e.getPresentation().setDescription(
                     bookmarkSidebar.isVisible() ? "隐藏书签侧边栏" : "显示书签侧边栏"
             );
+        }
+    }
+
+    // "更多"弹出菜单（三个竖点），包含设置、开发者工具、定时刷新、清空缓存
+    public static class MoreMenu extends DefaultActionGroup {
+
+        public MoreMenu(Project project, BrowserTabManager tabManager, Runnable openDevTools) {
+            super("更多", true);
+            getTemplatePresentation().setIcon(WebBrowserIcons.MORE);
+            getTemplatePresentation().setDescription("更多操作");
+
+            // 设置
+            add(new Settings(project));
+            addSeparator();
+            // 开发者工具
+            add(new NavigationActions.OpenDevTools(tabManager, openDevTools));
+            // 定时刷新
+            add(new AutoRefresh(tabManager));
+            // 清空缓存
+            add(new ClearCache(tabManager));
+        }
+    }
+
+    // 定时刷新当前页面
+    public static class AutoRefresh extends AnAction implements DumbAware {
+
+        // 标签页管理器
+        private final BrowserTabManager tabManager;
+
+        public AutoRefresh(BrowserTabManager tabManager) {
+            super("定时刷新", "每 30 秒自动刷新当前页面", AllIcons.Actions.Refresh);
+            this.tabManager = tabManager;
+        }
+
+        @Override
+        public void actionPerformed(AnActionEvent e) {
+            BrowserTabPanel tab = tabManager.getActiveTab();
+            // 无活跃标签页则直接返回
+            if (tab == null) return;
+            boolean enabled = !tab.isAutoRefreshEnabled();
+            tab.setAutoRefresh(enabled);
+            e.getPresentation().setText(enabled ? "停止刷新" : "定时刷新");
+            e.getPresentation().setDescription(enabled ? "停止自动刷新" : "每 30 秒自动刷新当前页面");
+        }
+
+        @Override
+        public void update(AnActionEvent e) {
+            BrowserTabPanel tab = tabManager.getActiveTab();
+            boolean enabled = tab != null;
+            e.getPresentation().setEnabled(enabled);
+            if (enabled) {
+                boolean running = tab.isAutoRefreshEnabled();
+                e.getPresentation().setText(running ? "停止刷新" : "定时刷新");
+                e.getPresentation().setDescription(running ? "停止自动刷新" : "每 30 秒自动刷新当前页面");
+            }
+        }
+    }
+
+    // 清空浏览器缓存和 Cookie
+    public static class ClearCache extends AnAction implements DumbAware {
+
+        // 标签页管理器
+        private final BrowserTabManager tabManager;
+
+        public ClearCache(BrowserTabManager tabManager) {
+            super("清空缓存", "清除浏览器缓存、Cookie 和本地存储", AllIcons.Actions.GC);
+            this.tabManager = tabManager;
+        }
+
+        @Override
+        public void actionPerformed(AnActionEvent e) {
+            BrowserTabPanel tab = tabManager.getActiveTab();
+            // 无活跃标签页则直接返回
+            if (tab == null) return;
+            tab.clearCache();
+        }
+
+        @Override
+        public void update(AnActionEvent e) {
+            e.getPresentation().setEnabled(tabManager.getActiveTab() != null);
         }
     }
 
