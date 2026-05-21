@@ -34,8 +34,8 @@ public class ChromeTab extends JPanel {
     private static final JBColor INACTIVE_BG = new JBColor(0xC8C8C8, 0x222222);
     // 鼠标悬停时非活跃标签的背景色
     private static final JBColor HOVER_BG = new JBColor(0xDCDCDC, 0x303030);
-    // 标签页的边框颜色
-    public static final JBColor BORDER = new JBColor(0xC0C0C0, 0x4A4A4A);
+    // 标签页的边框颜色（加深以在标签栏背景上清晰可见）
+    public static final JBColor BORDER = new JBColor(0x909090, 0x6A6A6A);
     // 标签栏底部条的颜色
     public static final JBColor STRIP_BG = new JBColor(0xC8C8C8, 0x222222);
 
