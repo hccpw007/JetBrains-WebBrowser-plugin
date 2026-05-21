@@ -1,6 +1,7 @@
 package com.cpw.browser.ui;
 
 import com.cpw.browser.WebBrowserIcons;
+import com.cpw.browser.util.TranslationUtil;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
@@ -147,10 +148,10 @@ public class AddressBar extends JPanel {
         if (!url.isEmpty() && !"about:blank".equals(url)) {
             boolean bookmarked = isUrlBookmarked.test(url);
             starLabel.setIcon(bookmarked ? WebBrowserIcons.STAR_FILLED : WebBrowserIcons.STAR);
-            starLabel.setToolTipText(bookmarked ? "从书签中移除" : "添加书签");
+            starLabel.setToolTipText(bookmarked ? TranslationUtil.getText("address.bookmark.remove") : TranslationUtil.getText("address.bookmark.add"));
         } else { // URL 为空或空白页时显示默认星标
             starLabel.setIcon(WebBrowserIcons.STAR);
-            starLabel.setToolTipText("添加书签");
+            starLabel.setToolTipText(TranslationUtil.getText("address.bookmark.add"));
         }
     }
 

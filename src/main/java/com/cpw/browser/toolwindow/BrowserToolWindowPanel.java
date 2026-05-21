@@ -255,6 +255,10 @@ public class BrowserToolWindowPanel {
         TranslationUtil.addListener(() -> {
             statusLabel.setText(TranslationUtil.getText("status.ready"));
             addTabButton.setToolTipText(TranslationUtil.getText("tab.new.tab"));
+            // 刷新地址栏星标提示
+            addressBar.updateStarIcon(addressBar.getUrl());
+            // 刷新书签侧边栏标签
+            bookmarkSidebar.refreshLabels();
             // 刷新所有标签页中的 ChromeTab 关闭按钮提示
             for (Map.Entry<BrowserTabPanel, ChromeTab> entry : chromeTabs.entrySet()) {
                 entry.getValue().refreshTooltip();

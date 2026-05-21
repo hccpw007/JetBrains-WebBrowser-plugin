@@ -3,6 +3,7 @@ package com.cpw.browser.ui;
 
 import com.cpw.browser.history.BrowsingHistoryState;
 import com.cpw.browser.history.HistoryEntry;
+import com.cpw.browser.util.TranslationUtil;
 
 import javax.swing.AbstractListModel;
 import java.time.DayOfWeek;
@@ -19,9 +20,9 @@ import java.util.Map;
 public class HistoryEntriesModel extends AbstractListModel<Object> {
 
     // 历史分组：今天的条目标题
-    private static final String HEADER_TODAY = "今天";
+    private static final String HEADER_TODAY = "history.today";
     // 历史分组：以前的条目标题
-    private static final String HEADER_OLDER = "以前";
+    private static final String HEADER_OLDER = "history.older";
 
     // 历史列表数据项（包含分组标题和历史条目）
     private List<Object> items = buildItems();
@@ -74,7 +75,7 @@ public class HistoryEntriesModel extends AbstractListModel<Object> {
 
         List<Object> result = new ArrayList<>();
         if (!todayGroup.isEmpty()) {
-            result.add(HEADER_TODAY);
+            result.add(TranslationUtil.getText(HEADER_TODAY));
             result.addAll(todayGroup);
         }
         for (DayOfWeek dow : Arrays.asList(
@@ -88,7 +89,7 @@ public class HistoryEntriesModel extends AbstractListModel<Object> {
             }
         }
         if (!earlierGroup.isEmpty()) {
-            result.add(HEADER_OLDER);
+            result.add(TranslationUtil.getText(HEADER_OLDER));
             result.addAll(earlierGroup);
         }
         return result;

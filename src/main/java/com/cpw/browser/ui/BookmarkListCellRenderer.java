@@ -1,6 +1,7 @@
 package com.cpw.browser.ui;
 
 import com.cpw.browser.bookmark.Bookmark;
+import com.cpw.browser.util.TranslationUtil;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBLabel;
 import java.awt.BorderLayout;
@@ -37,7 +38,7 @@ public class BookmarkListCellRenderer extends JPanel implements ListCellRenderer
         editLabel.setForeground(new JBColor(0xAAAAAA, 0x777777));
         editLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         editLabel.setBorder(new EmptyBorder(0, 4, 0, 4));
-        editLabel.setToolTipText("编辑");
+        editLabel.setToolTipText(TranslationUtil.getText("bookmark.edit.tooltip"));
 
         // 删除按钮
         deleteLabel = new JLabel("×");
@@ -45,7 +46,7 @@ public class BookmarkListCellRenderer extends JPanel implements ListCellRenderer
         deleteLabel.setForeground(new JBColor(0xAAAAAA, 0x777777));
         deleteLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         deleteLabel.setBorder(new EmptyBorder(0, 4, 0, 6));
-        deleteLabel.setToolTipText("删除书签");
+        deleteLabel.setToolTipText(TranslationUtil.getText("bookmark.delete.tooltip"));
 
         // 右侧操作按钮面板
         JPanel eastPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
@@ -75,7 +76,7 @@ public class BookmarkListCellRenderer extends JPanel implements ListCellRenderer
             Bookmark bookmark = (Bookmark) value;
             // 标题为空时兜底显示"未命名书签"（getter 已保证不返回 null）
             String title = bookmark.getTitle();
-            titleLabel.setText(!title.isBlank() ? title : "未命名书签");
+            titleLabel.setText(!title.isBlank() ? title : TranslationUtil.getText("bookmark.unnamed"));
             // URL 为空时不显示工具提示
             String url = bookmark.getUrl();
             titleLabel.setToolTipText(!url.isBlank() ? url : null);

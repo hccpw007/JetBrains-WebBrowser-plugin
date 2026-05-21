@@ -224,6 +224,13 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
         add(contentPanel, BorderLayout.CENTER);
     }
 
+    // 语言切换时刷新所有文本标签
+    public void refreshLabels() {
+        bookmarkLabel.setText(TranslationUtil.getText("bookmark.title"));
+        historyLabel.setText(TranslationUtil.getText("history.title"));
+        clearLabel.setText(TranslationUtil.getText("history.clear"));
+    }
+
     // 刷新书签列表
     public void refreshBookmarks() {
         bookmarkListModel.replaceAll(BookmarkPersistentState.getInstance().getBookmarks());

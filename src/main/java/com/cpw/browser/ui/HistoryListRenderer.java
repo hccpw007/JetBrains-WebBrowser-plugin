@@ -2,6 +2,7 @@
 package com.cpw.browser.ui;
 
 import com.cpw.browser.history.HistoryEntry;
+import com.cpw.browser.util.TranslationUtil;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBLabel;
 
@@ -87,13 +88,13 @@ public class HistoryListRenderer extends JPanel implements ListCellRenderer<Obje
         } else if (value instanceof DayOfWeek) { // 星期分组标题行
             DayOfWeek dow = (DayOfWeek) value;
             switch (dow) {
-                case MONDAY: titleLabel.setText("周一"); break;
-                case TUESDAY: titleLabel.setText("周二"); break;
-                case WEDNESDAY: titleLabel.setText("周三"); break;
-                case THURSDAY: titleLabel.setText("周四"); break;
-                case FRIDAY: titleLabel.setText("周五"); break;
-                case SATURDAY: titleLabel.setText("周六"); break;
-                case SUNDAY: titleLabel.setText("周日"); break;
+                case MONDAY: titleLabel.setText(TranslationUtil.getText("history.monday")); break;
+                case TUESDAY: titleLabel.setText(TranslationUtil.getText("history.tuesday")); break;
+                case WEDNESDAY: titleLabel.setText(TranslationUtil.getText("history.wednesday")); break;
+                case THURSDAY: titleLabel.setText(TranslationUtil.getText("history.thursday")); break;
+                case FRIDAY: titleLabel.setText(TranslationUtil.getText("history.friday")); break;
+                case SATURDAY: titleLabel.setText(TranslationUtil.getText("history.saturday")); break;
+                case SUNDAY: titleLabel.setText(TranslationUtil.getText("history.sunday")); break;
             }
             titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD, 11f));
             titleLabel.setForeground(new JBColor(0x666666, 0xAAAAAA));
@@ -112,7 +113,7 @@ public class HistoryListRenderer extends JPanel implements ListCellRenderer<Obje
             timeLabel.setVisible(true);
             contentPanel.setBorder(new EmptyBorder(0, 0, 0, 0));
             deleteLabel.setVisible(true);
-            deleteLabel.setToolTipText("删除");
+            deleteLabel.setToolTipText(TranslationUtil.getText("history.delete"));
         }
         return this;
     }
@@ -131,13 +132,13 @@ public class HistoryListRenderer extends JPanel implements ListCellRenderer<Obje
         } else if (!entryDate.isBefore(monday)) { // 本周记录显示 "周X HH:mm"
             String wd;
             switch (zdt.getDayOfWeek()) {
-                case MONDAY: wd = "周一"; break;
-                case TUESDAY: wd = "周二"; break;
-                case WEDNESDAY: wd = "周三"; break;
-                case THURSDAY: wd = "周四"; break;
-                case FRIDAY: wd = "周五"; break;
-                case SATURDAY: wd = "周六"; break;
-                case SUNDAY: wd = "周日"; break;
+                case MONDAY: wd = TranslationUtil.getText("history.monday"); break;
+                case TUESDAY: wd = TranslationUtil.getText("history.tuesday"); break;
+                case WEDNESDAY: wd = TranslationUtil.getText("history.wednesday"); break;
+                case THURSDAY: wd = TranslationUtil.getText("history.thursday"); break;
+                case FRIDAY: wd = TranslationUtil.getText("history.friday"); break;
+                case SATURDAY: wd = TranslationUtil.getText("history.saturday"); break;
+                case SUNDAY: wd = TranslationUtil.getText("history.sunday"); break;
                 default: wd = ""; break;
             }
             return wd + " " + zdt.format(DateTimeFormatter.ofPattern("HH:mm"));
