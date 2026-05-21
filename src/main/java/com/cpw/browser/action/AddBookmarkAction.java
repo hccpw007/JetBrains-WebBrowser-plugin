@@ -35,12 +35,12 @@ public class AddBookmarkAction extends AnAction {
         }
         BookmarkPersistentState bookmarkState = BookmarkPersistentState.getInstance();
         // 检查书签是否已存在
-        if (bookmarkState.contains(tab.currentUrl)) {
+        if (bookmarkState.contains(tab.getCurrentUrl())) {
             Messages.showInfoMessage("该书签已存在", "书签");
             return;
         }
-        String title = tab.pageTitle.isBlank() ? tab.currentUrl : tab.pageTitle;
-        bookmarkState.addBookmark(new Bookmark(title, tab.currentUrl));
+        String title = tab.getPageTitle().isBlank() ? tab.getCurrentUrl() : tab.getPageTitle();
+        bookmarkState.addBookmark(new Bookmark(title, tab.getCurrentUrl()));
         onBookmarkChanged.run();
     }
 }
