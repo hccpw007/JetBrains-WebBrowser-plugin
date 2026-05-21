@@ -19,6 +19,7 @@ public class BrowserTabManager {
 
     // 获取当前活跃标签页
     public BrowserTabPanel getActiveTab() {
+        // 索引在有效范围内则返回对应标签页
         if (activeTabIndex >= 0 && activeTabIndex < tabs.size()) {
             return tabs.get(activeTabIndex);
         }
@@ -61,21 +62,27 @@ public class BrowserTabManager {
 
         // 标签内部状态变更 -> 仅当是当前活动标签时才通知
         tab.setOnUrlChanged(url -> {
+            // 仅当本标签是当前活跃标签时通知外部
             if (activeTabIndex >= 0 && activeTabIndex < tabs.size() && tabs.get(activeTabIndex) == tab) {
+                // 已设置变更回调则调用
                 if (onActiveTabChanged != null) {
                     onActiveTabChanged.accept(tab);
                 }
             }
         });
         tab.setOnTitleChanged(title -> {
+            // 仅当本标签是当前活跃标签时通知外部
             if (activeTabIndex >= 0 && activeTabIndex < tabs.size() && tabs.get(activeTabIndex) == tab) {
+                // 已设置变更回调则调用
                 if (onActiveTabChanged != null) {
                     onActiveTabChanged.accept(tab);
                 }
             }
         });
         tab.setOnLoadingStateChanged(loading -> {
+            // 仅当本标签是当前活跃标签时通知外部
             if (activeTabIndex >= 0 && activeTabIndex < tabs.size() && tabs.get(activeTabIndex) == tab) {
+                // 已设置变更回调则调用
                 if (onActiveTabChanged != null) {
                     onActiveTabChanged.accept(tab);
                 }
@@ -86,9 +93,11 @@ public class BrowserTabManager {
 
         tabs.add(tab);
         activeTabIndex = tabs.size() - 1;
+        // 已设置添加回调则调用
         if (onTabAdded != null) {
             onTabAdded.accept(tab);
         }
+        // 已设置活跃变更回调则调用
         if (onActiveTabChanged != null) {
             onActiveTabChanged.accept(tab);
         }
@@ -96,6 +105,7 @@ public class BrowserTabManager {
         // 如果新建的空白标签且用户开启了"新标签打开主页"，则导航到主页
         if ("about:blank".equals(initialUrl)) {
             BrowserSettingsState settings = BrowserSettingsState.getInstance();
+            // 设置了主页 URL 则导航到主页
             if (settings.isOpenHomeOnNewTab() && !settings.getHomePageUrl().isBlank()) {
                 tab.navigate(settings.getHomePageUrl());
             }
@@ -119,6 +129,7 @@ public class BrowserTabManager {
         BrowserTabPanel tab = tabs.get(index);
         tab.dispose();
         tabs.remove(index);
+        // 已设置移除回调则调用
         if (onTabRemoved != null) {
             onTabRemoved.accept(tab);
         }
@@ -126,6 +137,7 @@ public class BrowserTabManager {
         // 如果标签页已空
         if (tabs.isEmpty()) {
             activeTabIndex = -1;
+            // 通知外部无活跃标签页
             if (onActiveTabChanged != null) {
                 onActiveTabChanged.accept(null);
             }
@@ -135,9 +147,10 @@ public class BrowserTabManager {
         // 修正活跃索引
         if (activeTabIndex >= tabs.size()) {
             activeTabIndex = tabs.size() - 1;
-        } else if (activeTabIndex > index) {
+        } else if (activeTabIndex > index) { // 关闭的标签页在当前活跃标签之前
             activeTabIndex--;
         }
+        // 通知外部活跃标签页变更
         if (onActiveTabChanged != null) {
             onActiveTabChanged.accept(getActiveTab());
         }
@@ -146,10 +159,12 @@ public class BrowserTabManager {
 
     // 切换到指定索引的标签页
     public BrowserTabPanel switchToTab(int index) {
+        // 索引越界则返回 null
         if (index < 0 || index >= tabs.size()) {
             return null;
         }
         activeTabIndex = index;
+        // 已设置活跃变更回调则调用
         if (onActiveTabChanged != null) {
             onActiveTabChanged.accept(getActiveTab());
         }
@@ -164,6 +179,7 @@ public class BrowserTabManager {
     // 放大当前标签页
     public void zoomIn() {
         BrowserTabPanel tab = getActiveTab();
+        // 有活跃标签页则放大
         if (tab != null) {
             tab.zoomIn();
         }
@@ -172,6 +188,7 @@ public class BrowserTabManager {
     // 缩小当前标签页
     public void zoomOut() {
         BrowserTabPanel tab = getActiveTab();
+        // 有活跃标签页则缩小
         if (tab != null) {
             tab.zoomOut();
         }
@@ -180,6 +197,7 @@ public class BrowserTabManager {
     // 重置当前标签页缩放
     public void zoomReset() {
         BrowserTabPanel tab = getActiveTab();
+        // 有活跃标签页则重置缩放
         if (tab != null) {
             tab.zoomReset();
         }
@@ -187,6 +205,7 @@ public class BrowserTabManager {
 
     // 释放所有标签页资源
     public void disposeAll() {
+        // 遍历所有标签页释放资源
         for (BrowserTabPanel tab : tabs) {
             tab.dispose();
         }
