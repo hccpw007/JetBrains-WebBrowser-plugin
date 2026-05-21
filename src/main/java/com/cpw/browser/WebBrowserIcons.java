@@ -22,8 +22,6 @@ public final class WebBrowserIcons {
     public static final Icon BOOKMARK_REMOVE = load("bookmark-remove");
     // 新建标签页图标
     public static final Icon NEW_TAB = load("new-tab");
-    // 工具窗口切换图标
-    public static final Icon TOOL_WINDOW = load("toolwindow");
     // 未收藏状态星标图标
     public static final Icon STAR = load("star");
     // 已收藏状态星标填充图标

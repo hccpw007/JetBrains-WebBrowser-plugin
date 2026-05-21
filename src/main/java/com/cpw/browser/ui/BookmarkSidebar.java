@@ -14,15 +14,11 @@ import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextField;
 
-import javax.swing.AbstractListModel;
 import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
-import javax.swing.ListCellRenderer;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
@@ -41,17 +37,6 @@ import java.awt.Insets;
 import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.time.DayOfWeek;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
 public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
@@ -398,187 +383,6 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
         return button;
     }
 
-    // ---- 历史列表模型 ----
-    private class HistoryEntriesModel extends AbstractListModel<Object> {
-
-        // 历史分组：今天的条目标题
-        private static final String HEADER_TODAY = "今天";
-        // 历史分组：以前的条目标题
-        private static final String HEADER_OLDER = "以前";
-
-        // 历史列表数据项（包含分组标题和历史条目）
-        private List<Object> items = buildItems();
-
-        // 刷新历史列表数据
-        public void refresh() {
-            items = buildItems();
-            fireContentsChanged(this, 0, Math.max(items.size(), 0));
-        }
-
-        // 获取列表项数量
-        @Override
-        public int getSize() {
-            return items.size();
-        }
-
-        // 获取指定索引的列表项
-        @Override
-        public Object getElementAt(int index) {
-            return items.get(index);
-        }
-
-        // 构建历史列表条目（按日期分组）
-        private List<Object> buildItems() {
-            List<HistoryEntry> entries = BrowsingHistoryState.getInstance().getEntries();
-            // 无历史记录则返回空列表
-            if (entries.isEmpty()) return List.of();
-
-            ZoneId zone = ZoneId.systemDefault();
-            LocalDate today = LocalDate.now(zone);
-            long todayStart = today.atStartOfDay(zone).toInstant().toEpochMilli();
-            LocalDate monday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-            long mondayStart = monday.atStartOfDay(zone).toInstant().toEpochMilli();
-
-            List<HistoryEntry> todayGroup = new ArrayList<>();
-            Map<DayOfWeek, List<HistoryEntry>> weekGroups = new HashMap<>();
-            List<HistoryEntry> earlierGroup = new ArrayList<>();
-
-            // 按日期分组归类历史记录
-            for (HistoryEntry e : entries) {
-                // 当天记录
-                if (e.getTimestamp() >= todayStart) {
-                    todayGroup.add(e);
-                } else if (e.getTimestamp() >= mondayStart) { // 本周记录
-                    DayOfWeek dow = Instant.ofEpochMilli(e.getTimestamp()).atZone(zone).getDayOfWeek();
-                    weekGroups.computeIfAbsent(dow, k -> new ArrayList<>()).add(e);
-                } else { // 更早记录
-                    earlierGroup.add(e);
-                }
-            }
-
-            List<Object> result = new ArrayList<>();
-            // 当天分组非空则添加标题和条目
-            if (!todayGroup.isEmpty()) {
-                result.add(HEADER_TODAY);
-                result.addAll(todayGroup);
-            }
-            // 按星期顺序添加本周分组
-            for (DayOfWeek dow : Arrays.asList(
-                    DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
-                    DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY, DayOfWeek.SUNDAY
-            )) {
-                List<HistoryEntry> group = weekGroups.get(dow);
-                // 该星期有记录则添加标题和条目
-                if (group != null && !group.isEmpty()) {
-                    result.add(dow);
-                    result.addAll(group);
-                }
-            }
-            // 更早的记录非空则添加标题和条目
-            if (!earlierGroup.isEmpty()) {
-                result.add(HEADER_OLDER);
-                result.addAll(earlierGroup);
-            }
-            return result;
-        }
-    }
-
-    // ---- 历史列表渲染器，支持 String 分组标题、DayOfWeek 星期标题和 HistoryEntry 条目 ----
-    private class HistoryListRenderer extends JPanel implements ListCellRenderer<Object> {
-
-        // 历史条目标题标签
-        private final JBLabel titleLabel;
-        // 历史条目时间标签
-        private final JBLabel timeLabel;
-        // 内容容器面板
-        private final JPanel contentPanel;
-        // 删除按钮标签
-        private final JLabel deleteLabel;
-
-        // 构造历史列表项渲染器
-        HistoryListRenderer() {
-            super(new BorderLayout());
-
-            titleLabel = new JBLabel();
-            titleLabel.setFont(titleLabel.getFont().deriveFont(12f));
-
-            timeLabel = new JBLabel();
-            timeLabel.setFont(timeLabel.getFont().deriveFont(10f));
-            timeLabel.setForeground(new JBColor(0x888888, 0x999999));
-
-            contentPanel = new JPanel();
-            contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
-            contentPanel.add(titleLabel);
-            contentPanel.add(timeLabel);
-
-            deleteLabel = new JLabel("×");
-            deleteLabel.setFont(deleteLabel.getFont().deriveFont(Font.PLAIN, 13f));
-            deleteLabel.setForeground(new JBColor(0xAAAAAA, 0x777777));
-            deleteLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            deleteLabel.setBorder(new EmptyBorder(0, 4, 0, 6));
-
-            add(contentPanel, BorderLayout.CENTER);
-            add(deleteLabel, BorderLayout.EAST);
-            setBorder(new EmptyBorder(2, 8, 2, 2));
-        }
-
-        // 渲染列表项（支持分组标题、星期标题和历史条目三种类型）
-        @Override
-        public Component getListCellRendererComponent(
-                JList<?> list,
-                Object value,
-                int index,
-                boolean isSelected,
-                boolean cellHasFocus
-        ) {
-            setBackground(JBColor.WHITE);
-
-            // 日期分组标题行
-            if (value instanceof String) {
-                // 日期分组标题行
-                String header = (String) value;
-                titleLabel.setText(header);
-                titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD, 11f));
-                titleLabel.setForeground(new JBColor(0x666666, 0xAAAAAA));
-                timeLabel.setVisible(false);
-                contentPanel.setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createMatteBorder(1, 0, 0, 0, new JBColor(0xE0E0E0, 0x555555)),
-                        new EmptyBorder(4, 0, 2, 0)
-                ));
-                deleteLabel.setVisible(false);
-            } else if (value instanceof DayOfWeek) { // 星期分组标题行
-                DayOfWeek dow = (DayOfWeek) value;
-                switch (dow) {
-                    case MONDAY: titleLabel.setText("周一"); break;
-                    case TUESDAY: titleLabel.setText("周二"); break;
-                    case WEDNESDAY: titleLabel.setText("周三"); break;
-                    case THURSDAY: titleLabel.setText("周四"); break;
-                    case FRIDAY: titleLabel.setText("周五"); break;
-                    case SATURDAY: titleLabel.setText("周六"); break;
-                    case SUNDAY: titleLabel.setText("周日"); break;
-                }
-                titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD, 11f));
-                titleLabel.setForeground(new JBColor(0x666666, 0xAAAAAA));
-                timeLabel.setVisible(false);
-                contentPanel.setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createMatteBorder(1, 0, 0, 0, new JBColor(0xE0E0E0, 0x555555)),
-                        new EmptyBorder(4, 0, 2, 0)
-                ));
-                deleteLabel.setVisible(false);
-            } else if (value instanceof HistoryEntry) { // 具体历史条目
-                HistoryEntry entry = (HistoryEntry) value;
-                titleLabel.setText(entry.getTitle());
-                titleLabel.setFont(titleLabel.getFont().deriveFont(Font.PLAIN, 12f));
-                titleLabel.setForeground(new JBColor(0x000000, 0xDDDDDD));
-                timeLabel.setText(formatTimestamp(entry.getTimestamp()));
-                timeLabel.setVisible(true);
-                contentPanel.setBorder(new EmptyBorder(0, 0, 0, 0));
-                deleteLabel.setVisible(true);
-                deleteLabel.setToolTipText("删除");
-            }
-            return this;
-        }
-    }
 
     // 弹出书签编辑/添加对话框，返回 [标题, 地址] 或 null
     public static String[] showBookmarkEditDialog(String title, String url) {
@@ -618,34 +422,5 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
             return new String[]{titleField.getText().trim(), urlField.getText().trim()};
         }
         return null;
-    }
-
-    // 格式化历史记录时间戳为可读文本
-    private static String formatTimestamp(long millis) {
-        ZoneId zone = ZoneId.systemDefault();
-        java.time.ZonedDateTime zdt = Instant.ofEpochMilli(millis).atZone(zone);
-        LocalDate today = LocalDate.now(zone);
-        LocalDate entryDate = zdt.toLocalDate();
-        LocalDate monday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-
-        // 当天记录显示 HH:mm
-        if (entryDate.equals(today)) {
-            return zdt.format(DateTimeFormatter.ofPattern("HH:mm"));
-        } else if (!entryDate.isBefore(monday)) { // 本周记录显示 "周X HH:mm"
-            String wd;
-            switch (zdt.getDayOfWeek()) {
-                case MONDAY: wd = "周一"; break;
-                case TUESDAY: wd = "周二"; break;
-                case WEDNESDAY: wd = "周三"; break;
-                case THURSDAY: wd = "周四"; break;
-                case FRIDAY: wd = "周五"; break;
-                case SATURDAY: wd = "周六"; break;
-                case SUNDAY: wd = "周日"; break;
-                default: wd = ""; break;
-            }
-            return wd + " " + zdt.format(DateTimeFormatter.ofPattern("HH:mm"));
-        } else { // 更早记录显示 "MM-dd HH:mm"
-            return zdt.format(DateTimeFormatter.ofPattern("MM-dd HH:mm"));
-        }
     }
 }

@@ -1,29 +1,20 @@
 // 浏览器工具窗口主面板，包含标签页管理器、地址栏、书签侧边栏、缩放提示等核心 UI
 package com.cpw.browser.toolwindow;
 
-import com.cpw.browser.WebBrowserIcons;
-import com.cpw.browser.action.GoBackAction;
-import com.cpw.browser.action.GoForwardAction;
-import com.cpw.browser.action.GoHomeAction;
-import com.cpw.browser.action.OpenDevToolsAction;
-import com.cpw.browser.action.RefreshAction;
+import com.cpw.browser.action.NavigationActions;
+import com.cpw.browser.action.PanelActions;
 import com.cpw.browser.bookmark.Bookmark;
 import com.cpw.browser.bookmark.BookmarkPersistentState;
 import com.cpw.browser.history.BrowsingHistoryState;
-import com.cpw.browser.settings.BrowserSettingsPage;
 import com.cpw.browser.settings.BrowserSettingsState;
 import com.cpw.browser.ui.AddressBar;
 import com.cpw.browser.ui.BookmarkSidebar;
 import com.cpw.browser.ui.ChromeTab;
-import com.intellij.icons.AllIcons;
+import com.cpw.browser.util.UrlUtils;
 import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.actionSystem.ActionToolbar;
-import com.intellij.openapi.actionSystem.AnAction;
-import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.DefaultActionGroup;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.options.ShowSettingsUtil;
-import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBLabel;
@@ -47,8 +38,6 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -223,22 +212,22 @@ public class BrowserToolWindowPanel {
 
         // 后退/前进/刷新/主页 mini 工具栏
         DefaultActionGroup navGroup = new DefaultActionGroup();
-        navGroup.add(new GoBackAction(tabManager));
-        navGroup.add(new GoForwardAction(tabManager));
-        navGroup.add(new RefreshAction(tabManager));
-        navGroup.add(new GoHomeAction(tabManager));
+        navGroup.add(new NavigationActions.GoBack(tabManager));
+        navGroup.add(new NavigationActions.GoForward(tabManager));
+        navGroup.add(new NavigationActions.Refresh(tabManager));
+        navGroup.add(new NavigationActions.GoHome(tabManager));
         ActionToolbar navToolbar = ActionManager.getInstance().createActionToolbar("WebBrowser.NavBar", navGroup, true);
         navToolbar.setTargetComponent(navToolbar.getComponent());
 
-        // url 右侧工具栏：放大、缩小、开发者工具、书签侧边栏切换
+        // url 右侧工具栏：缩放、开发者工具、书签侧边栏切换、系统打开、设置
         DefaultActionGroup rightGroup = new DefaultActionGroup();
-        rightGroup.add(new ZoomInAction());
-        rightGroup.add(new ZoomOutAction());
-        rightGroup.add(createOpenDevToolsAction());
+        rightGroup.add(new PanelActions.ZoomIn(tabManager, this::showZoomToast));
+        rightGroup.add(new PanelActions.ZoomOut(tabManager, this::showZoomToast));
+        rightGroup.add(new NavigationActions.OpenDevTools(tabManager, this::openDevTools));
         rightGroup.addSeparator();
-        rightGroup.add(new ToggleBookmarkSidebarAction());
-        rightGroup.add(new OpenInSystemBrowserAction());
-        rightGroup.add(new SettingsAction());
+        rightGroup.add(new PanelActions.ToggleBookmarkSidebar(bookmarkSidebar, centerPanel));
+        rightGroup.add(new PanelActions.OpenInSystemBrowser(tabManager));
+        rightGroup.add(new PanelActions.Settings(project));
         ActionToolbar rightToolbar = ActionManager.getInstance().createActionToolbar("WebBrowser.RightActions", rightGroup, true);
         rightToolbar.setTargetComponent(rightToolbar.getComponent());
 
@@ -314,99 +303,6 @@ public class BrowserToolWindowPanel {
                     tab.openDevTools();
                 }
             });
-        }
-    }
-
-    // 创建 OpenDevToolsAction 实例
-    private AnAction createOpenDevToolsAction() {
-        return new AnAction("开发者工具", "打开或关闭开发者工具", WebBrowserIcons.DEV_TOOLS) {
-            @Override
-            public void actionPerformed(AnActionEvent e) {
-                openDevTools();
-            }
-        };
-    }
-
-    // 放大 Action
-    private class ZoomInAction extends AnAction implements DumbAware {
-        ZoomInAction() {
-            super("放大", "放大网页 5%", WebBrowserIcons.ZOOM_IN);
-        }
-
-        @Override
-        public void actionPerformed(AnActionEvent e) {
-            tabManager.zoomIn();
-            showZoomToastForActiveTab("放大至");
-        }
-    }
-
-    // 缩小 Action
-    private class ZoomOutAction extends AnAction implements DumbAware {
-        ZoomOutAction() {
-            super("缩小", "缩小网页 5%", WebBrowserIcons.ZOOM_OUT);
-        }
-
-        @Override
-        public void actionPerformed(AnActionEvent e) {
-            tabManager.zoomOut();
-            showZoomToastForActiveTab("缩小至");
-        }
-    }
-
-    // 书签侧边栏切换 Action
-    private class ToggleBookmarkSidebarAction extends AnAction implements DumbAware {
-        ToggleBookmarkSidebarAction() {
-            super("显示书签", "显示或隐藏书签侧边栏", WebBrowserIcons.SHOW_BOOKMARK);
-        }
-
-        @Override
-        public void actionPerformed(AnActionEvent e) {
-            bookmarkSidebar.setVisible(!bookmarkSidebar.isVisible());
-            centerPanel.revalidate();
-            centerPanel.repaint();
-            e.getPresentation().setDescription(
-                    bookmarkSidebar.isVisible() ? "隐藏书签侧边栏" : "显示书签侧边栏"
-            );
-        }
-    }
-
-    // 系统浏览器打开 Action
-    private class OpenInSystemBrowserAction extends AnAction implements DumbAware {
-        OpenInSystemBrowserAction() {
-            super("系统浏览器打开", "在系统浏览器中打开当前网页", WebBrowserIcons.GOOGLE);
-        }
-
-        @Override
-        public void actionPerformed(AnActionEvent e) {
-            BrowserTabPanel tab = tabManager.getActiveTab();
-            String url = tab != null ? tab.getCurrentUrl() : null;
-            // 仅在 URL 有效且非空白页时打开系统浏览器
-            if (url != null && !url.isBlank() && !"about:blank".equals(url)) {
-                try {
-                    java.awt.Desktop.getDesktop().browse(new java.net.URI(url));
-                } catch (Exception ex) {
-                    statusLabel.setText("打开系统浏览器失败: " + ex.getMessage());
-                }
-            }
-        }
-
-        @Override
-        public void update(AnActionEvent e) {
-            BrowserTabPanel tab = tabManager.getActiveTab();
-            String url = tab != null ? tab.getCurrentUrl() : null;
-            e.getPresentation().setEnabled(url != null && !url.isBlank() && !"about:blank".equals(url));
-        }
-    }
-
-    // 设置 Action
-    private class SettingsAction extends AnAction implements DumbAware {
-        SettingsAction() {
-            super("设置", "打开 WebBrowser 设置", AllIcons.General.Settings);
-        }
-
-        @Override
-        public void actionPerformed(AnActionEvent e) {
-            ShowSettingsUtil.getInstance().showSettingsDialog(project, BrowserSettingsPage.class);
         }
     }
 
@@ -560,7 +456,7 @@ public class BrowserToolWindowPanel {
 
     // 处理地址栏导航请求
     private void onNavigateRequested(String rawUrl) {
-        String url = normalizeUrl(rawUrl);
+        String url = UrlUtils.normalize(rawUrl);
         BrowserTabPanel tab = tabManager.getActiveTab();
         // 有活跃标签页则直接导航，否则新建标签页
         if (tab != null) {
@@ -619,26 +515,4 @@ public class BrowserToolWindowPanel {
         zoomToastTimer.start();
     }
 
-    // 为当前活跃标签页显示缩放百分比提示
-    private void showZoomToastForActiveTab(String action) {
-        BrowserTabPanel activeTab = tabManager.getActiveTab();
-        int pct = (int) ((activeTab != null ? activeTab.getZoomLevel() : 1.0) * 100);
-        showZoomToast(action + pct + "%");
-    }
-
-    // 规范化 URL 输入（无协议头自动补充 https://，含空格视为搜索）
-    private String normalizeUrl(String input) {
-        String trimmed = input.trim();
-        // 空输入返回空白页
-        if (trimmed.isEmpty()) return "about:blank";
-        // 已有协议头则直接返回
-        if (trimmed.matches("^[a-zA-Z][a-zA-Z0-9+.-]*://.*")) return trimmed;
-        // 包含点且不含空格视为域名，补充 https://
-        if (trimmed.contains(".") && !trimmed.contains(" ")) return "https://" + trimmed;
-        try {
-            return "https://www.google.com/search?q=" + URLEncoder.encode(trimmed, StandardCharsets.UTF_8.name());
-        } catch (java.io.UnsupportedEncodingException e) {
-            return "about:blank";
-        }
-    }
 }
