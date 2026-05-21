@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @State(name = "BookmarkPersistentState", storages = @Storage("WebBrowser.xml"))
 public class BookmarkPersistentState implements PersistentStateComponent<BookmarkPersistentState.State> {
@@ -45,7 +46,7 @@ public class BookmarkPersistentState implements PersistentStateComponent<Bookmar
     // 添加书签，如果 URL 已存在则不添加
     public void addBookmark(Bookmark bookmark) {
         boolean exists = state.getBookmarks().stream()
-                .anyMatch(b -> b.getUrl().equals(bookmark.getUrl()));
+                .anyMatch(b -> Objects.equals(b.getUrl(), bookmark.getUrl()));
         if (!exists) {
             state.getBookmarks().add(bookmark);
         }
@@ -53,7 +54,7 @@ public class BookmarkPersistentState implements PersistentStateComponent<Bookmar
 
     // 根据 URL 移除书签
     public boolean removeBookmark(String url) {
-        return state.getBookmarks().removeIf(b -> b.getUrl().equals(url));
+        return state.getBookmarks().removeIf(b -> Objects.equals(b.getUrl(), url));
     }
 
     // 获取所有书签的副本
@@ -63,23 +64,23 @@ public class BookmarkPersistentState implements PersistentStateComponent<Bookmar
 
     // 判断是否已包含指定 URL 的书签
     public boolean contains(String url) {
-        return state.getBookmarks().stream().anyMatch(b -> b.getUrl().equals(url));
+        return state.getBookmarks().stream().anyMatch(b -> Objects.equals(b.getUrl(), url));
     }
 
     // 更新书签的标题和 URL
     public void updateBookmark(String oldUrl, String newTitle, String newUrl) {
         Bookmark bookmark = state.getBookmarks().stream()
-                .filter(b -> b.getUrl().equals(oldUrl))
+                .filter(b -> Objects.equals(b.getUrl(), oldUrl))
                 .findFirst()
                 .orElse(null);
         if (bookmark == null) return;
 
         int index = state.getBookmarks().indexOf(bookmark);
-        if (!oldUrl.equals(newUrl)) {
+        if (!Objects.equals(oldUrl, newUrl)) {
             // URL 变更时移除旧条目，若新 URL 不存在则添加
             state.getBookmarks().remove(index);
             boolean exists = state.getBookmarks().stream()
-                    .anyMatch(b -> b.getUrl().equals(newUrl));
+                    .anyMatch(b -> Objects.equals(b.getUrl(), newUrl));
             if (!exists) {
                 state.getBookmarks().add(new Bookmark(newTitle, newUrl, bookmark.getCreatedAt()));
             }
