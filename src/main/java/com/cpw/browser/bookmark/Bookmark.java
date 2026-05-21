@@ -5,11 +5,15 @@ import java.util.Objects;
 
 public class Bookmark {
     // 书签标题
-    private final String title;
+    private String title;
     // 书签 URL
-    private final String url;
+    private String url;
     // 书签创建时间戳
-    private final long createdAt;
+    private long createdAt;
+
+    // 无参构造，用于 XML 反序列化
+    private Bookmark() {
+    }
 
     // 全参构造
     public Bookmark(String title, String url, long createdAt) {
