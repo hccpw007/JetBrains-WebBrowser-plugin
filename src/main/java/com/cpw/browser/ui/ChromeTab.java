@@ -171,22 +171,6 @@ public class ChromeTab extends JPanel {
         g2.setColor(bg);
         g2.fill(buildTabShape(w, h, active));
 
-        // 描边：活跃标签不画底边（与内容区相连）
-        g2.setColor(BORDER);
-        // 如果是活跃标签，只绘制顶部和两侧的边框（不画底边）
-        if (active) {
-            Path2D borderPath = new Path2D.Float();
-            borderPath.moveTo(0.0f, h);
-            borderPath.lineTo(0.0f, CR);
-            borderPath.quadTo(0.0f, 0.0f, CR, 0.0f);
-            borderPath.lineTo(w - CR, 0.0f);
-            borderPath.quadTo(w, 0.0f, w, CR);
-            borderPath.lineTo(w, h);
-            g2.draw(borderPath);
-        } else { // 非活跃标签直接绘制完整轮廓
-            g2.draw(buildTabShape(w, h, false));
-        }
-
         g2.dispose();
     }
 
