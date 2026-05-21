@@ -41,107 +41,113 @@ public class BrowserSettingsPage implements Configurable {
     public JComponent createComponent() {
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
-        c.insets = new Insets(0, 0, 0, 0);
         c.anchor = GridBagConstraints.WEST;
-        c.fill = GridBagConstraints.HORIZONTAL;
+
+        // Row 0: 主页 URL — 标签和输入框在同一行
         c.gridx = 0;
         c.gridy = 0;
-
-        // 主页 URL — 标签
+        c.fill = GridBagConstraints.NONE;
+        c.weightx = 0.0;
+        c.insets = new Insets(0, 0, 0, 8);
         panel.add(new JLabel("主页 URL:"), c);
-
-        // 主页 URL — 输入框
-        c.gridy = 1;
+        c.gridx = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
         c.weightx = 1.0;
-        c.insets = new Insets(2, 0, 6, 0);
+        c.insets = new Insets(0, 0, 0, 0);
         homePageField = new JBTextField();
         panel.add(homePageField, c);
 
-        // 新标签页时打开主页
-        c.gridy = 2;
+        // Row 1: 新标签页时打开主页
+        c.gridx = 0;
+        c.gridy = 1;
+        c.gridwidth = 2;
+        c.fill = GridBagConstraints.NONE;
         c.weightx = 0.0;
-        c.insets = new Insets(0, 0, 0, 0);
+        c.insets = new Insets(4, 0, 0, 0);
         openHomeCheckBox = new JBCheckBox("新标签页时打开主页");
         panel.add(openHomeCheckBox, c);
 
-        // 分隔线 — 历史设置区域
-        c.gridy = 3;
+        // Row 2: 分隔线 — 历史记录
+        c.gridy = 2;
         c.gridwidth = 2;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.insets = new Insets(12, 0, 8, 0);
+        c.weightx = 0.0;
         panel.add(new TitledSeparator("历史记录"), c);
 
-        // 历史天数 — 标签和输入框
-        c.gridy = 4;
+        // Row 3: 最多保存天数 — 标签和输入框
+        c.gridy = 3;
+        c.gridx = 0;
         c.gridwidth = 1;
         c.fill = GridBagConstraints.NONE;
-        c.insets = new Insets(0, 0, 2, 16);
-        c.weightx = 0.5;
-        JLabel daysLabel = new JLabel("最多保存天数:");
-        panel.add(daysLabel, c);
-        c.gridx = 1;
-        JLabel countLabel = new JLabel("最多记录条数:");
-        panel.add(countLabel, c);
-
-        c.gridy = 5;
-        c.gridx = 0;
-        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 0.0;
         c.insets = new Insets(0, 0, 0, 8);
-        c.weightx = 0.5;
+        panel.add(new JLabel("最多保存天数:"), c);
+        c.gridx = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 0.3;
+        c.insets = new Insets(0, 0, 0, 0);
         maxHistoryDaysField = new JBTextField();
         maxHistoryDaysField.setColumns(4);
         panel.add(maxHistoryDaysField, c);
+
+        // Row 4: 最多记录条数 — 标签和输入框
+        c.gridy = 4;
+        c.gridx = 0;
+        c.fill = GridBagConstraints.NONE;
+        c.weightx = 0.0;
+        c.insets = new Insets(4, 0, 0, 8);
+        panel.add(new JLabel("最多记录条数:"), c);
         c.gridx = 1;
-        c.insets = new Insets(0, 8, 0, 0);
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 0.3;
+        c.insets = new Insets(4, 0, 0, 0);
         maxHistoryCountField = new JBTextField();
         maxHistoryCountField.setColumns(4);
         panel.add(maxHistoryCountField, c);
 
-        // 位置 — 标签
-        c.gridy = 6;
+        // Row 5: 分隔线 — 开发者工具
+        c.gridy = 5;
         c.gridx = 0;
         c.gridwidth = 2;
-        c.fill = GridBagConstraints.NONE;
-        c.insets = new Insets(12, 0, 4, 0);
-        c.weightx = 0.0;
-        panel.add(new TitledSeparator("显示"), c);
-
-        // 开发者工具 — 分隔线
-        c.gridy = 7;
-        c.gridx = 0;
-        c.gridwidth = 2;
-        c.fill = GridBagConstraints.NONE;
-        c.insets = new Insets(12, 0, 4, 0);
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = new Insets(12, 0, 8, 0);
         c.weightx = 0.0;
         panel.add(new TitledSeparator("开发者工具"), c);
 
-        // 开发者工具 — 下拉框
-        c.gridy = 8;
+        // Row 6: 打开方式 — 标签和下拉框
+        c.gridy = 6;
         c.gridx = 0;
         c.gridwidth = 1;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.insets = new Insets(0, 0, 0, 0);
+        c.fill = GridBagConstraints.NONE;
         c.weightx = 0.0;
+        c.insets = new Insets(0, 0, 0, 8);
         panel.add(new JLabel("打开方式:"), c);
         c.gridx = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1.0;
+        c.insets = new Insets(0, 0, 0, 0);
         devToolsModeCombo = new JComboBox<>(new String[]{"当前页面下方", "独立窗口"});
         panel.add(devToolsModeCombo, c);
 
-        // 位置 — 分隔线
-        c.gridy = 9;
+        // Row 7: 显示位置 — 标签和下拉框
+        c.gridy = 7;
         c.gridx = 0;
-        c.gridwidth = 1;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.insets = new Insets(0, 0, 0, 0);
+        c.fill = GridBagConstraints.NONE;
         c.weightx = 0.0;
-        panel.add(new JLabel("位置:"), c);
+        c.insets = new Insets(4, 0, 0, 8);
+        panel.add(new JLabel("显示位置:"), c);
         c.gridx = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1.0;
+        c.insets = new Insets(4, 0, 0, 0);
         displayPositionCombo = new JComboBox<>(new String[]{"工具栏", "编辑区"});
         panel.add(displayPositionCombo, c);
 
-        // 右下角签名
-        c.gridy = 10;
+        // Row 8: 右下角签名
+        c.gridy = 8;
         c.gridx = 1;
+        c.gridwidth = 1;
         c.weightx = 1.0;
         c.anchor = GridBagConstraints.LAST_LINE_END;
         c.fill = GridBagConstraints.NONE;
