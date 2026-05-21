@@ -1,113 +1,223 @@
 # WebBrowser
 
-[![Twitter Follow](https://img.shields.io/badge/follow-%40JBPlatform-1DA1F2?logo=twitter)](https://twitter.com/JBPlatform)
-[![Developers Forum](https://img.shields.io/badge/JetBrains%20Platform-Join-blue)][jb:forum]
+A Simple Browser for IntelliJ IDEA, inspired by VS Code Simple Browser.
+一个 IntelliJ IDEA 的内嵌网页浏览器插件，灵感来自 VS Code 的 Simple Browser。
 
-## Plugin structure
+Embed web pages directly in the IDE with navigation, bookmarks, history, and DevTools support. Powered by JCEF (Java Chromium Embedded Framework).
+在 IDE 中直接嵌入网页浏览功能，支持导航、书签、历史记录和开发者工具。基于 JCEF（Java Chromium Embedded Framework）构建。
 
-A generated project contains the following content structure:
+**Author: Pengwei Chen**
+
+---
+
+## Features / 功能特性
+
+### Browser Display / 浏览器显示
+
+- **Tool Window mode** — Browser appears in a docked tool window on the IDE sidebar.
+- **工具栏模式** — 浏览器显示在 IDE 侧边栏的停靠工具窗口中。
+- **Editor Tab mode** — Browser opens as an editor tab in the main editor area.
+- **编辑区模式** — 浏览器以编辑器标签页形式在主编辑区打开。
+- **Toggle shortcut** `Alt+Shift+W` — Quickly show or hide the browser.
+- **切换快捷键** `Alt+Shift+W` — 快速打开或关闭浏览器。
+
+### Navigation / 导航
+
+- **Back / Forward** — Navigate through session history; buttons auto-disable when no history exists.
+- **后退 / 前进** — 在会话历史中导航，按钮在无历史记录时自动禁用。
+- **Home** — Navigate to your configured homepage with one click.
+- **主页** — 一键导航到您设置的主页。
+- **Refresh** — Reload the current page.
+- **刷新** — 重新加载当前页面。
+- **Smart address bar** — Type URLs or search terms; auto-completes with `https://` for domains, redirects to Google Search for keywords.
+- **智能地址栏** — 输入 URL 或搜索词，域名自动补全 `https://`，关键词自动跳转 Google 搜索。
+
+### Tab Management / 标签页管理
+
+- **Multiple tabs** — Up to 20 tabs, each isolated with its own navigation history and zoom level.
+- **多标签页** — 最多 20 个标签页，每个标签页拥有独立的导航历史和缩放级别。
+- **Chrome-style tab strip** — Custom rendered tabs with active/inactive/hover states, concave bottom for inactive tabs.
+- **Chrome 风格标签栏** — 自定义绘制标签，支持活跃/非活跃/悬停状态，非活跃标签底部内凹。
+- **Right-click context menu** — Close, Close Others, Close All.
+- **右键上下文菜单** — 关闭、关闭其他、关闭所有。
+- **New tab button** — Click "+" to create a new tab; optionally opens your homepage automatically.
+- **新建标签页** — 点击 "+" 创建新标签页，可选自动打开主页。
+
+### Bookmarks / 书签
+
+- **Add Bookmark** — Bookmark the current page with title and URL.
+- **添加书签** — 将当前页面添加到书签，包含标题和网址。
+- **Edit / Delete Bookmark** — Edit bookmark name and URL, or delete with confirmation.
+- **编辑/删除书签** — 编辑书签名称和网址，或确认删除。
+- **Duplicate detection** — Prevents adding the same URL twice.
+- **重复检测** — 防止添加相同的 URL。
+- **Star icon in address bar** — One-click toggle to add or remove bookmarks.
+- **地址栏星标** — 一键切换添加或移除书签。
+
+### Browsing History / 浏览历史
+
+- **Automatic recording** — Pages you visit are automatically recorded after loading completes.
+- **自动记录** — 访问过的页面在加载完成后自动记录。
+- **Smart grouping** — History entries grouped by Today, Day of Week, and Older.
+- **智能分组** — 历史记录按今天、各天（周一到周日）、以前分组显示。
+- **Configurable retention** — Set maximum days and maximum number of entries.
+- **可配置保留策略** — 设置最大保存天数和最大记录条数。
+- **Clear options** — Clear last hour, last 24 hours, or all history.
+- **清除选项** — 清除最近 1 小时、24 小时或全部历史。
+
+### Developer Tools / 开发者工具
+
+- **Embedded DevTools** — Chrome DevTools panel embedded directly below the current page (CDP-based).
+- **嵌入式 DevTools** — Chrome DevTools 面板直接嵌入当前页面下方（基于 CDP）。
+- **Separate window mode** — Option to open DevTools in a popup window.
+- **独立窗口模式** — 可选择在新弹出窗口中打开 DevTools。
+- **Auto-detects JCEF debugging port** — Scans known JCEF cache directories for the active DevTools port.
+- **自动检测 JCEF 调试端口** — 扫描已知 JCEF 缓存目录查找 DevTools 活跃端口。
+
+### Zoom / 缩放
+
+- **Zoom In / Zoom Out** — Adjust zoom level by 5% increments.
+- **放大 / 缩小** — 以 5% 步进调整缩放级别。
+- **Toast notification** — Shows current zoom percentage for 1 second then auto-hides.
+- **缩放提示** — 显示当前缩放百分比，1 秒后自动消失。
+
+### Bookmark Sidebar / 书签侧边栏
+
+- **Dual-tab sidebar** — Segmented toggle between Bookmarks and History (Element-Plus style).
+- **双标签侧边栏** — Element Plus 风格分段切换器，在书签和历史之间切换。
+- **Bookmark operations** — Click to navigate, pencil icon to edit, "x" to delete.
+- **书签操作** — 点击导航，编辑图标修改，"x" 删除。
+- **History operations** — Click to navigate, "x" to remove a single entry, "Clear" link for batch operations.
+- **历史操作** — 点击导航，"x" 删除单条，"清空"链接批量操作。
+- **Collapsible** — Toggle visibility via the toolbar button.
+- **可折叠** — 通过工具栏按钮显示或隐藏。
+
+### Auto-Refresh / 定时刷新
+
+- **Configurable interval** — Automatically refresh a page at a user-specified interval (in seconds).
+- **可配置间隔** — 按用户指定的间隔（秒）自动刷新页面。
+- **Confirmation dialogs** — Confirms before enabling and asks before stopping.
+- **确认对话框** — 开启时确认，停止时再次确认。
+
+### Cache Management / 缓存管理
+
+- **Clear Cache** — Clears `localStorage`, `sessionStorage`, `caches` and cookies via JavaScript, then reloads the page.
+- **清空缓存** — 通过 JavaScript 清除 `localStorage`、`sessionStorage`、`caches` 和 Cookie，然后重新加载页面。
+
+### Open in System Browser / 系统浏览器打开
+
+- **One-click** — Opens the current page URL in your operating system's default browser.
+- **一键打开** — 在操作系统默认浏览器中打开当前页面 URL。
+
+### Internationalization / 多语言支持
+
+- **7 languages supported** — Simplified Chinese, English, Japanese, Korean, French, German, plus IDE default.
+- **支持 7 种语言** — 简体中文、英语、日语、韩语、法语、德语，以及跟随 IDE 默认。
+- **Instant switching** — Language takes effect immediately; no IDE restart required.
+- **即时切换** — 切换语言后立即生效，无需重启 IDE。
+
+### Settings / 设置
+
+- **Customizable homepage** — Set any URL as your homepage.
+- **可定制主页** — 设置任意 URL 作为主页。
+- **New tab behavior** — Choose whether to open the homepage on new tabs.
+- **新标签页行为** — 选择新标签页是否打开主页。
+- **History retention** — Configure max days and max entries.
+- **历史保留策略** — 配置最大天数和最大条目数。
+- **DevTools mode** — Choose embedded or separate window.
+- **DevTools 模式** — 选择嵌入或独立窗口。
+- **Display position** — Choose tool window or editor tab.
+- **显示位置** — 选择工具栏或编辑区。
+- **Language** — Switch UI language on the fly.
+- **语言** — 随时切换界面语言。
+
+### Keyboard Shortcuts / 键盘快捷键
+
+| Shortcut / 快捷键 | Action / 功能 |
+|-------------------|---------------|
+| `Alt+Shift+W` | Toggle WebBrowser tool window / 切换浏览器工具窗口 |
+| `Ctrl+L` | Focus the address bar / 聚焦地址栏 |
+| `Ctrl+Shift+I` | Open or close DevTools / 打开或关闭开发者工具 |
+
+---
+
+## Installation / 安装
+
+### From JetBrains Marketplace / 从 Marketplace 安装
+
+Search for **WebBrowser** in **Settings/Preferences → Plugins** and install it.
+在 **设置/偏好设置 → 插件** 中搜索 **WebBrowser** 并安装。
+
+Restart the IDE if prompted.
+如果提示，请重启 IDE。
+
+### Build from source / 从源码构建
+
+```bash
+git clone https://github.com/lowcode-server/WebBrowser.git
+cd WebBrowser
+./gradlew build
+```
+
+The built plugin JAR will be at `build/libs/WebBrowser-*.jar`.
+构建产物位于 `build/libs/WebBrowser-*.jar`。
+
+---
+
+## Development / 开发
+
+```bash
+# Run IDE with the plugin / 启动 IDE 并加载插件
+./gradlew runIde
+
+# Run tests / 运行测试
+./gradlew test
+
+# Build / 构建
+./gradlew build
+
+# Verify plugin compatibility / 验证插件兼容性
+./gradlew verifyPlugin
+
+# Publish to JetBrains Marketplace / 发布到 Marketplace
+./gradlew publishPlugin
+```
+
+### Requirements / 环境要求
+
+- IntelliJ IDEA 2026.1.2 or later / 或更高版本
+- Java 21+
+- Gradle (wrapper included) / （已包含 wrapper）
+
+### Project Structure / 项目结构
 
 ```
-.
-├── .run/                   Predefined Run/Debug Configurations
-├── build/                  Output build directory
-├── gradle
-│   ├── wrapper/            Gradle Wrapper
-│   ├── libs.versions.toml  Version catalog
-├── src                     Plugin sources
-│   ├── main
-│   │   ├── kotlin/         Kotlin production sources
-│   │   └── resources/      Resources - plugin.xml, icons, messages
-├── .gitignore              Git ignoring rules
-├── build.gradle.kts        Gradle build configuration
-├── gradle.properties       Gradle configuration properties
-├── gradlew                 *nix Gradle Wrapper script
-├── gradlew.bat             Windows Gradle Wrapper script
-├── README.md               README
-└── settings.gradle.kts     Gradle project settings
+src/main/java/com/cpw/browser/
+├── action/                    # Action classes (navigation, bookmarks, panel)
+├── bookmark/                  # Bookmark data model and persistence
+├── editor/                    # Editor tab integration
+├── history/                   # Browsing history data model and persistence
+├── settings/                  # Settings page and state persistence
+├── toolwindow/                # Tool window, tab manager, embedded DevTools
+├── ui/                        # UI components (AddressBar, ChromeTab, etc.)
+├── util/                      # Utilities (i18n, URL normalization)
+├── WebBrowserIcons.java       # Icon constants
+├── JcefArgsProvider.java      # JCEF startup arguments
+├── MyMessageBundle.java       # i18n utility
+└── PluginFirstRunActivity.java # First-run onboarding dialog
 ```
 
-In addition to the configuration files, the most crucial part is the `src` directory, which contains our implementation and the manifest for our
-plugin – [plugin.xml][file:plugin.xml].
+---
 
-> [!NOTE]
-> To use Java in your plugin, create the `/src/main/java` directory.
+## Tech Stack / 技术栈
 
-## Plugin configuration file
+- **Java** (pure Java, no Kotlin dependencies) / 纯 Java，无 Kotlin 依赖
+- **IntelliJ Platform Plugin SDK** (Gradle)
+- **JCEF** (Java Chromium Embedded Framework)
 
-The plugin configuration file is a [plugin.xml][file:plugin.xml] file located in the `src/main/resources/META-INF` directory.
-It provides general information about the plugin, its dependencies, extensions, and listeners.
+---
 
-You can read more about this file in the [Plugin Configuration File][docs:plugin.xml] section of our documentation.
+## License / 许可证
 
-If you're still not quite sure what this is all about, read [Introduction to IntelliJ Platform][docs:intro].
-
-## Predefined Run/Debug configurations
-
-Within the default project structure, there is a `.run` directory provided containing predefined *Run/Debug configurations* that expose corresponding
-Gradle tasks:
-
-| Configuration name | Description                                                                                                                                                                         |
-|--------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Run Plugin         | Runs [`:runIde`][gh:intellij-platform-gradle-plugin-runIde] IntelliJ Platform Gradle Plugin task. Use the *Debug* icon for plugin debugging.                                        |
-| Run Tests          | Runs [`:test`][gradle:lifecycle-tasks] Gradle task.                                                                                                                                 |
-| Run Verifications  | Runs [`:verifyPlugin`][gh:intellij-platform-gradle-plugin-verifyPlugin] IntelliJ Platform Gradle Plugin task to check the plugin compatibility against the specified IntelliJ IDEs. |
-
-> [!NOTE]
-> You can find the logs from the running task in the `idea.log` tab.
-
-## Publishing the plugin
-
-> [!TIP]
-> Make sure to follow all guidelines listed in [Publishing a Plugin][docs:publishing] to follow all recommended and required steps.
-
-Releasing a plugin to [JetBrains Marketplace](https://plugins.jetbrains.com) is a straightforward operation that uses the `publishPlugin` Gradle task
-provided by the [intellij-platform-gradle-plugin][gh:intellij-platform-gradle-plugin-docs].
-
-You can also upload the plugin to the [JetBrains Plugin Repository](https://plugins.jetbrains.com/plugin/upload) manually via UI.
-
-## Useful links
-
-- [IntelliJ Platform SDK Plugin SDK][docs]
-- [IntelliJ Platform Gradle Plugin Documentation][gh:intellij-platform-gradle-plugin-docs]
-- [IntelliJ Platform Explorer][jb:ipe]
-- [JetBrains Marketplace Quality Guidelines][jb:quality-guidelines]
-- [IntelliJ Platform UI Guidelines][jb:ui-guidelines]
-- [JetBrains Marketplace Paid Plugins][jb:paid-plugins]
-- [IntelliJ SDK Code Samples][gh:code-samples]
-
-[docs]: https://plugins.jetbrains.com/docs/intellij
-
-[docs:intro]: https://plugins.jetbrains.com/docs/intellij/intellij-platform.html?from=IJPluginTemplate
-
-[docs:plugin.xml]: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html?from=IJPluginTemplate
-
-[docs:publishing]: https://plugins.jetbrains.com/docs/intellij/publishing-plugin.html?from=IJPluginTemplate
-
-[file:plugin.xml]: ./src/main/resources/META-INF/plugin.xml
-
-[gh:code-samples]: https://github.com/JetBrains/intellij-sdk-code-samples
-
-[gh:intellij-platform-gradle-plugin]: https://github.com/JetBrains/intellij-platform-gradle-plugin
-
-[gh:intellij-platform-gradle-plugin-docs]: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin.html
-
-[gh:intellij-platform-gradle-plugin-runIde]: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-tasks.html#runIde
-
-[gh:intellij-platform-gradle-plugin-verifyPlugin]: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-tasks.html#verifyPlugin
-
-[gradle:lifecycle-tasks]: https://docs.gradle.org/current/userguide/java_plugin.html#lifecycle_tasks
-
-[jb:github]: https://github.com/JetBrains/.github/blob/main/profile/README.md
-
-[jb:forum]: https://platform.jetbrains.com/
-
-[jb:quality-guidelines]: https://plugins.jetbrains.com/docs/marketplace/quality-guidelines.html
-
-[jb:paid-plugins]: https://plugins.jetbrains.com/docs/marketplace/paid-plugins-marketplace.html
-
-[jb:quality-guidelines]: https://plugins.jetbrains.com/docs/marketplace/quality-guidelines.html
-
-[jb:ipe]: https://jb.gg/ipe
-
-[jb:ui-guidelines]: https://jetbrains.github.io/ui
+This project is open source under the MIT License.
+本项目基于 MIT 许可证开源。
