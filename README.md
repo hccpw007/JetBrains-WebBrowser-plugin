@@ -149,22 +149,6 @@ Embed web pages directly in the IDE with navigation, bookmarks, history, and Dev
 
 ### Keyboard Shortcuts / 键盘快捷键
 
-| Shortcut / 快捷键 | Action / 功能 |
-|-------------------|---------------|
-| `Alt+Shift+W` | Toggle WebBrowser tool window / 切换浏览器工具窗口 |
-
-### Runtime Requirements / 使用环境要求
-
-- **IntelliJ IDEA** 2026.1.2 or later (Ultimate / Community)
-- **Java** 21+ (bundled with IDE)
-- **JCEF** (Java Chromium Embedded Framework, bundled with IntelliJ IDEA)
-
-### Development Requirements / 开发环境要求
-
-- **IntelliJ IDEA** 2026.1.2+
-- **Java** 21+ (JDK)
-- **Gradle** (wrapper included / 已包含 wrapper)
-
 ---
 
 ## Installation / 安装
@@ -180,7 +164,7 @@ Restart the IDE if prompted.
 ### Build from source / 从源码构建
 
 ```bash
-git clone https://github.com/lowcode-server/WebBrowser.git
+git clone https://github.com/hccpw007/JetBrains-IntelliJ-IDEA-Web-Browser.git
 cd WebBrowser
 ./gradlew build
 ```
