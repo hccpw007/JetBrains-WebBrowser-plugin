@@ -385,7 +385,9 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
     // ---- 历史列表模型 ----
     private class HistoryEntriesModel extends AbstractListModel<Object> {
 
+        // 历史分组：今天的条目标题
         private static final String HEADER_TODAY = "今天";
+        // 历史分组：以前的条目标题
         private static final String HEADER_OLDER = "以前";
 
         private List<Object> items = buildItems();

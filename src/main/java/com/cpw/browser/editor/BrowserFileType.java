@@ -10,8 +10,10 @@ import javax.swing.Icon;
 
 public final class BrowserFileType implements FileType {
 
+    // 单例实例
     public static final BrowserFileType INSTANCE = new BrowserFileType();
 
+    // 编辑器标签页图标
     private static final Icon TAB_ICON = IconLoader.getIcon("/icons/webbrowser_tab.svg", BrowserFileType.class);
 
     private BrowserFileType() {

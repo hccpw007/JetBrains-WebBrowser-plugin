@@ -8,7 +8,9 @@ import java.util.function.Supplier;
 
 public final class MyMessageBundle {
 
+    // 消息资源文件的基路径
     private static final String BUNDLE = "messages.MyMessageBundle";
+    // DynamicBundle 实例，用于按需加载消息
     private static final DynamicBundle instance = new DynamicBundle(MyMessageBundle.class, BUNDLE);
 
     private MyMessageBundle() {

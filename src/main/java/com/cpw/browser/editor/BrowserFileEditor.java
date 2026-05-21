@@ -20,6 +20,7 @@ import java.util.List;
 // 文件编辑器集成，支持 .webbrowser 文件类型的内嵌浏览器编辑器
 public class BrowserFileEditor implements FileEditor {
 
+    // 编辑器标题的用户数据 Key
     public static final Key<String> TITLE_KEY = Key.create("BrowserEditorTitle");
 
     private final BrowserToolWindowPanel browserPanel;
