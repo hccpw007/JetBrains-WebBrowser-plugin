@@ -14,13 +14,13 @@ Embed web pages directly in the IDE with navigation, bookmarks, history, and Dev
 
 ### Runtime Requirements / 使用环境要求
 
-- **IntelliJ IDEA** 2026.1.2 or later (Ultimate / Community)
+- **IntelliJ IDEA** 2025.1 or later (Ultimate / Community)
 - **Java** 21+ (bundled with IDE)
 - **JCEF** (Java Chromium Embedded Framework, bundled with IntelliJ IDEA)
 
 ### Development Requirements / 开发环境要求
 
-- **IntelliJ IDEA** 2026.1.2+
+- **IntelliJ IDEA** 2025.1+
 - **Java** 21+ (JDK)
 - **Gradle** (wrapper included / 已包含 wrapper)
 
