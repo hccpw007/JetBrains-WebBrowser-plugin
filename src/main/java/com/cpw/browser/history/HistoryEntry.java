@@ -24,12 +24,12 @@ public class HistoryEntry {
 
     // 获取访问的 URL
     public String getUrl() {
-        return url;
+        return url != null ? url : "";
     }
 
     // 获取页面标题
     public String getTitle() {
-        return title;
+        return title != null ? title : "";
     }
 
     // 获取访问时间戳

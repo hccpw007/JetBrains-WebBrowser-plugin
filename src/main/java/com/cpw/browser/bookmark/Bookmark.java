@@ -29,12 +29,12 @@ public class Bookmark {
 
     // 获取书签标题
     public String getTitle() {
-        return title;
+        return title != null ? title : "";
     }
 
     // 获取书签 URL
     public String getUrl() {
-        return url;
+        return url != null ? url : "";
     }
 
     // 获取书签创建时间戳

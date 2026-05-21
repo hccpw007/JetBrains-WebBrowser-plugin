@@ -73,12 +73,12 @@ public class BookmarkListCellRenderer extends JPanel implements ListCellRenderer
         // 如果值是书签对象，显示其标题和 URL 提示
         if (value instanceof Bookmark) {
             Bookmark bookmark = (Bookmark) value;
-            // 标题为空时兜底显示"未命名书签"
+            // 标题为空时兜底显示"未命名书签"（getter 已保证不返回 null）
             String title = bookmark.getTitle();
-            titleLabel.setText(title != null && !title.isBlank() ? title : "未命名书签");
+            titleLabel.setText(!title.isBlank() ? title : "未命名书签");
             // URL 为空时不显示工具提示
             String url = bookmark.getUrl();
-            titleLabel.setToolTipText(url != null && !url.isBlank() ? url : null);
+            titleLabel.setToolTipText(!url.isBlank() ? url : null);
         }
 
         return this;
