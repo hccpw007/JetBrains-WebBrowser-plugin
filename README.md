@@ -1,12 +1,28 @@
 # WebBrowser
 
-A Simple Browser for IntelliJ IDEA, inspired by VS Code Simple Browser.
-一个 IntelliJ IDEA 的内嵌网页浏览器插件，灵感来自 VS Code 的 Simple Browser。
+An embedded web browser for IntelliJ IDEA with multi-tab, bookmark, history, and DevTools support.
+一个 IntelliJ IDEA 的内嵌网页浏览器插件，支持多标签页、书签、历史记录和开发者工具。
 
 Embed web pages directly in the IDE with navigation, bookmarks, history, and DevTools support. Powered by JCEF (Java Chromium Embedded Framework).
 在 IDE 中直接嵌入网页浏览功能，支持导航、书签、历史记录和开发者工具。基于 JCEF（Java Chromium Embedded Framework）构建。
 
 **Author: Pengwei Chen**
+
+---
+
+## Requirements / 环境要求
+
+### Runtime Requirements / 使用环境要求
+
+- **IntelliJ IDEA** 2026.1.2 or later (Ultimate / Community)
+- **Java** 21+ (bundled with IDE)
+- **JCEF** (Java Chromium Embedded Framework, bundled with IntelliJ IDEA)
+
+### Development Requirements / 开发环境要求
+
+- **IntelliJ IDEA** 2026.1.2+
+- **Java** 21+ (JDK)
+- **Gradle** (wrapper included / 已包含 wrapper)
 
 ---
 
@@ -136,8 +152,18 @@ Embed web pages directly in the IDE with navigation, bookmarks, history, and Dev
 | Shortcut / 快捷键 | Action / 功能 |
 |-------------------|---------------|
 | `Alt+Shift+W` | Toggle WebBrowser tool window / 切换浏览器工具窗口 |
-| `Ctrl+L` | Focus the address bar / 聚焦地址栏 |
-| `Ctrl+Shift+I` | Open or close DevTools / 打开或关闭开发者工具 |
+
+### Runtime Requirements / 使用环境要求
+
+- **IntelliJ IDEA** 2026.1.2 or later (Ultimate / Community)
+- **Java** 21+ (bundled with IDE)
+- **JCEF** (Java Chromium Embedded Framework, bundled with IntelliJ IDEA)
+
+### Development Requirements / 开发环境要求
+
+- **IntelliJ IDEA** 2026.1.2+
+- **Java** 21+ (JDK)
+- **Gradle** (wrapper included / 已包含 wrapper)
 
 ---
 
@@ -182,12 +208,6 @@ The built plugin JAR will be at `build/libs/WebBrowser-*.jar`.
 # Publish to JetBrains Marketplace / 发布到 Marketplace
 ./gradlew publishPlugin
 ```
-
-### Requirements / 环境要求
-
-- IntelliJ IDEA 2026.1.2 or later / 或更高版本
-- Java 21+
-- Gradle (wrapper included) / （已包含 wrapper）
 
 ### Project Structure / 项目结构
 
