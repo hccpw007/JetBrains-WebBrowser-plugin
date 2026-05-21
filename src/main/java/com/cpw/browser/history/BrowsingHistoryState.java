@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @State(name = "BrowsingHistoryState", storages = @Storage("WebBrowser.xml"))
 public class BrowsingHistoryState implements PersistentStateComponent<BrowsingHistoryState.State> {
@@ -58,7 +59,7 @@ public class BrowsingHistoryState implements PersistentStateComponent<BrowsingHi
         int existingIndex = -1;
         for (int i = state.getEntries().size() - 1; i >= 0; i--) {
             HistoryEntry entry = state.getEntries().get(i);
-            if (entry.getUrl().equals(url) && entry.getTimestamp() >= todayStart) {
+            if (Objects.equals(entry.getUrl(), url) && entry.getTimestamp() >= todayStart) {
                 existingIndex = i;
                 break;
             }
@@ -100,7 +101,7 @@ public class BrowsingHistoryState implements PersistentStateComponent<BrowsingHi
 
     // 根据 URL 和时间戳移除指定记录
     public void removeEntry(String url, long timestamp) {
-        state.getEntries().removeIf(entry -> entry.getUrl().equals(url) && entry.getTimestamp() == timestamp);
+        state.getEntries().removeIf(entry -> Objects.equals(entry.getUrl(), url) && entry.getTimestamp() == timestamp);
     }
 
     // 清除全部历史记录
