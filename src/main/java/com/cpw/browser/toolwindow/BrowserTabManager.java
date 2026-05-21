@@ -9,12 +9,16 @@ import java.util.function.Consumer;
 // 多标签页管理器，支持创建/关闭/切换标签页，管理回调事件
 public class BrowserTabManager {
 
+    // 所有标签页的列表
     private final List<BrowserTabPanel> tabs = new ArrayList<>();
+    // 当前活跃标签页的索引
     private int activeTabIndex = -1;
 
     // 分离的回调：添加、移除、切换
     private Consumer<BrowserTabPanel> onTabAdded = null;
+    // 标签页移除时的回调
     private Consumer<BrowserTabPanel> onTabRemoved = null;
+    // 活跃标签页变更时的回调
     private Consumer<BrowserTabPanel> onActiveTabChanged = null;
 
     // 获取当前活跃标签页

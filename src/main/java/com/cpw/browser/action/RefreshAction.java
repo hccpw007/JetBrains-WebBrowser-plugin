@@ -9,7 +9,9 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 // 刷新当前页面的 Action，刷新前会重置缩放
 public class RefreshAction extends AnAction {
 
+    // 标签页管理器，用于刷新当前标签页
     private final BrowserTabManager tabManager;
+    // 缩放重置完成后的回调
     private final Runnable onAfterZoomReset;
 
     // 没有刷新后回调的构造

@@ -12,7 +12,9 @@ import com.intellij.openapi.ui.Messages;
 // 将当前页面添加到书签的 Action
 public class AddBookmarkAction extends AnAction {
 
+    // 标签页管理器，用于获取当前标签页的 URL 和标题
     private final BrowserTabManager tabManager;
+    // 书签变更后的回调
     private final Runnable onBookmarkChanged;
 
     // 构造添加书签 Action

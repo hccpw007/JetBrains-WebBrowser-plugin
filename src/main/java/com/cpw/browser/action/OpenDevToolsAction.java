@@ -9,7 +9,9 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 // 打开 Chrome DevTools 开发者工具的 Action
 public class OpenDevToolsAction extends AnAction {
 
+    // 标签页管理器，用于获取当前标签页
     private final BrowserTabManager tabManager;
+    // 打开开发者工具的回调
     private final Runnable onOpenDevTools;
 
     // 使用默认 DevTools 打开逻辑

@@ -10,6 +10,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 // 导航到主页的 Action
 public class GoHomeAction extends AnAction {
 
+    // 标签页管理器，用于获取当前标签页并导航到主页
     private final BrowserTabManager tabManager;
 
     // 构造主页导航 Action

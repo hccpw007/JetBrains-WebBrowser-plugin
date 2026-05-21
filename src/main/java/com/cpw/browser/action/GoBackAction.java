@@ -9,6 +9,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 // 浏览器后退导航的 Action
 public class GoBackAction extends AnAction {
 
+    // 标签页管理器，用于获取当前标签页执行后退操作
     private final BrowserTabManager tabManager;
 
     // 构造后退导航 Action

@@ -9,6 +9,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 // 浏览器前进导航的 Action
 public class GoForwardAction extends AnAction {
 
+    // 标签页管理器，用于获取当前标签页执行前进操作
     private final BrowserTabManager tabManager;
 
     // 构造前进导航 Action

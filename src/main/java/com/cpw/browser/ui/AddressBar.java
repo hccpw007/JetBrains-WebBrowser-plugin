@@ -29,10 +29,15 @@ import javax.swing.border.Border;
 // 地址栏组件，包含 URL 输入框和书签星标
 public class AddressBar extends JPanel {
 
+    // URL 输入框，用于显示和编辑当前页面地址
     public final JBTextField urlField;
+    // 书签星标图标，指示当前页面是否已加入书签
     private final JBLabel starLabel;
+    // 导航回调，用户输入 URL 按下回车后触发
     private final Consumer<String> onNavigate;
+    // 判断指定 URL 是否已加入书签的函数
     private final Predicate<String> isUrlBookmarked;
+    // 切换书签状态的回调
     private final Consumer<String> onToggleBookmark;
 
     public AddressBar(

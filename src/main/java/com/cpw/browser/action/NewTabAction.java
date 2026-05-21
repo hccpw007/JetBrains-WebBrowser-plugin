@@ -8,6 +8,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 // 创建新浏览器标签页的 Action
 public class NewTabAction extends AnAction {
 
+    // 标签页管理器，用于创建新标签页
     private final BrowserTabManager tabManager;
 
     // 构造新建标签页 Action

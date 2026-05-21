@@ -10,7 +10,9 @@ import java.util.function.Supplier;
 // 删除选中书签的 Action
 public class RemoveBookmarkAction extends AnAction {
 
+    // 获取选中书签 URL 的函数
     private final Supplier<String> getSelectedBookmarkUrl;
+    // 书签变更后的回调
     private final Runnable onBookmarkChanged;
 
     // 构造删除书签 Action

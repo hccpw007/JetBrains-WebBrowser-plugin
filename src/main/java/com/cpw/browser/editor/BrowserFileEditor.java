@@ -23,9 +23,13 @@ public class BrowserFileEditor implements FileEditor {
     // 编辑器标题的用户数据 Key
     public static final Key<String> TITLE_KEY = Key.create("BrowserEditorTitle");
 
+    // 浏览器工具窗口面板实例
     private final BrowserToolWindowPanel browserPanel;
+    // 关联的虚拟文件
     private final VirtualFile file;
+    // 属性变更监听器列表
     private final List<PropertyChangeListener> listeners = new ArrayList<>();
+    // 用户数据持有者
     private final UserDataHolderBase userDataHolder = new UserDataHolderBase();
 
     public BrowserFileEditor(Project project, VirtualFile file) {

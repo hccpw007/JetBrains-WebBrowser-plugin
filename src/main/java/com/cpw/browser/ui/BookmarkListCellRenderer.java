@@ -17,8 +17,11 @@ import javax.swing.border.EmptyBorder;
 // 书签列表项渲染器，显示标题、编辑和删除按钮
 public class BookmarkListCellRenderer extends JPanel implements ListCellRenderer<Object> {
 
+    // 书签标题标签
     private final JBLabel titleLabel;
+    // 编辑按钮标签
     private final JLabel editLabel;
+    // 删除按钮标签
     private final JLabel deleteLabel;
 
     public BookmarkListCellRenderer() {
