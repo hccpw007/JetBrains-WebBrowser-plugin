@@ -190,8 +190,8 @@ public class BrowserSettingsPage implements Configurable {
         devToolsSeparator = new TitledSeparator(TranslationUtil.getText("settings.devtools"));
         panel.add(devToolsSeparator, c);
 
-        // Row 8: 打开方式
-        c.gridy = 8;
+        // Row 9: 打开方式
+        c.gridy = 9;
         c.gridx = 0;
         c.gridwidth = 1;
         c.fill = GridBagConstraints.NONE;
