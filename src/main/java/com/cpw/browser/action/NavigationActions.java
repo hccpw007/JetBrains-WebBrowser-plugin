@@ -5,6 +5,7 @@ import com.cpw.browser.WebBrowserIcons;
 import com.cpw.browser.settings.BrowserSettingsState;
 import com.cpw.browser.toolwindow.BrowserTabManager;
 import com.cpw.browser.toolwindow.BrowserTabPanel;
+import com.cpw.browser.util.TranslationUtil;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 
@@ -20,7 +21,7 @@ public final class NavigationActions {
         private final BrowserTabManager tabManager;
 
         public GoBack(BrowserTabManager tabManager) {
-            super("后退", "返回上一页", WebBrowserIcons.BACK);
+            super(TranslationUtil.getText("action.back"), TranslationUtil.getText("action.back.desc"), WebBrowserIcons.BACK);
             this.tabManager = tabManager;
         }
 
@@ -46,7 +47,7 @@ public final class NavigationActions {
         private final BrowserTabManager tabManager;
 
         public GoForward(BrowserTabManager tabManager) {
-            super("前进", "前进到下一页", WebBrowserIcons.FORWARD);
+            super(TranslationUtil.getText("action.forward"), TranslationUtil.getText("action.forward.desc"), WebBrowserIcons.FORWARD);
             this.tabManager = tabManager;
         }
 
@@ -72,7 +73,7 @@ public final class NavigationActions {
         private final BrowserTabManager tabManager;
 
         public GoHome(BrowserTabManager tabManager) {
-            super("主页", "回到主页", WebBrowserIcons.HOME);
+            super(TranslationUtil.getText("action.home"), TranslationUtil.getText("action.home.desc"), WebBrowserIcons.HOME);
             this.tabManager = tabManager;
         }
 
@@ -99,7 +100,7 @@ public final class NavigationActions {
         private final BrowserTabManager tabManager;
 
         public Refresh(BrowserTabManager tabManager) {
-            super("刷新", "重新加载当前页面", WebBrowserIcons.REFRESH);
+            super(TranslationUtil.getText("action.refresh"), TranslationUtil.getText("action.refresh.desc"), WebBrowserIcons.REFRESH);
             this.tabManager = tabManager;
         }
 
@@ -124,7 +125,7 @@ public final class NavigationActions {
         private final BrowserTabManager tabManager;
 
         public NewTab(BrowserTabManager tabManager) {
-            super("新建标签页", "打开一个新的浏览器标签页", WebBrowserIcons.NEW_TAB);
+            super(TranslationUtil.getText("action.new.tab"), TranslationUtil.getText("action.new.tab.desc"), WebBrowserIcons.NEW_TAB);
             this.tabManager = tabManager;
         }
 
@@ -143,7 +144,7 @@ public final class NavigationActions {
         private final Runnable onOpenDevTools;
 
         public OpenDevTools(BrowserTabManager tabManager, Runnable onOpenDevTools) {
-            super("开发者工具", "打开 Chrome DevTools", WebBrowserIcons.DEV_TOOLS);
+            super(TranslationUtil.getText("action.dev.tools"), TranslationUtil.getText("action.dev.tools.desc"), WebBrowserIcons.DEV_TOOLS);
             this.tabManager = tabManager;
             this.onOpenDevTools = onOpenDevTools;
         }

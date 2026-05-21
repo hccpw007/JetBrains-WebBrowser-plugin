@@ -5,6 +5,7 @@ import com.cpw.browser.bookmark.Bookmark;
 import com.cpw.browser.bookmark.BookmarkPersistentState;
 import com.cpw.browser.history.BrowsingHistoryState;
 import com.cpw.browser.history.HistoryEntry;
+import com.cpw.browser.util.TranslationUtil;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.ui.CollectionListModel;
 import com.intellij.ui.JBColor;
@@ -46,7 +47,6 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
     // 历史标签页索引
     private static final int TAB_HISTORY = 1;
 
-    // ---- 书签 ----
     // 书签列表数据模型
     private final CollectionListModel<Bookmark> bookmarkListModel;
     // 书签列表组件
@@ -54,7 +54,6 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
     // 书签列表滚动面板
     private final JBScrollPane bookmarkScroll;
 
-    // ---- 历史 ----
     // 历史列表数据模型
     private final HistoryEntriesModel historyListModel;
     // 历史列表组件
@@ -62,7 +61,6 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
     // 历史列表滚动面板
     private final JBScrollPane historyScroll;
 
-    // ---- 布局 ----
     // 卡片布局内容面板
     private final JPanel contentPanel;
     // 历史记录面板
@@ -72,7 +70,6 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
     // 分段切换器高度
     private final int segmentHeight = 24;
 
-    // ---- 分段切换器 (Element Plus 风格) ----
     // 当前选中的标签页索引
     private int currentTab = TAB_BOOKMARKS;
     // 分段切换器面板
@@ -91,7 +88,6 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
     // 历史条目选中回调
     private final Consumer<String> onHistoryEntrySelected;
 
-    // 构造书签侧边栏，包含分段切换器、书签列表和历史列表
     public BookmarkSidebar(
             Consumer<Bookmark> onBookmarkSelected,
             Consumer<String> onHistoryEntrySelected
@@ -100,7 +96,7 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
         this.onBookmarkSelected = onBookmarkSelected;
         this.onHistoryEntrySelected = onHistoryEntrySelected;
 
-        // ---- 书签 ----
+        // 书签
         bookmarkListModel = new CollectionListModel<>(
                 BookmarkPersistentState.getInstance().getBookmarks()
         );
@@ -115,7 +111,7 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
         });
         bookmarkScroll = new JBScrollPane(bookmarkList);
 
-        // ---- 历史 ----
+        // 历史
         historyListModel = new HistoryEntriesModel();
         historyList = new JBList<>(historyListModel);
         historyList.setCellRenderer(new HistoryListRenderer());
@@ -128,11 +124,11 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
         });
         historyScroll = new JBScrollPane(historyList);
 
-        // ---- 面板 ----
+        // 面板
         contentPanel = new JPanel(new CardLayout());
         historyPanel = new JPanel(new BorderLayout());
 
-        // ---- 分段切换器 ----
+        // 分段切换器
         segmentBar = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -149,7 +145,7 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
         segmentBar.setMaximumSize(new Dimension(segmentWidth, segmentHeight));
 
         // 书签标签
-        bookmarkLabel = new JLabel("书签", SwingConstants.CENTER);
+        bookmarkLabel = new JLabel(TranslationUtil.getText("bookmark.title"), SwingConstants.CENTER);
         bookmarkLabel.setFont(bookmarkLabel.getFont().deriveFont(Font.BOLD, 11f));
         bookmarkLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         bookmarkLabel.addMouseListener(new MouseAdapter() {
@@ -160,7 +156,7 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
         });
 
         // 历史标签
-        historyLabel = new JLabel("历史", SwingConstants.CENTER);
+        historyLabel = new JLabel(TranslationUtil.getText("history.title"), SwingConstants.CENTER);
         historyLabel.setFont(historyLabel.getFont().deriveFont(Font.PLAIN, 11f));
         historyLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         historyLabel.addMouseListener(new MouseAdapter() {
@@ -171,7 +167,7 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
         });
 
         // 清空历史记录标签
-        clearLabel = new JBLabel("清空记录");
+        clearLabel = new JBLabel(TranslationUtil.getText("history.clear"));
         clearLabel.setFont(clearLabel.getFont().deriveFont(11f));
         clearLabel.setForeground(new JBColor(0x3366CC, 0x7799DD));
         clearLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -246,14 +242,11 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
 
     // 切换到书签标签
     private void showBookmarks() {
-        // 已是书签标签则跳过
         if (currentTab == TAB_BOOKMARKS) return;
         currentTab = TAB_BOOKMARKS;
         bookmarkLabel.setFont(bookmarkLabel.getFont().deriveFont(Font.BOLD));
         historyLabel.setFont(historyLabel.getFont().deriveFont(Font.PLAIN));
-        // 移动选中背景到左侧
         Component lastComp = segmentBar.getComponent(segmentBar.getComponentCount() - 1);
-        // 选中背景组件存在则更新其位置
         if (lastComp != null) {
             lastComp.setBounds(0, 0, segmentBar.getWidth() / 2, segmentBar.getHeight());
         }
@@ -263,14 +256,11 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
 
     // 切换到历史标签
     private void showHistory() {
-        // 已是历史标签则跳过
         if (currentTab == TAB_HISTORY) return;
         currentTab = TAB_HISTORY;
         historyLabel.setFont(historyLabel.getFont().deriveFont(Font.BOLD));
         bookmarkLabel.setFont(bookmarkLabel.getFont().deriveFont(Font.PLAIN));
-        // 移动选中背景到右侧
         Component lastComp = segmentBar.getComponent(segmentBar.getComponentCount() - 1);
-        // 选中背景组件存在则更新其位置
         if (lastComp != null) {
             lastComp.setBounds(segmentBar.getWidth() / 2, 0, segmentBar.getWidth() / 2, segmentBar.getHeight());
         }
@@ -279,70 +269,59 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
         ((CardLayout) contentPanel.getLayout()).show(contentPanel, "history");
     }
 
-    // 处理书签列表点击事件（右侧 22px 删除，左侧 22px 编辑，其余选中）
+    // 处理书签列表点击事件
     private void handleBookmarkClick(MouseEvent e) {
         int index = bookmarkList.locationToIndex(e.getPoint());
-        // 点击位置无书签则返回
         if (index < 0) return;
         java.awt.Rectangle bounds = bookmarkList.getCellBounds(index, index);
-        // 无法获取单元格边界则返回
         if (bounds == null) return;
         Bookmark bookmark = bookmarkListModel.getElementAt(index);
         int rightEdge = bounds.x + bounds.width;
 
         // 点击右侧 22px 区域触发删除操作
         if (e.getPoint().x >= rightEdge - 22) {
-            // 点击右侧删除区域，确认后删除书签
             int result = Messages.showYesNoDialog(
-                    "确定删除书签 \"" + bookmark.getTitle() + "\" 吗？",
-                    "删除书签",
+                    TranslationUtil.getText("bookmark.delete.confirm", bookmark.getTitle()),
+                    TranslationUtil.getText("bookmark.delete.title"),
                     null
             );
-            // 用户确认删除
             if (result == Messages.YES) {
                 BookmarkPersistentState.getInstance().removeBookmark(bookmark.getUrl());
                 refreshBookmarks();
             }
         } else if (e.getPoint().x >= rightEdge - 44) { // 点击编辑区域
-            // 点击编辑区域，弹出编辑对话框
             String[] editResult = showBookmarkEditDialog(bookmark.getTitle(), bookmark.getUrl());
-            // 用户确认编辑则更新书签
             if (editResult != null) {
                 BookmarkPersistentState.getInstance().updateBookmark(
                         bookmark.getUrl(), editResult[0], editResult[1]
                 );
                 refreshBookmarks();
             }
-        } else { // 点击主体区域，选中该书签
+        } else { // 点击主体区域
             onBookmarkSelected.accept(bookmark);
         }
     }
 
-    // 处理历史列表点击事件（右侧 22px 删除，其余选中）
+    // 处理历史列表点击事件
     private void handleHistoryClick(MouseEvent e) {
         int index = historyList.locationToIndex(e.getPoint());
-        // 点击位置无条目则返回
         if (index < 0) return;
         Object item = historyListModel.getElementAt(index);
-        // 非 HistoryEntry 类型则返回（分组标题不可点击）
         if (!(item instanceof HistoryEntry)) return;
         HistoryEntry entry = (HistoryEntry) item;
         java.awt.Rectangle bounds = historyList.getCellBounds(index, index);
-        // 无法获取单元格边界则返回
         if (bounds == null) return;
-        // 点击右侧 22px 区域触发删除操作
         if (e.getPoint().x >= bounds.x + bounds.width - 22) {
             int result = Messages.showYesNoDialog(
-                    "确定删除该条历史记录吗？",
-                    "删除历史记录",
+                    TranslationUtil.getText("history.delete.confirm"),
+                    TranslationUtil.getText("history.delete.title"),
                     null
             );
-            // 用户确认删除
             if (result == Messages.YES) {
                 BrowsingHistoryState.getInstance().removeEntry(entry.getUrl(), entry.getTimestamp());
                 refreshHistory();
             }
-        } else { // 点击主体区域，选中该历史条目
+        } else { // 点击主体区域
             onHistoryEntrySelected.accept(entry.getUrl());
         }
     }
@@ -355,10 +334,9 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
                 BorderFactory.createLineBorder(new JBColor(0xC0C0C0, 0x4A4A4A), 1, true),
                 BorderFactory.createEmptyBorder(2, 0, 2, 0)
         ));
-        popup.add(createClearItem("清空一小时内记录", 1L));
-        popup.add(createClearItem("清空24小时内记录", 24L));
-        popup.add(createClearItem("清空所有记录", null));
-        // 在清空记录标签下方弹出
+        popup.add(createClearItem(TranslationUtil.getText("history.clear.1h"), 1L));
+        popup.add(createClearItem(TranslationUtil.getText("history.clear.24h"), 24L));
+        popup.add(createClearItem(TranslationUtil.getText("history.clear.all"), null));
         popup.show(clearLabel, 0, clearLabel.getHeight() + 2);
     }
 
@@ -372,10 +350,9 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
         button.setHorizontalAlignment(SwingConstants.LEFT);
         button.setBorder(new EmptyBorder(4, 12, 4, 12));
         button.addActionListener(e -> {
-            // hours 为 null 则清空全部，否则清空指定小时数以内
             if (hours == null) {
                 BrowsingHistoryState.getInstance().clearEntries();
-            } else { // 清空指定小时数以内的记录
+            } else {
                 BrowsingHistoryState.getInstance().clearEntries(hours);
             }
             refreshHistory();
@@ -383,8 +360,7 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
         return button;
     }
 
-
-    // 弹出书签编辑/添加对话框，返回 [标题, 地址] 或 null
+    // 弹出书签编辑/添加对话框
     public static String[] showBookmarkEditDialog(String title, String url) {
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
@@ -393,7 +369,7 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
 
         c.gridx = 0;
         c.gridy = 0;
-        panel.add(new JLabel("标题:"), c);
+        panel.add(new JLabel(TranslationUtil.getText("bookmark.add.name")), c);
         c.gridx = 1;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.weightx = 1.0;
@@ -404,7 +380,7 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
         c.gridy = 1;
         c.fill = GridBagConstraints.NONE;
         c.weightx = 0.0;
-        panel.add(new JLabel("地址:"), c);
+        panel.add(new JLabel(TranslationUtil.getText("bookmark.add.url")), c);
         c.gridx = 1;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.weightx = 1.0;
@@ -412,12 +388,11 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
         panel.add(urlField, c);
 
         int result = javax.swing.JOptionPane.showOptionDialog(
-                null, panel, "书签",
+                null, panel, TranslationUtil.getText("bookmark.title"),
                 javax.swing.JOptionPane.OK_CANCEL_OPTION,
                 javax.swing.JOptionPane.PLAIN_MESSAGE,
                 null, null, null
         );
-        // 用户点击确认则返回编辑后的数据
         if (result == javax.swing.JOptionPane.OK_OPTION) {
             return new String[]{titleField.getText().trim(), urlField.getText().trim()};
         }

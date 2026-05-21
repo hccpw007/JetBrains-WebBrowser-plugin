@@ -1,6 +1,7 @@
 package com.cpw.browser.ui;
 
 import com.cpw.browser.toolwindow.BrowserTabPanel;
+import com.cpw.browser.util.TranslationUtil;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBLabel;
 import java.awt.BorderLayout;
@@ -85,7 +86,7 @@ public class ChromeTab extends JPanel {
         closeBtn.setFocusPainted(false);
         closeBtn.setFont(closeBtn.getFont().deriveFont(16f));
         closeBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        closeBtn.setToolTipText("关闭标签页");
+        closeBtn.setToolTipText(TranslationUtil.getText("tab.close.tooltip"));
         closeBtn.setPreferredSize(new Dimension(16, 16));
         closeBtn.setMaximumSize(new Dimension(16, 16));
         closeBtn.setMinimumSize(new Dimension(16, 16));

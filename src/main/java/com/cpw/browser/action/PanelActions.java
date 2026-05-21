@@ -6,8 +6,8 @@ import com.cpw.browser.settings.BrowserSettingsPage;
 import com.cpw.browser.toolwindow.BrowserTabManager;
 import com.cpw.browser.toolwindow.BrowserTabPanel;
 import com.cpw.browser.ui.BookmarkSidebar;
+import com.cpw.browser.util.TranslationUtil;
 import com.intellij.icons.AllIcons;
-import com.intellij.openapi.actionSystem.ActionGroup;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -27,13 +27,11 @@ public final class PanelActions {
     // 放大网页
     public static class ZoomIn extends AnAction implements DumbAware {
 
-        // 标签页管理器
         private final BrowserTabManager tabManager;
-        // 缩放提示回调（接收提示文本）
         private final Consumer<String> showZoomToast;
 
         public ZoomIn(BrowserTabManager tabManager, Consumer<String> showZoomToast) {
-            super("放大", "放大网页 5%", WebBrowserIcons.ZOOM_IN);
+            super(TranslationUtil.getText("action.zoom.in"), TranslationUtil.getText("action.zoom.in.desc"), WebBrowserIcons.ZOOM_IN);
             this.tabManager = tabManager;
             this.showZoomToast = showZoomToast;
         }
@@ -43,20 +41,18 @@ public final class PanelActions {
             tabManager.zoomIn();
             BrowserTabPanel activeTab = tabManager.getActiveTab();
             int pct = (int) ((activeTab != null ? activeTab.getZoomLevel() : 1.0) * 100);
-            showZoomToast.accept("放大至" + pct + "%");
+            showZoomToast.accept(TranslationUtil.getText("zoom.toast.in", String.valueOf(pct)));
         }
     }
 
     // 缩小网页
     public static class ZoomOut extends AnAction implements DumbAware {
 
-        // 标签页管理器
         private final BrowserTabManager tabManager;
-        // 缩放提示回调
         private final Consumer<String> showZoomToast;
 
         public ZoomOut(BrowserTabManager tabManager, Consumer<String> showZoomToast) {
-            super("缩小", "缩小网页 5%", WebBrowserIcons.ZOOM_OUT);
+            super(TranslationUtil.getText("action.zoom.out"), TranslationUtil.getText("action.zoom.out.desc"), WebBrowserIcons.ZOOM_OUT);
             this.tabManager = tabManager;
             this.showZoomToast = showZoomToast;
         }
@@ -66,20 +62,18 @@ public final class PanelActions {
             tabManager.zoomOut();
             BrowserTabPanel activeTab = tabManager.getActiveTab();
             int pct = (int) ((activeTab != null ? activeTab.getZoomLevel() : 1.0) * 100);
-            showZoomToast.accept("缩小至" + pct + "%");
+            showZoomToast.accept(TranslationUtil.getText("zoom.toast.out", String.valueOf(pct)));
         }
     }
 
     // 书签侧边栏显示/隐藏切换
     public static class ToggleBookmarkSidebar extends AnAction implements DumbAware {
 
-        // 书签侧边栏
         private final BookmarkSidebar bookmarkSidebar;
-        // 居中面板
         private final JPanel centerPanel;
 
         public ToggleBookmarkSidebar(BookmarkSidebar bookmarkSidebar, JPanel centerPanel) {
-            super("显示书签", "显示或隐藏书签侧边栏", WebBrowserIcons.SHOW_BOOKMARK);
+            super(TranslationUtil.getText("action.show.bookmark"), TranslationUtil.getText("action.show.bookmark.desc"), WebBrowserIcons.SHOW_BOOKMARK);
             this.bookmarkSidebar = bookmarkSidebar;
             this.centerPanel = centerPanel;
         }
@@ -90,27 +84,25 @@ public final class PanelActions {
             centerPanel.revalidate();
             centerPanel.repaint();
             e.getPresentation().setDescription(
-                    bookmarkSidebar.isVisible() ? "隐藏书签侧边栏" : "显示书签侧边栏"
+                    bookmarkSidebar.isVisible()
+                            ? TranslationUtil.getText("action.hide.bookmark.desc")
+                            : TranslationUtil.getText("action.show.bookmark.desc")
             );
         }
     }
 
-    // "更多"弹出菜单（三个竖点），包含设置、开发者工具、定时刷新、清空缓存
+    // "更多"弹出菜单
     public static class MoreMenu extends DefaultActionGroup {
 
         public MoreMenu(Project project, BrowserTabManager tabManager, Runnable openDevTools) {
-            super("更多", true);
+            super(TranslationUtil.getText("action.more"), true);
             getTemplatePresentation().setIcon(WebBrowserIcons.MORE);
-            getTemplatePresentation().setDescription("更多操作");
+            getTemplatePresentation().setDescription(TranslationUtil.getText("action.more.desc"));
 
-            // 设置
             add(new Settings(project));
             addSeparator();
-            // 开发者工具
             add(new NavigationActions.OpenDevTools(tabManager, openDevTools));
-            // 定时刷新
             add(new AutoRefresh(tabManager));
-            // 清空缓存
             add(new ClearCache(tabManager));
         }
     }
@@ -118,24 +110,22 @@ public final class PanelActions {
     // 定时刷新当前页面
     public static class AutoRefresh extends AnAction implements DumbAware {
 
-        // 标签页管理器
         private final BrowserTabManager tabManager;
 
         public AutoRefresh(BrowserTabManager tabManager) {
-            super("定时刷新", "每 30 秒自动刷新当前页面", AllIcons.Actions.Refresh);
+            super(TranslationUtil.getText("action.auto.refresh"), TranslationUtil.getText("action.auto.refresh.desc"), AllIcons.Actions.Refresh);
             this.tabManager = tabManager;
         }
 
         @Override
         public void actionPerformed(AnActionEvent e) {
             BrowserTabPanel tab = tabManager.getActiveTab();
-            // 无活跃标签页则直接返回
             if (tab == null) return;
             boolean enabled = !tab.isAutoRefreshEnabled();
             if (enabled) {
-                // 启动定时刷新：弹出输入框让用户设置间隔秒数
-                String input = Messages.showInputDialog("请输入刷新间隔（秒）:", "定时刷新", null, "30", null);
-                // 用户取消则不做任何操作
+                String input = Messages.showInputDialog(
+                        TranslationUtil.getText("auto.refresh.prompt"),
+                        TranslationUtil.getText("auto.refresh.title"), null, "30", null);
                 if (input == null) return;
                 try {
                     int seconds = Integer.parseInt(input.trim());
@@ -145,15 +135,17 @@ public final class PanelActions {
                     return;
                 }
                 tab.setAutoRefresh(true);
-                e.getPresentation().setText("停止刷新");
-                e.getPresentation().setDescription("停止自动刷新（每 " + tab.getAutoRefreshInterval() + " 秒）");
+                e.getPresentation().setText(TranslationUtil.getText("action.stop.refresh"));
+                e.getPresentation().setDescription(
+                        TranslationUtil.getText("action.stop.refresh.desc") + "（" + tab.getAutoRefreshInterval() + "s）");
             } else {
-                // 停止定时刷新：弹出确认对话框
-                int result = Messages.showYesNoDialog("确定停止自动刷新吗？", "停止定时刷新", null);
+                int result = Messages.showYesNoDialog(
+                        TranslationUtil.getText("auto.refresh.stop.confirm"),
+                        TranslationUtil.getText("auto.refresh.stop.title"), null);
                 if (result != Messages.YES) return;
                 tab.setAutoRefresh(false);
-                e.getPresentation().setText("定时刷新");
-                e.getPresentation().setDescription("每 30 秒自动刷新当前页面");
+                e.getPresentation().setText(TranslationUtil.getText("action.auto.refresh"));
+                e.getPresentation().setDescription(TranslationUtil.getText("action.auto.refresh.desc"));
             }
         }
 
@@ -164,8 +156,12 @@ public final class PanelActions {
             e.getPresentation().setEnabled(enabled);
             if (enabled) {
                 boolean running = tab.isAutoRefreshEnabled();
-                e.getPresentation().setText(running ? "停止刷新" : "定时刷新");
-                e.getPresentation().setDescription(running ? "停止自动刷新（每 " + tab.getAutoRefreshInterval() + " 秒）" : "每 30 秒自动刷新当前页面");
+                e.getPresentation().setText(running
+                        ? TranslationUtil.getText("action.stop.refresh")
+                        : TranslationUtil.getText("action.auto.refresh"));
+                e.getPresentation().setDescription(running
+                        ? TranslationUtil.getText("action.stop.refresh.desc") + "（" + tab.getAutoRefreshInterval() + "s）"
+                        : TranslationUtil.getText("action.auto.refresh.desc"));
             }
         }
     }
@@ -173,21 +169,18 @@ public final class PanelActions {
     // 清空浏览器缓存和 Cookie
     public static class ClearCache extends AnAction implements DumbAware {
 
-        // 标签页管理器
         private final BrowserTabManager tabManager;
 
         public ClearCache(BrowserTabManager tabManager) {
-            super("清空缓存", "清除浏览器缓存、Cookie 和本地存储", AllIcons.Actions.GC);
+            super(TranslationUtil.getText("action.clear.cache"), TranslationUtil.getText("action.clear.cache.desc"), AllIcons.Actions.GC);
             this.tabManager = tabManager;
         }
 
         @Override
         public void actionPerformed(AnActionEvent e) {
             BrowserTabPanel tab = tabManager.getActiveTab();
-            // 无活跃标签页则直接返回
             if (tab == null) return;
             tab.clearCache();
-            // 清空缓存后刷新页面，使缓存清理立即生效
             tab.refresh();
         }
 
@@ -200,11 +193,10 @@ public final class PanelActions {
     // 在系统默认浏览器中打开
     public static class OpenInSystemBrowser extends AnAction implements DumbAware {
 
-        // 标签页管理器
         private final BrowserTabManager tabManager;
 
         public OpenInSystemBrowser(BrowserTabManager tabManager) {
-            super("系统浏览器打开", "在系统浏览器中打开当前网页", WebBrowserIcons.GOOGLE);
+            super(TranslationUtil.getText("action.open.system"), TranslationUtil.getText("action.open.system.desc"), WebBrowserIcons.GOOGLE);
             this.tabManager = tabManager;
         }
 
@@ -216,7 +208,7 @@ public final class PanelActions {
                 try {
                     java.awt.Desktop.getDesktop().browse(new java.net.URI(url));
                 } catch (Exception ex) {
-                    // 静默失败，无状态栏可写
+                    // 静默失败
                 }
             }
         }
@@ -232,11 +224,10 @@ public final class PanelActions {
     // 打开 WebBrowser 设置页
     public static class Settings extends AnAction implements DumbAware {
 
-        // 当前项目
         private final Project project;
 
         public Settings(Project project) {
-            super("设置", "打开 WebBrowser 设置", AllIcons.General.Settings);
+            super(TranslationUtil.getText("action.settings"), TranslationUtil.getText("action.settings.desc"), AllIcons.General.Settings);
             this.project = project;
         }
 

@@ -3,6 +3,7 @@ package com.cpw.browser.toolwindow;
 
 import com.cpw.browser.action.NavigationActions;
 import com.cpw.browser.action.PanelActions;
+import com.cpw.browser.util.TranslationUtil;
 import com.cpw.browser.bookmark.Bookmark;
 import com.cpw.browser.bookmark.BookmarkPersistentState;
 import com.cpw.browser.history.BrowsingHistoryState;
@@ -156,7 +157,7 @@ public class BrowserToolWindowPanel {
 
         // 居中区域：书签(可隐藏) + 浏览器内容
         centerPanel = new JPanel(new BorderLayout());
-        statusLabel = new JBLabel("就绪", SwingConstants.LEFT);
+        statusLabel = new JBLabel(TranslationUtil.getText("status.ready"), SwingConstants.LEFT);
         mainPanel = new JBPanel<>(new BorderLayout());
         chromeTabs = new HashMap<>();
 
@@ -167,7 +168,7 @@ public class BrowserToolWindowPanel {
         addTabButton.setFocusPainted(false);
         addTabButton.setFont(addTabButton.getFont().deriveFont(16f));
         addTabButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        addTabButton.setToolTipText("新建标签页");
+        addTabButton.setToolTipText(TranslationUtil.getText("tab.new.tab"));
         addTabButton.setPreferredSize(new Dimension(28, ChromeTab.TAB_HEIGHT));
         addTabButton.setMaximumSize(new Dimension(28, ChromeTab.TAB_HEIGHT));
         addTabButton.setMinimumSize(new Dimension(28, ChromeTab.TAB_HEIGHT));
@@ -298,7 +299,7 @@ public class BrowserToolWindowPanel {
                 if (devTools != null) {
                     updateBrowserContent(tab);
                 } else { // CDP 嵌入式失败时回退到弹出窗口
-                    statusLabel.setText("嵌入式 DevTools 不可用，已打开独立窗口");
+                    statusLabel.setText(TranslationUtil.getText("devtools.embedded.unavailable"));
                     tab.openDevTools();
                 }
             });
@@ -391,7 +392,7 @@ public class BrowserToolWindowPanel {
         // 存在活跃标签页则更新界面状态
         if (tab != null) {
             addressBar.setUrl(tab.getCurrentUrl());
-            statusLabel.setText(tab.isLoading() ? "加载中..." : "就绪");
+            statusLabel.setText(tab.isLoading() ? TranslationUtil.getText("status.loading") : TranslationUtil.getText("status.ready"));
             updateBrowserContent(tab);
             updateTabStripHighlight();
             updateTabTitle(tab);
@@ -401,7 +402,7 @@ public class BrowserToolWindowPanel {
             }
         } else { // 无活跃标签页，重置界面
             addressBar.setUrl("");
-            statusLabel.setText("就绪");
+            statusLabel.setText(TranslationUtil.getText("status.ready"));
             updateBrowserContent(null);
             // 恢复默认标题
             if (onTitleChanged != null) {

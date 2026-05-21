@@ -1,5 +1,6 @@
 package com.cpw.browser.toolwindow;
 
+import com.cpw.browser.util.TranslationUtil;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.ui.jcef.JBCefBrowser;
 import org.cef.browser.CefBrowser;
@@ -34,7 +35,7 @@ public class BrowserTabPanel {
     // 当前页面的 URL
     private String currentUrl;
     // 当前页面的标题
-    private String pageTitle = "新标签页";
+    private String pageTitle;
     // 页面是否正在加载中
     private boolean isLoading = false;
     // 当前缩放级别（1.0 为 100%）
@@ -58,6 +59,7 @@ public class BrowserTabPanel {
 
     public BrowserTabPanel(String initialUrl) {
         this.currentUrl = initialUrl;
+        this.pageTitle = TranslationUtil.getText("tab.new.tab");
 
         // 创建浏览器并设置背景色
         this.browser = new JBCefBrowser(initialUrl);
@@ -402,8 +404,8 @@ public class BrowserTabPanel {
             if (rawTitle.endsWith("/")) {
                 rawTitle = rawTitle.substring(0, rawTitle.length() - 1);
             }
-        } else { // 默认显示"新标签页"
-            rawTitle = "新标签页";
+        } else { // 默认显示新标签页
+            rawTitle = TranslationUtil.getText("tab.new.tab");
         }
         return rawTitle.length() > 20 ? rawTitle.substring(0, 20) + "..." : rawTitle;
     }

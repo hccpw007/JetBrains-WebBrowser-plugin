@@ -1,6 +1,7 @@
 // 插件设置页面，实现 Configurable 接口
 package com.cpw.browser.settings;
 
+import com.cpw.browser.util.TranslationUtil;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.ui.TitledSeparator;
 import com.intellij.ui.components.JBCheckBox;
@@ -16,8 +17,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.Objects;
-
-import com.cpw.browser.util.TranslationUtil;
 
 public class BrowserSettingsPage implements Configurable {
 
@@ -36,6 +35,23 @@ public class BrowserSettingsPage implements Configurable {
     // 界面语言下拉框
     private JComboBox<String> languageCombo;
 
+    // 用于语言切换后刷新标签的字段
+    private JLabel homePageLabel;
+    private TitledSeparator historySeparator;
+    private JLabel historyDaysLabel;
+    private JLabel historyCountLabel;
+    private TitledSeparator devToolsSeparator;
+    private JLabel devToolsModeLabel;
+    private JLabel displayPositionLabel;
+    private TitledSeparator languageSeparator;
+    private JLabel languageLabel;
+    private JLabel developerLabel;
+
+    // 语言代码数组
+    private static final String[] LANGUAGE_CODES = {"default", "zh", "en", "ja", "ko", "fr", "de"};
+    // 各语言自身名称（第一项占位，运行时从资源包读取）
+    private static final String[] LANGUAGE_NATIVE_NAMES = {"", "简体中文", "English", "日本語", "한국어", "Français", "Deutsch"};
+
     @Override
     public String getDisplayName() {
         return "WebBrowser";
@@ -47,13 +63,14 @@ public class BrowserSettingsPage implements Configurable {
         GridBagConstraints c = new GridBagConstraints();
         c.anchor = GridBagConstraints.WEST;
 
-        // Row 0: 主页 URL — 标签和输入框在同一行
+        // Row 0: 主页 URL
         c.gridx = 0;
         c.gridy = 0;
         c.fill = GridBagConstraints.NONE;
         c.weightx = 0.0;
         c.insets = new Insets(0, 0, 0, 8);
-        panel.add(new JLabel("主页 URL:"), c);
+        homePageLabel = new JLabel(TranslationUtil.getText("settings.homepage.url") + ":");
+        panel.add(homePageLabel, c);
         c.gridx = 1;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.weightx = 1.0;
@@ -68,7 +85,7 @@ public class BrowserSettingsPage implements Configurable {
         c.fill = GridBagConstraints.NONE;
         c.weightx = 0.0;
         c.insets = new Insets(4, 0, 0, 0);
-        openHomeCheckBox = new JBCheckBox("新标签页时打开主页");
+        openHomeCheckBox = new JBCheckBox(TranslationUtil.getText("settings.homepage.open"));
         panel.add(openHomeCheckBox, c);
 
         // Row 2: 分隔线 — 历史记录
@@ -77,16 +94,18 @@ public class BrowserSettingsPage implements Configurable {
         c.fill = GridBagConstraints.HORIZONTAL;
         c.insets = new Insets(12, 0, 8, 0);
         c.weightx = 0.0;
-        panel.add(new TitledSeparator("历史记录"), c);
+        historySeparator = new TitledSeparator(TranslationUtil.getText("settings.history"));
+        panel.add(historySeparator, c);
 
-        // Row 3: 最多保存天数 — 标签和输入框
+        // Row 3: 最多保存天数
         c.gridy = 3;
         c.gridx = 0;
         c.gridwidth = 1;
         c.fill = GridBagConstraints.NONE;
         c.weightx = 0.0;
         c.insets = new Insets(0, 0, 0, 8);
-        panel.add(new JLabel("最多保存天数:"), c);
+        historyDaysLabel = new JLabel(TranslationUtil.getText("settings.history.days"));
+        panel.add(historyDaysLabel, c);
         c.gridx = 1;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.weightx = 0.3;
@@ -95,13 +114,14 @@ public class BrowserSettingsPage implements Configurable {
         maxHistoryDaysField.setColumns(4);
         panel.add(maxHistoryDaysField, c);
 
-        // Row 4: 最多记录条数 — 标签和输入框
+        // Row 4: 最多记录条数
         c.gridy = 4;
         c.gridx = 0;
         c.fill = GridBagConstraints.NONE;
         c.weightx = 0.0;
         c.insets = new Insets(4, 0, 0, 8);
-        panel.add(new JLabel("最多记录条数:"), c);
+        historyCountLabel = new JLabel(TranslationUtil.getText("settings.history.entries"));
+        panel.add(historyCountLabel, c);
         c.gridx = 1;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.weightx = 0.3;
@@ -117,35 +137,44 @@ public class BrowserSettingsPage implements Configurable {
         c.fill = GridBagConstraints.HORIZONTAL;
         c.insets = new Insets(12, 0, 8, 0);
         c.weightx = 0.0;
-        panel.add(new TitledSeparator("开发者工具"), c);
+        devToolsSeparator = new TitledSeparator(TranslationUtil.getText("settings.devtools"));
+        panel.add(devToolsSeparator, c);
 
-        // Row 6: 打开方式 — 标签和下拉框
+        // Row 6: 打开方式
         c.gridy = 6;
         c.gridx = 0;
         c.gridwidth = 1;
         c.fill = GridBagConstraints.NONE;
         c.weightx = 0.0;
         c.insets = new Insets(0, 0, 0, 8);
-        panel.add(new JLabel("打开方式:"), c);
+        devToolsModeLabel = new JLabel(TranslationUtil.getText("settings.devtools.mode"));
+        panel.add(devToolsModeLabel, c);
         c.gridx = 1;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.weightx = 1.0;
         c.insets = new Insets(0, 0, 0, 0);
-        devToolsModeCombo = new JComboBox<>(new String[]{"当前页面下方", "独立窗口"});
+        devToolsModeCombo = new JComboBox<>(new String[]{
+                TranslationUtil.getText("settings.devtools.below"),
+                TranslationUtil.getText("settings.devtools.window")
+        });
         panel.add(devToolsModeCombo, c);
 
-        // Row 7: 显示位置 — 标签和下拉框
+        // Row 7: 显示位置
         c.gridy = 7;
         c.gridx = 0;
         c.fill = GridBagConstraints.NONE;
         c.weightx = 0.0;
         c.insets = new Insets(4, 0, 0, 8);
-        panel.add(new JLabel("显示位置:"), c);
+        displayPositionLabel = new JLabel(TranslationUtil.getText("settings.display.position"));
+        panel.add(displayPositionLabel, c);
         c.gridx = 1;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.weightx = 1.0;
         c.insets = new Insets(4, 0, 0, 0);
-        displayPositionCombo = new JComboBox<>(new String[]{"工具栏", "编辑区"});
+        displayPositionCombo = new JComboBox<>(new String[]{
+                TranslationUtil.getText("settings.position.toolbar"),
+                TranslationUtil.getText("settings.position.editor")
+        });
         panel.add(displayPositionCombo, c);
 
         // Row 8: 分隔线 — 语言
@@ -155,21 +184,23 @@ public class BrowserSettingsPage implements Configurable {
         c.fill = GridBagConstraints.HORIZONTAL;
         c.insets = new Insets(12, 0, 8, 0);
         c.weightx = 0.0;
-        panel.add(new TitledSeparator(TranslationUtil.getText("settings.language")), c);
+        languageSeparator = new TitledSeparator(TranslationUtil.getText("settings.language"));
+        panel.add(languageSeparator, c);
 
-        // Row 9: 语言下拉框 — 标签和下拉框
+        // Row 9: 语言下拉框
         c.gridy = 9;
         c.gridx = 0;
         c.gridwidth = 1;
         c.fill = GridBagConstraints.NONE;
         c.weightx = 0.0;
         c.insets = new Insets(0, 0, 0, 8);
-        panel.add(new JLabel(TranslationUtil.getText("settings.language") + ":"), c);
+        languageLabel = new JLabel(TranslationUtil.getText("settings.language") + ":");
+        panel.add(languageLabel, c);
         c.gridx = 1;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.weightx = 1.0;
         c.insets = new Insets(0, 0, 0, 0);
-        languageCombo = new JComboBox<>(new String[]{"default", "zh", "en", "ja", "ko", "fr", "de"});
+        languageCombo = new JComboBox<>(buildLanguageDisplayItems());
         panel.add(languageCombo, c);
 
         // Row 10: 右下角签名
@@ -182,15 +213,22 @@ public class BrowserSettingsPage implements Configurable {
         c.insets = new Insets(20, 0, 0, 0);
         JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         footerPanel.setOpaque(false);
-        JLabel devLabel = new JLabel("开发者:陈彭伟", SwingConstants.RIGHT);
-        devLabel.setFont(devLabel.getFont().deriveFont(11f));
-        footerPanel.add(devLabel);
+        developerLabel = new JLabel(TranslationUtil.getText("settings.developer"), SwingConstants.RIGHT);
+        developerLabel.setFont(developerLabel.getFont().deriveFont(11f));
+        footerPanel.add(developerLabel);
         panel.add(footerPanel, c);
 
         return panel;
     }
 
-    // 检查设置是否被修改
+    // 构建语言下拉框显示项
+    private String[] buildLanguageDisplayItems() {
+        String[] items = new String[LANGUAGE_CODES.length];
+        items[0] = TranslationUtil.getText("settings.language.default");
+        System.arraycopy(LANGUAGE_NATIVE_NAMES, 1, items, 1, LANGUAGE_NATIVE_NAMES.length - 1);
+        return items;
+    }
+
     @Override
     public boolean isModified() {
         BrowserSettingsState state = BrowserSettingsState.getInstance();
@@ -198,11 +236,9 @@ public class BrowserSettingsPage implements Configurable {
         Boolean openHome = openHomeCheckBox != null ? openHomeCheckBox.isSelected() : null;
         Integer days = maxHistoryDaysField != null ? parseNullableInt(maxHistoryDaysField.getText()) : null;
         Integer count = maxHistoryCountField != null ? parseNullableInt(maxHistoryCountField.getText()) : null;
-        String selectedItem = displayPositionCombo != null ? (String) displayPositionCombo.getSelectedItem() : null;
-        String position = selectedItem != null ? positionToSetting(selectedItem) : null;
-        String devToolsItem = devToolsModeCombo != null ? (String) devToolsModeCombo.getSelectedItem() : null;
-        String devToolsMode = devToolsItem != null ? devToolsModeToSetting(devToolsItem) : null;
-        String lang = languageCombo != null ? (String) languageCombo.getSelectedItem() : null;
+        String position = displayPositionCombo != null ? positionIndexToSetting(displayPositionCombo.getSelectedIndex()) : null;
+        String devToolsMode = devToolsModeCombo != null ? devToolsIndexToSetting(devToolsModeCombo.getSelectedIndex()) : null;
+        String lang = languageCombo != null ? languageDisplayIndexToCode(languageCombo.getSelectedIndex()) : null;
 
         return !Objects.equals(homeText, state.getHomePageUrl())
                 || !Objects.equals(openHome, state.isOpenHomeOnNewTab())
@@ -213,117 +249,148 @@ public class BrowserSettingsPage implements Configurable {
                 || !Objects.equals(lang, state.getLanguage());
     }
 
-    // 应用设置并保存到持久化状态
     @Override
     public void apply() {
         BrowserSettingsState state = BrowserSettingsState.getInstance();
-        // 主页 URL 字段存在时保存
+        // 记录应用前的语言设置
+        String oldLang = state.getLanguage();
+
         if (homePageField != null) {
             state.setHomePageUrl(homePageField.getText());
         }
-        // 新标签页复选框存在时保存
         if (openHomeCheckBox != null) {
             state.setOpenHomeOnNewTab(openHomeCheckBox.isSelected());
         }
-        // 历史天数字段存在时尝试解析并保存
         if (maxHistoryDaysField != null) {
             Integer days = parseNullableInt(maxHistoryDaysField.getText());
-            // 解析成功时才更新
             if (days != null) {
                 state.setMaxHistoryDays(days);
             }
         }
-        // 历史条数字段存在时尝试解析并保存
         if (maxHistoryCountField != null) {
             Integer count = parseNullableInt(maxHistoryCountField.getText());
-            // 解析成功时才更新
             if (count != null) {
                 state.setMaxHistoryCount(count);
             }
         }
-        // 显示位置下拉框存在时保存
         if (displayPositionCombo != null) {
-            String selected = (String) displayPositionCombo.getSelectedItem();
-            state.setDisplayPosition(positionToSetting(selected));
+            state.setDisplayPosition(positionIndexToSetting(displayPositionCombo.getSelectedIndex()));
         }
-        // 开发者工具下拉框存在时保存
         if (devToolsModeCombo != null) {
-            String selected = (String) devToolsModeCombo.getSelectedItem();
-            state.setDevToolsMode(devToolsModeToSetting(selected));
+            state.setDevToolsMode(devToolsIndexToSetting(devToolsModeCombo.getSelectedIndex()));
         }
-        // 语言下拉框存在时保存
         if (languageCombo != null) {
-            state.setLanguage((String) languageCombo.getSelectedItem());
+            state.setLanguage(languageDisplayIndexToCode(languageCombo.getSelectedIndex()));
+        }
+
+        // 语言发生变更则刷新当前窗口标签
+        String newLang = state.getLanguage();
+        if (!Objects.equals(oldLang, newLang)) {
+            refreshLabels();
         }
     }
 
-    // 重置 UI 控件为当前持久化设置的值
+    // 语言切换后刷新所有标签文字
+    private void refreshLabels() {
+        int posIdx = displayPositionCombo.getSelectedIndex();
+        int devIdx = devToolsModeCombo.getSelectedIndex();
+        int langIdx = languageCombo.getSelectedIndex();
+
+        homePageLabel.setText(TranslationUtil.getText("settings.homepage.url") + ":");
+        openHomeCheckBox.setText(TranslationUtil.getText("settings.homepage.open"));
+        historySeparator.setText(TranslationUtil.getText("settings.history"));
+        historyDaysLabel.setText(TranslationUtil.getText("settings.history.days"));
+        historyCountLabel.setText(TranslationUtil.getText("settings.history.entries"));
+        devToolsSeparator.setText(TranslationUtil.getText("settings.devtools"));
+        devToolsModeLabel.setText(TranslationUtil.getText("settings.devtools.mode"));
+        displayPositionLabel.setText(TranslationUtil.getText("settings.display.position"));
+        languageSeparator.setText(TranslationUtil.getText("settings.language"));
+        languageLabel.setText(TranslationUtil.getText("settings.language") + ":");
+        developerLabel.setText(TranslationUtil.getText("settings.developer"));
+
+        // 刷新显示位置下拉框
+        displayPositionCombo.removeAllItems();
+        displayPositionCombo.addItem(TranslationUtil.getText("settings.position.toolbar"));
+        displayPositionCombo.addItem(TranslationUtil.getText("settings.position.editor"));
+        displayPositionCombo.setSelectedIndex(Math.max(0, Math.min(posIdx, 1)));
+
+        // 刷新开发者工具下拉框
+        devToolsModeCombo.removeAllItems();
+        devToolsModeCombo.addItem(TranslationUtil.getText("settings.devtools.below"));
+        devToolsModeCombo.addItem(TranslationUtil.getText("settings.devtools.window"));
+        devToolsModeCombo.setSelectedIndex(Math.max(0, Math.min(devIdx, 1)));
+
+        // 刷新语言下拉框第一项
+        languageCombo.removeItemAt(0);
+        languageCombo.insertItemAt(TranslationUtil.getText("settings.language.default"), 0);
+        languageCombo.setSelectedIndex(Math.max(0, Math.min(langIdx, LANGUAGE_CODES.length - 1)));
+    }
+
     @Override
     public void reset() {
         BrowserSettingsState state = BrowserSettingsState.getInstance();
-        // 主页 URL 字段存在时恢复
         if (homePageField != null) {
             homePageField.setText(state.getHomePageUrl());
         }
-        // 新标签页复选框存在时恢复
         if (openHomeCheckBox != null) {
             openHomeCheckBox.setSelected(state.isOpenHomeOnNewTab());
         }
-        // 历史天数字段存在时恢复
         if (maxHistoryDaysField != null) {
             maxHistoryDaysField.setText(String.valueOf(state.getMaxHistoryDays()));
         }
-        // 历史条数字段存在时恢复
         if (maxHistoryCountField != null) {
             maxHistoryCountField.setText(String.valueOf(state.getMaxHistoryCount()));
         }
-        // 显示位置下拉框存在时恢复
         if (displayPositionCombo != null) {
-            displayPositionCombo.setSelectedItem(settingToPosition(state.getDisplayPosition()));
+            displayPositionCombo.setSelectedIndex(settingToPositionIndex(state.getDisplayPosition()));
         }
-        // 开发者工具下拉框存在时恢复
         if (devToolsModeCombo != null) {
-            devToolsModeCombo.setSelectedItem(settingToDevToolsMode(state.getDevToolsMode()));
+            devToolsModeCombo.setSelectedIndex(settingToDevToolsIndex(state.getDevToolsMode()));
         }
-        // 语言下拉框存在时恢复
         if (languageCombo != null) {
-            languageCombo.setSelectedItem(state.getLanguage());
+            languageCombo.setSelectedIndex(codeToLanguageDisplayIndex(state.getLanguage()));
         }
     }
 
-    // 将显示文本转换为设置值
-    private static String positionToSetting(String display) {
-        if ("编辑区".equals(display)) {
-            return "editor";
-        }
-        return "toolbar";
+    // 显示位置索引 -> 设置值
+    private static String positionIndexToSetting(int index) {
+        return index == 1 ? "editor" : "toolbar";
     }
 
-    // 将设置值转换为显示文本
-    private static String settingToPosition(String setting) {
-        if ("editor".equals(setting)) {
-            return "编辑区";
-        }
-        return "工具栏";
+    // 设置值 -> 显示位置索引
+    private static int settingToPositionIndex(String setting) {
+        return "editor".equals(setting) ? 1 : 0;
     }
 
-    // 将显示文本转换为设置值
-    private static String devToolsModeToSetting(String display) {
-        if ("独立窗口".equals(display)) {
-            return "window";
-        }
-        return "split";
+    // 开发者工具索引 -> 设置值
+    private static String devToolsIndexToSetting(int index) {
+        return index == 1 ? "window" : "split";
     }
 
-    // 将设置值转换为显示文本
-    private static String settingToDevToolsMode(String setting) {
-        if ("window".equals(setting)) {
-            return "独立窗口";
-        }
-        return "当前页面下方";
+    // 设置值 -> 开发者工具索引
+    private static int settingToDevToolsIndex(String setting) {
+        return "window".equals(setting) ? 1 : 0;
     }
 
-    // 安全地将文本解析为整数，解析失败时返回 null
+    // 语言下拉索引 -> 语言代码
+    private static String languageDisplayIndexToCode(int index) {
+        if (index >= 0 && index < LANGUAGE_CODES.length) {
+            return LANGUAGE_CODES[index];
+        }
+        return "default";
+    }
+
+    // 语言代码 -> 语言下拉索引
+    private static int codeToLanguageDisplayIndex(String code) {
+        for (int i = 0; i < LANGUAGE_CODES.length; i++) {
+            if (LANGUAGE_CODES[i].equals(code)) {
+                return i;
+            }
+        }
+        return 0;
+    }
+
+    // 安全解析整数
     private static Integer parseNullableInt(String text) {
         if (text == null || text.isBlank()) {
             return null;

@@ -6,6 +6,7 @@ import com.cpw.browser.bookmark.Bookmark;
 import com.cpw.browser.bookmark.BookmarkPersistentState;
 import com.cpw.browser.toolwindow.BrowserTabManager;
 import com.cpw.browser.toolwindow.BrowserTabPanel;
+import com.cpw.browser.util.TranslationUtil;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.ui.Messages;
@@ -26,7 +27,7 @@ public final class BookmarkActions {
         private final Runnable onBookmarkChanged;
 
         public Add(BrowserTabManager tabManager, Runnable onBookmarkChanged) {
-            super("添加书签", "将当前页面添加到书签", WebBrowserIcons.BOOKMARK_ADD);
+            super(TranslationUtil.getText("bookmark.add.title"), TranslationUtil.getText("action.add.bookmark.desc"), WebBrowserIcons.BOOKMARK_ADD);
             this.tabManager = tabManager;
             this.onBookmarkChanged = onBookmarkChanged;
         }
@@ -44,7 +45,7 @@ public final class BookmarkActions {
             }
             BookmarkPersistentState bookmarkState = BookmarkPersistentState.getInstance();
             if (bookmarkState.contains(tab.getCurrentUrl())) {
-                Messages.showInfoMessage("该书签已存在", "书签");
+                Messages.showInfoMessage(TranslationUtil.getText("bookmark.exists"), TranslationUtil.getText("bookmark.title"));
                 return;
             }
             String title = tab.getPageTitle().isBlank() ? tab.getCurrentUrl() : tab.getPageTitle();
@@ -62,7 +63,7 @@ public final class BookmarkActions {
         private final Runnable onBookmarkChanged;
 
         public Remove(Supplier<String> getSelectedBookmarkUrl, Runnable onBookmarkChanged) {
-            super("删除书签", "删除选中的书签", WebBrowserIcons.BOOKMARK_REMOVE);
+            super(TranslationUtil.getText("action.remove.bookmark"), TranslationUtil.getText("action.remove.bookmark.desc"), WebBrowserIcons.BOOKMARK_REMOVE);
             this.getSelectedBookmarkUrl = getSelectedBookmarkUrl;
             this.onBookmarkChanged = onBookmarkChanged;
         }
