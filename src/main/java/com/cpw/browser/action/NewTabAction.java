@@ -10,11 +10,13 @@ public class NewTabAction extends AnAction {
 
     private final BrowserTabManager tabManager;
 
+    // 构造新建标签页 Action
     public NewTabAction(BrowserTabManager tabManager) {
         super("新建标签页", "打开一个新的浏览器标签页", WebBrowserIcons.NEW_TAB);
         this.tabManager = tabManager;
     }
 
+    // 执行新建标签页操作
     @Override
     public void actionPerformed(AnActionEvent e) {
         tabManager.createTab();

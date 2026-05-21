@@ -35,6 +35,7 @@ public class OpenDevToolsAction extends AnAction {
         e.getPresentation().setEnabled(tabManager.getActiveTab() != null);
     }
 
+    // 执行打开开发者工具操作
     @Override
     public void actionPerformed(AnActionEvent e) {
         onOpenDevTools.run();

@@ -128,6 +128,7 @@ public class BrowserSettingsPage implements Configurable {
         return panel;
     }
 
+    // 检查设置是否被修改
     @Override
     public boolean isModified() {
         BrowserSettingsState state = BrowserSettingsState.getInstance();
@@ -145,48 +146,62 @@ public class BrowserSettingsPage implements Configurable {
                 || !Objects.equals(position, state.getDisplayPosition());
     }
 
+    // 应用设置并保存到持久化状态
     @Override
     public void apply() {
         BrowserSettingsState state = BrowserSettingsState.getInstance();
+        // 主页 URL 字段存在时保存
         if (homePageField != null) {
             state.setHomePageUrl(homePageField.getText());
         }
+        // 新标签页复选框存在时保存
         if (openHomeCheckBox != null) {
             state.setOpenHomeOnNewTab(openHomeCheckBox.isSelected());
         }
+        // 历史天数字段存在时尝试解析并保存
         if (maxHistoryDaysField != null) {
             Integer days = parseNullableInt(maxHistoryDaysField.getText());
+            // 解析成功时才更新
             if (days != null) {
                 state.setMaxHistoryDays(days);
             }
         }
+        // 历史条数字段存在时尝试解析并保存
         if (maxHistoryCountField != null) {
             Integer count = parseNullableInt(maxHistoryCountField.getText());
+            // 解析成功时才更新
             if (count != null) {
                 state.setMaxHistoryCount(count);
             }
         }
+        // 显示位置下拉框存在时保存
         if (displayPositionCombo != null) {
             String selected = (String) displayPositionCombo.getSelectedItem();
             state.setDisplayPosition(positionToSetting(selected));
         }
     }
 
+    // 重置 UI 控件为当前持久化设置的值
     @Override
     public void reset() {
         BrowserSettingsState state = BrowserSettingsState.getInstance();
+        // 主页 URL 字段存在时恢复
         if (homePageField != null) {
             homePageField.setText(state.getHomePageUrl());
         }
+        // 新标签页复选框存在时恢复
         if (openHomeCheckBox != null) {
             openHomeCheckBox.setSelected(state.isOpenHomeOnNewTab());
         }
+        // 历史天数字段存在时恢复
         if (maxHistoryDaysField != null) {
             maxHistoryDaysField.setText(String.valueOf(state.getMaxHistoryDays()));
         }
+        // 历史条数字段存在时恢复
         if (maxHistoryCountField != null) {
             maxHistoryCountField.setText(String.valueOf(state.getMaxHistoryCount()));
         }
+        // 显示位置下拉框存在时恢复
         if (displayPositionCombo != null) {
             displayPositionCombo.setSelectedItem(settingToPosition(state.getDisplayPosition()));
         }

@@ -56,7 +56,9 @@ import java.util.function.Consumer;
 
 public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
 
+    // 书签标签页索引
     private static final int TAB_BOOKMARKS = 0;
+    // 历史标签页索引
     private static final int TAB_HISTORY = 1;
 
     // ---- 书签 ----
@@ -83,9 +85,12 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
     private final JBLabel clearLabel;
     private final JLabel activeBg;
 
+    // 书签选中回调
     private final Consumer<Bookmark> onBookmarkSelected;
+    // 历史条目选中回调
     private final Consumer<String> onHistoryEntrySelected;
 
+    // 构造书签侧边栏，包含分段切换器、书签列表和历史列表
     public BookmarkSidebar(
             Consumer<Bookmark> onBookmarkSelected,
             Consumer<String> onHistoryEntrySelected
@@ -240,12 +245,14 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
 
     // 切换到书签标签
     private void showBookmarks() {
+        // 已是书签标签则跳过
         if (currentTab == TAB_BOOKMARKS) return;
         currentTab = TAB_BOOKMARKS;
         bookmarkLabel.setFont(bookmarkLabel.getFont().deriveFont(Font.BOLD));
         historyLabel.setFont(historyLabel.getFont().deriveFont(Font.PLAIN));
         // 移动选中背景到左侧
         Component lastComp = segmentBar.getComponent(segmentBar.getComponentCount() - 1);
+        // 选中背景组件存在则更新其位置
         if (lastComp != null) {
             lastComp.setBounds(0, 0, segmentBar.getWidth() / 2, segmentBar.getHeight());
         }
@@ -255,12 +262,14 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
 
     // 切换到历史标签
     private void showHistory() {
+        // 已是历史标签则跳过
         if (currentTab == TAB_HISTORY) return;
         currentTab = TAB_HISTORY;
         historyLabel.setFont(historyLabel.getFont().deriveFont(Font.BOLD));
         bookmarkLabel.setFont(bookmarkLabel.getFont().deriveFont(Font.PLAIN));
         // 移动选中背景到右侧
         Component lastComp = segmentBar.getComponent(segmentBar.getComponentCount() - 1);
+        // 选中背景组件存在则更新其位置
         if (lastComp != null) {
             lastComp.setBounds(segmentBar.getWidth() / 2, 0, segmentBar.getWidth() / 2, segmentBar.getHeight());
         }
@@ -272,12 +281,15 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
     // 处理书签列表点击事件（右侧 22px 删除，左侧 22px 编辑，其余选中）
     private void handleBookmarkClick(MouseEvent e) {
         int index = bookmarkList.locationToIndex(e.getPoint());
+        // 点击位置无书签则返回
         if (index < 0) return;
         java.awt.Rectangle bounds = bookmarkList.getCellBounds(index, index);
+        // 无法获取单元格边界则返回
         if (bounds == null) return;
         Bookmark bookmark = bookmarkListModel.getElementAt(index);
         int rightEdge = bounds.x + bounds.width;
 
+        // 点击右侧 22px 区域触发删除操作
         if (e.getPoint().x >= rightEdge - 22) {
             // 点击右侧删除区域，确认后删除书签
             int result = Messages.showYesNoDialog(
@@ -285,21 +297,22 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
                     "删除书签",
                     null
             );
+            // 用户确认删除
             if (result == Messages.YES) {
                 BookmarkPersistentState.getInstance().removeBookmark(bookmark.getUrl());
                 refreshBookmarks();
             }
-        } else if (e.getPoint().x >= rightEdge - 44) {
+        } else if (e.getPoint().x >= rightEdge - 44) { // 点击编辑区域
             // 点击编辑区域，弹出编辑对话框
             String[] editResult = showBookmarkEditDialog(bookmark.getTitle(), bookmark.getUrl());
+            // 用户确认编辑则更新书签
             if (editResult != null) {
                 BookmarkPersistentState.getInstance().updateBookmark(
                         bookmark.getUrl(), editResult[0], editResult[1]
                 );
                 refreshBookmarks();
             }
-        } else {
-            // 点击主体区域，选中该书签
+        } else { // 点击主体区域，选中该书签
             onBookmarkSelected.accept(bookmark);
         }
     }
@@ -307,24 +320,28 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
     // 处理历史列表点击事件（右侧 22px 删除，其余选中）
     private void handleHistoryClick(MouseEvent e) {
         int index = historyList.locationToIndex(e.getPoint());
+        // 点击位置无条目则返回
         if (index < 0) return;
         Object item = historyListModel.getElementAt(index);
+        // 非 HistoryEntry 类型则返回（分组标题不可点击）
         if (!(item instanceof HistoryEntry)) return;
         HistoryEntry entry = (HistoryEntry) item;
         java.awt.Rectangle bounds = historyList.getCellBounds(index, index);
+        // 无法获取单元格边界则返回
         if (bounds == null) return;
-        // 点击右侧删除区域 (~22px)
+        // 点击右侧 22px 区域触发删除操作
         if (e.getPoint().x >= bounds.x + bounds.width - 22) {
             int result = Messages.showYesNoDialog(
                     "确定删除该条历史记录吗？",
                     "删除历史记录",
                     null
             );
+            // 用户确认删除
             if (result == Messages.YES) {
                 BrowsingHistoryState.getInstance().removeEntry(entry.getUrl(), entry.getTimestamp());
                 refreshHistory();
             }
-        } else {
+        } else { // 点击主体区域，选中该历史条目
             onHistoryEntrySelected.accept(entry.getUrl());
         }
     }
@@ -354,9 +371,10 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
         button.setHorizontalAlignment(SwingConstants.LEFT);
         button.setBorder(new EmptyBorder(4, 12, 4, 12));
         button.addActionListener(e -> {
+            // hours 为 null 则清空全部，否则清空指定小时数以内
             if (hours == null) {
                 BrowsingHistoryState.getInstance().clearEntries();
-            } else {
+            } else { // 清空指定小时数以内的记录
                 BrowsingHistoryState.getInstance().clearEntries(hours);
             }
             refreshHistory();
@@ -372,23 +390,28 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
 
         private List<Object> items = buildItems();
 
+        // 刷新历史列表数据
         public void refresh() {
             items = buildItems();
             fireContentsChanged(this, 0, Math.max(items.size(), 0));
         }
 
+        // 获取列表项数量
         @Override
         public int getSize() {
             return items.size();
         }
 
+        // 获取指定索引的列表项
         @Override
         public Object getElementAt(int index) {
             return items.get(index);
         }
 
+        // 构建历史列表条目（按日期分组）
         private List<Object> buildItems() {
             List<HistoryEntry> entries = BrowsingHistoryState.getInstance().getEntries();
+            // 无历史记录则返回空列表
             if (entries.isEmpty()) return List.of();
 
             ZoneId zone = ZoneId.systemDefault();
@@ -403,31 +426,36 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
 
             // 按日期分组归类历史记录
             for (HistoryEntry e : entries) {
+                // 当天记录
                 if (e.getTimestamp() >= todayStart) {
                     todayGroup.add(e);
-                } else if (e.getTimestamp() >= mondayStart) {
+                } else if (e.getTimestamp() >= mondayStart) { // 本周记录
                     DayOfWeek dow = Instant.ofEpochMilli(e.getTimestamp()).atZone(zone).getDayOfWeek();
                     weekGroups.computeIfAbsent(dow, k -> new ArrayList<>()).add(e);
-                } else {
+                } else { // 更早记录
                     earlierGroup.add(e);
                 }
             }
 
             List<Object> result = new ArrayList<>();
+            // 当天分组非空则添加标题和条目
             if (!todayGroup.isEmpty()) {
                 result.add(HEADER_TODAY);
                 result.addAll(todayGroup);
             }
+            // 按星期顺序添加本周分组
             for (DayOfWeek dow : Arrays.asList(
                     DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
                     DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY, DayOfWeek.SUNDAY
             )) {
                 List<HistoryEntry> group = weekGroups.get(dow);
+                // 该星期有记录则添加标题和条目
                 if (group != null && !group.isEmpty()) {
                     result.add(dow);
                     result.addAll(group);
                 }
             }
+            // 更早的记录非空则添加标题和条目
             if (!earlierGroup.isEmpty()) {
                 result.add(HEADER_OLDER);
                 result.addAll(earlierGroup);
@@ -444,6 +472,7 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
         private final JPanel contentPanel;
         private final JLabel deleteLabel;
 
+        // 构造历史列表项渲染器
         HistoryListRenderer() {
             super(new BorderLayout());
 
@@ -470,6 +499,7 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
             setBorder(new EmptyBorder(2, 8, 2, 2));
         }
 
+        // 渲染列表项（支持分组标题、星期标题和历史条目三种类型）
         @Override
         public Component getListCellRendererComponent(
                 JList<?> list,
@@ -480,6 +510,7 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
         ) {
             setBackground(JBColor.WHITE);
 
+            // 日期分组标题行
             if (value instanceof String) {
                 // 日期分组标题行
                 String header = (String) value;
@@ -492,8 +523,7 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
                         new EmptyBorder(4, 0, 2, 0)
                 ));
                 deleteLabel.setVisible(false);
-            } else if (value instanceof DayOfWeek) {
-                // 星期分组标题行
+            } else if (value instanceof DayOfWeek) { // 星期分组标题行
                 DayOfWeek dow = (DayOfWeek) value;
                 switch (dow) {
                     case MONDAY: titleLabel.setText("周一"); break;
@@ -512,8 +542,7 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
                         new EmptyBorder(4, 0, 2, 0)
                 ));
                 deleteLabel.setVisible(false);
-            } else if (value instanceof HistoryEntry) {
-                // 具体历史条目
+            } else if (value instanceof HistoryEntry) { // 具体历史条目
                 HistoryEntry entry = (HistoryEntry) value;
                 titleLabel.setText(entry.getTitle());
                 titleLabel.setFont(titleLabel.getFont().deriveFont(Font.PLAIN, 12f));
@@ -561,6 +590,7 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
                 javax.swing.JOptionPane.PLAIN_MESSAGE,
                 null, null, null
         );
+        // 用户点击确认则返回编辑后的数据
         if (result == javax.swing.JOptionPane.OK_OPTION) {
             return new String[]{titleField.getText().trim(), urlField.getText().trim()};
         }
@@ -575,9 +605,10 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
         LocalDate entryDate = zdt.toLocalDate();
         LocalDate monday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
 
+        // 当天记录显示 HH:mm
         if (entryDate.equals(today)) {
             return zdt.format(DateTimeFormatter.ofPattern("HH:mm"));
-        } else if (!entryDate.isBefore(monday)) {
+        } else if (!entryDate.isBefore(monday)) { // 本周记录显示 "周X HH:mm"
             String wd;
             switch (zdt.getDayOfWeek()) {
                 case MONDAY: wd = "周一"; break;
@@ -590,7 +621,7 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
                 default: wd = ""; break;
             }
             return wd + " " + zdt.format(DateTimeFormatter.ofPattern("HH:mm"));
-        } else {
+        } else { // 更早记录显示 "MM-dd HH:mm"
             return zdt.format(DateTimeFormatter.ofPattern("MM-dd HH:mm"));
         }
     }

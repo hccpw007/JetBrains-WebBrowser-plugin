@@ -55,6 +55,7 @@ public class BookmarkListCellRenderer extends JPanel implements ListCellRenderer
         setBorder(new EmptyBorder(6, 8, 6, 2));
     }
 
+    // 渲染书签列表项的组件
     @Override
     public Component getListCellRendererComponent(
             JList<?> list,

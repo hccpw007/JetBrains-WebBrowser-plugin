@@ -1,4 +1,4 @@
-package com.cpw.browser;
+package com.cpw.browser.action;
 
 import com.cpw.browser.editor.BrowserFileEditor;
 import com.cpw.browser.settings.BrowserSettingsState;
@@ -31,9 +31,12 @@ public class ToggleBrowserAction extends AnAction implements DumbAware {
         e.getPresentation().setEnabled(e.getProject() != null);
     }
 
+    // 执行浏览器显示模式的切换操作
     @Override
     public void actionPerformed(@NotNull AnActionEvent e) {
         Project project = e.getProject();
+
+        // 项目为空时直接返回
         if (project == null) return;
 
         BrowserSettingsState settings = BrowserSettingsState.getInstance();
@@ -41,7 +44,7 @@ public class ToggleBrowserAction extends AnAction implements DumbAware {
         // 根据设置中的显示位置决定切换模式
         if ("editor".equals(settings.getDisplayPosition())) {
             toggleEditorMode(project);
-        } else {
+        } else { // 使用工具窗口侧边栏模式
             toggleToolbarMode(project);
         }
     }
@@ -56,18 +59,22 @@ public class ToggleBrowserAction extends AnAction implements DumbAware {
         // 检查是否已有浏览器编辑器打开
         boolean hasBrowserEditor = false;
         for (FileEditor fe : manager.getAllEditors()) {
+            // 找到已打开的浏览器编辑器实例
             if (fe instanceof BrowserFileEditor) {
                 hasBrowserEditor = true;
                 break;
             }
         }
 
+        // 已存在浏览器编辑器时关闭并清理
         if (hasBrowserEditor) {
             // 已打开，关闭它
             VirtualFile vf = projectFiles.remove(project);
+            // 成功获取到有效文件时关闭编辑器
             if (vf != null && vf.isValid()) {
                 manager.closeFile(vf);
                 File localFile = vf.toNioPath().toFile();
+                // 临时文件存在则删除
                 if (localFile.exists()) localFile.delete();
             }
             return;
@@ -76,18 +83,21 @@ public class ToggleBrowserAction extends AnAction implements DumbAware {
         try {
             // 确保工具窗口已隐藏
             ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow("WebBrowser");
+            // 工具窗口可见时将其隐藏
             if (toolWindow != null && toolWindow.isVisible()) {
                 toolWindow.hide();
             }
 
             // 创建临时文件作为标记，用于在编辑区打开浏览器
             File tempFile = new File(System.getProperty("java.io.tmpdir"), "Web Browser.webbrowser");
+            // 临时文件已存在则删除重建
             if (tempFile.exists()) tempFile.delete();
             tempFile.createNewFile();
             tempFile.deleteOnExit();
             Files.writeString(tempFile.toPath(), "WebBrowser");
 
             VirtualFile vf = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(tempFile);
+            // 成功获取到有效文件时在编辑区打开
             if (vf != null && vf.isValid()) {
                 projectFiles.put(project, vf);
                 manager.openFile(vf, true);
@@ -102,8 +112,10 @@ public class ToggleBrowserAction extends AnAction implements DumbAware {
         // 如果有浏览器编辑器标签页，先关闭它
         FileEditorManager manager = FileEditorManager.getInstance(project);
         for (FileEditor fe : manager.getAllEditors()) {
+            // 找到已打开的浏览器编辑器实例并关闭
             if (fe instanceof BrowserFileEditor) {
                 VirtualFile vf = projectFiles.remove(project);
+                // 成功获取到有效文件时关闭并删除临时文件
                 if (vf != null && vf.isValid()) {
                     manager.closeFile(vf);
                     vf.toNioPath().toFile().delete();
@@ -113,12 +125,15 @@ public class ToggleBrowserAction extends AnAction implements DumbAware {
         }
 
         ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow("WebBrowser");
+
+        // 工具窗口未初始化时直接返回
         if (toolWindow == null) return;
 
+        // 根据工具窗口当前可见状态切换显隐
         if (toolWindow.isVisible()) {
             toolWindow.hide();
             toolWindow.setAvailable(false, null);
-        } else {
+        } else { // 显示并激活工具窗口
             toolWindow.setAvailable(true, null);
             toolWindow.show();
         }
@@ -127,7 +142,10 @@ public class ToggleBrowserAction extends AnAction implements DumbAware {
     // 确保侧边栏按钮隐藏（编辑区模式切换时调用）
     private void hideToolWindowStrip(Project project) {
         ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow("WebBrowser");
+
+        // 工具窗口未初始化时直接返回
         if (toolWindow == null) return;
+        // 工具窗口可见时将其隐藏
         if (toolWindow.isVisible()) toolWindow.hide();
         toolWindow.setAvailable(false, null);
     }

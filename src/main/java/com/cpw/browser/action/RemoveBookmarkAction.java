@@ -13,6 +13,7 @@ public class RemoveBookmarkAction extends AnAction {
     private final Supplier<String> getSelectedBookmarkUrl;
     private final Runnable onBookmarkChanged;
 
+    // 构造删除书签 Action
     public RemoveBookmarkAction(Supplier<String> getSelectedBookmarkUrl, Runnable onBookmarkChanged) {
         super("删除书签", "删除选中的书签", WebBrowserIcons.BOOKMARK_REMOVE);
         this.getSelectedBookmarkUrl = getSelectedBookmarkUrl;
@@ -25,6 +26,7 @@ public class RemoveBookmarkAction extends AnAction {
         e.getPresentation().setEnabled(getSelectedBookmarkUrl.get() != null);
     }
 
+    // 执行删除书签操作
     @Override
     public void actionPerformed(AnActionEvent e) {
         String url = getSelectedBookmarkUrl.get();

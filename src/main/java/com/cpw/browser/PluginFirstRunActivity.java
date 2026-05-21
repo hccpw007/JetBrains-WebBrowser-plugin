@@ -12,6 +12,7 @@ public class PluginFirstRunActivity implements StartupActivity {
 
     private static final String FIRST_RUN_KEY = "com.cpw.browser.firstRun";
 
+    // 执行首次运行活动：检测首次运行并提示重启
     @Override
     public void runActivity(@NotNull Project project) {
         // 检查是否为首次运行

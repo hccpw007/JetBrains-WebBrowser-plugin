@@ -20,21 +20,27 @@ public class Bookmark {
         this(title, url, System.currentTimeMillis());
     }
 
+    // 获取书签标题
     public String getTitle() {
         return title;
     }
 
+    // 获取书签 URL
     public String getUrl() {
         return url;
     }
 
+    // 获取书签创建时间戳
     public long getCreatedAt() {
         return createdAt;
     }
 
+    // 判断两个书签是否相等
     @Override
     public boolean equals(Object o) {
+        // 引用相同则相等
         if (this == o) return true;
+        // 类型不匹配则不相等
         if (o == null || getClass() != o.getClass()) return false;
         Bookmark bookmark = (Bookmark) o;
         return createdAt == bookmark.createdAt &&
@@ -42,11 +48,13 @@ public class Bookmark {
                Objects.equals(url, bookmark.url);
     }
 
+    // 计算书签的哈希码
     @Override
     public int hashCode() {
         return Objects.hash(title, url, createdAt);
     }
 
+    // 返回书签的字符串表示
     @Override
     public String toString() {
         return "Bookmark{" +

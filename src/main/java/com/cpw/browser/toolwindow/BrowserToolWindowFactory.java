@@ -1,4 +1,4 @@
-package com.cpw.browser;
+package com.cpw.browser.toolwindow;
 
 import com.cpw.browser.toolwindow.BrowserToolWindowPanel;
 import com.intellij.openapi.actionSystem.AnAction;
@@ -47,6 +47,7 @@ public class BrowserToolWindowFactory implements ToolWindowFactory {
         });
     }
 
+    // 注册键盘快捷键：Ctrl+L 聚焦地址栏，Ctrl+Shift+I 打开开发者工具
     private void registerShortcuts(BrowserToolWindowPanel panel, ToolWindow toolWindow) {
         // 获取主机组件用于注册快捷键
         JComponent component = panel.getContent();

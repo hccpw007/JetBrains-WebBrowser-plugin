@@ -21,11 +21,11 @@ import javax.swing.border.EmptyBorder;
 // Chrome 风格的标签页组件，使用 custom painting 绘制标签形状
 public class ChromeTab extends JPanel {
 
-    /** 标签页高度（不含 tabStrip 顶部内边距） */
+    // 标签页高度（不含 tabStrip 顶部内边距）
     public static final int TAB_HEIGHT = 26;
-    /** 顶部圆角半径 */
+    // 顶部圆角半径
     private static final int CR = 10;
-    /** 非活跃标签底部内凹幅度 */
+    // 非活跃标签底部内凹幅度
     private static final int BC = 4;
 
     // ---- 主题色 ----
@@ -35,17 +35,20 @@ public class ChromeTab extends JPanel {
     public static final JBColor BORDER = new JBColor(0xC0C0C0, 0x4A4A4A);
     public static final JBColor STRIP_BG = new JBColor(0xC8C8C8, 0x222222);
 
+    // 关联的浏览器标签页面板
     public final BrowserTabPanel browserTab;
+    // 标签选中时的回调
     private final Runnable onSelect;
+    // 标签关闭时的回调
     private final Runnable onClose;
 
-    /** 当前是否为活跃标签 */
+    // 当前是否为活跃标签
     private boolean active;
 
-    /** 标签标题文本 */
+    // 标签标题文本
     public final JBLabel titleLabel;
 
-    /** 鼠标是否悬停在标签上 */
+    // 鼠标是否悬停在标签上
     private boolean hovered;
 
     public ChromeTab(
@@ -106,10 +109,12 @@ public class ChromeTab extends JPanel {
         });
     }
 
+    // 获取当前是否为活跃标签
     public boolean isActive() {
         return active;
     }
 
+    // 设置活跃状态，状态变化时触发重绘
     public void setActive(boolean active) {
         // 切换活跃状态时触发重绘
         if (this.active != active) {
@@ -118,22 +123,26 @@ public class ChromeTab extends JPanel {
         }
     }
 
+    // 获取首选尺寸，固定高度为 TAB_HEIGHT
     @Override
     public Dimension getPreferredSize() {
         Dimension pref = super.getPreferredSize();
         return new Dimension(pref.width, TAB_HEIGHT);
     }
 
+    // 获取最小尺寸，宽度最小 70px
     @Override
     public Dimension getMinimumSize() {
         return new Dimension(70, TAB_HEIGHT);
     }
 
+    // 获取最大尺寸，宽度最大 240px
     @Override
     public Dimension getMaximumSize() {
         return new Dimension(240, TAB_HEIGHT);
     }
 
+    // 自定义绘制标签外观（背景色和边框）
     @Override
     protected void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D) g.create();
@@ -145,11 +154,12 @@ public class ChromeTab extends JPanel {
 
         // 选择背景色：活跃 > 悬停 > 非活跃
         JBColor bg;
+        // 如果标签处于活跃状态，使用活跃背景色
         if (active) {
             bg = ACTIVE_BG;
-        } else if (hovered) {
+        } else if (hovered) { // 如果鼠标悬停，使用悬停背景色
             bg = HOVER_BG;
-        } else {
+        } else { // 否则使用非活跃背景色
             bg = INACTIVE_BG;
         }
 
@@ -159,6 +169,7 @@ public class ChromeTab extends JPanel {
 
         // 描边：活跃标签不画底边（与内容区相连）
         g2.setColor(BORDER);
+        // 如果是活跃标签，只绘制顶部和两侧的边框（不画底边）
         if (active) {
             Path2D borderPath = new Path2D.Float();
             borderPath.moveTo(0.0f, h);
@@ -168,7 +179,7 @@ public class ChromeTab extends JPanel {
             borderPath.quadTo(w, 0.0f, w, CR);
             borderPath.lineTo(w, h);
             g2.draw(borderPath);
-        } else {
+        } else { // 非活跃标签直接绘制完整轮廓
             g2.draw(buildTabShape(w, h, false));
         }
 
@@ -182,10 +193,11 @@ public class ChromeTab extends JPanel {
         path.quadTo(0.0f, 0.0f, CR, 0.0f);
         path.lineTo(w - CR, 0.0f);
         path.quadTo(w, 0.0f, w, CR);
+        // 活跃标签直接画直角底边，非活跃标签底部内凹
         if (active) {
             path.lineTo(w, h);
             path.lineTo(0.0f, h);
-        } else {
+        } else { // 非活跃标签绘制底部内凹曲线
             path.lineTo(w, h - BC);
             path.quadTo(w, h, w - BC, h);
             path.lineTo(BC, h);

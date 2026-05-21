@@ -26,7 +26,7 @@
         <jcef.appRequiredArgumentsProvider implementation="com.cpw.browser.JcefArgsProvider"/>
         <toolWindow
             id="WebBrowser"
-            factoryClass="com.cpw.browser.BrowserToolWindowFactory"
+            factoryClass="com.cpw.browser.toolwindow.BrowserToolWindowFactory"
             icon="/icons/toolwindow.svg"
             anchor="left"
             secondary="false"/>
@@ -64,7 +64,7 @@
         <!-- 注册打开/关闭浏览器工具窗口的Action -->
         <action
             id="com.cpw.browser.ToggleBrowserAction"
-            class="com.cpw.browser.ToggleBrowserAction"
+            class="com.cpw.browser.action.ToggleBrowserAction"
             text="WebBrowser"
             description="Open or close the web browser tool window"
             icon="/icons/toolwindow.svg">

@@ -15,10 +15,12 @@ public final class MyMessageBundle {
         // 工具类，禁止实例化
     }
 
+    // 根据键名获取本地化消息
     public static @Nls String message(@PropertyKey(resourceBundle = BUNDLE) String key, Object... params) {
         return instance.getMessage(key, params);
     }
 
+    // 根据键名获取延迟加载的本地化消息
     public static Supplier<@Nls String> lazyMessage(@PropertyKey(resourceBundle = BUNDLE) String key, Object... params) {
         return instance.getLazyMessage(key, params);
     }

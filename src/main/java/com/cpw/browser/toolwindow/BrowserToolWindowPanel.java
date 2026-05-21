@@ -54,23 +54,52 @@ import java.util.function.Consumer;
 
 public class BrowserToolWindowPanel {
 
+    // 标题变更回调
     private Consumer<String> onTitleChanged;
+
+    // 当前项目
     private final Project project;
 
+    // 标签页管理器
     private final BrowserTabManager tabManager;
+
+    // 地址栏
     private final AddressBar addressBar;
+
+    // 书签侧边栏
     private BookmarkSidebar bookmarkSidebar;
+
+    // 标签页栏面板
     private final JPanel tabStripPanel;
+
+    // 浏览器内容面板
     private final JPanel browserContentPanel;
+
+    // 缩放提示标签
     private final JBLabel zoomToast;
+
+    // 浏览器层叠面板
     private final JLayeredPane browserLayer;
+
+    // 缩放提示定时器
     private Timer zoomToastTimer;
+
+    // 居中区域面板
     private final JPanel centerPanel;
+
+    // 底部状态栏标签
     private final JBLabel statusLabel;
+
+    // 主面板
     private final JBPanel<?> mainPanel;
+
+    // 标签页与 ChromeTab 映射
     private final Map<BrowserTabPanel, ChromeTab> chromeTabs;
+
+    // 新建标签页按钮
     private final JButton addTabButton;
 
+    // 构造浏览器工具窗口主面板
     public BrowserToolWindowPanel(Project project) {
         this.project = project;
 
@@ -116,6 +145,7 @@ public class BrowserToolWindowPanel {
                 int w = getWidth();
                 int h = getHeight();
                 browserContentPanel.setBounds(0, 0, w, h);
+                // 如果缩放提示可见，则调整其位置到居中
                 if (zoomToast.isVisible()) {
                     Dimension pref = zoomToast.getPreferredSize();
                     zoomToast.setBounds(
@@ -260,16 +290,18 @@ public class BrowserToolWindowPanel {
     // 打开/关闭开发者工具
     public void openDevTools() {
         BrowserTabPanel tab = tabManager.getActiveTab();
+        // 无活跃标签页则直接返回
         if (tab == null) return;
+        // 根据 DevTools 当前状态决定打开或关闭
         if (tab.isEmbeddedDevToolsOpen()) {
             tab.closeEmbeddedDevTools();
             updateBrowserContent(tab);
-        } else {
+        } else { // 打开嵌入式 DevTools
             tab.openEmbeddedDevTools(devTools -> {
+                // DevTools 组件创建成功则更新界面
                 if (devTools != null) {
                     updateBrowserContent(tab);
-                } else {
-                    // CDP 嵌入式失败时回退到弹出窗口
+                } else { // CDP 嵌入式失败时回退到弹出窗口
                     statusLabel.setText("嵌入式 DevTools 不可用，已打开独立窗口");
                     tab.openDevTools();
                 }
@@ -340,6 +372,7 @@ public class BrowserToolWindowPanel {
         public void actionPerformed(AnActionEvent e) {
             BrowserTabPanel tab = tabManager.getActiveTab();
             String url = tab != null ? tab.getCurrentUrl() : null;
+            // 仅在 URL 有效且非空白页时打开系统浏览器
             if (url != null && !url.isBlank() && !"about:blank".equals(url)) {
                 try {
                     java.awt.Desktop.getDesktop().browse(new java.net.URI(url));
@@ -375,10 +408,12 @@ public class BrowserToolWindowPanel {
                 tab,
                 () -> {
                     int idx = tabManager.getTabs().indexOf(tab);
+                    // 索引有效则切换到该标签页
                     if (idx >= 0) tabManager.switchToTab(idx);
                 },
                 () -> {
                     int idx = tabManager.getTabs().indexOf(tab);
+                    // 索引有效则关闭该标签页
                     if (idx >= 0) tabManager.closeTab(idx);
                 }
         );
@@ -393,12 +428,15 @@ public class BrowserToolWindowPanel {
         Consumer<String> origTitleCb = tab.getOnTitleChanged();
         tab.setOnTitleChanged(title -> {
             ChromeTab ct = chromeTabs.get(tab);
+            // 找到对应的 ChromeTab 则更新标题显示
             if (ct != null) {
                 ct.titleLabel.setText(tab.getTabTitle());
             }
+            // 有原始回调则继续传递
             if (origTitleCb != null) {
                 origTitleCb.accept(title);
             }
+            // 当前标签页为活跃标签页且已设置标题回调时通知外部
             if (tab == tabManager.getActiveTab() && onTitleChanged != null) {
                 onTitleChanged.accept(tab.getTabTitle());
             }
@@ -407,14 +445,17 @@ public class BrowserToolWindowPanel {
         // 页面加载完成后记录历史（标题和 URL 均不可为空）
         Consumer<Boolean> origLoadCb = tab.getOnLoadingStateChanged();
         tab.setOnLoadingStateChanged(loading -> {
+            // 页面加载完成后记录浏览历史
             if (!loading) {
                 String url = tab.getCurrentUrl();
                 String title = tab.getPageTitle();
+                // URL 和标题均不为空且非空白页时才记录
                 if (url != null && !url.isBlank() && !"about:blank".equals(url)
                         && title != null && !title.isBlank()) {
                     BrowsingHistoryState.getInstance().addEntry(url, title);
                 }
             }
+            // 有原始回调则继续传递
             if (origLoadCb != null) {
                 origLoadCb.accept(loading);
             }
@@ -424,6 +465,7 @@ public class BrowserToolWindowPanel {
     // 从标签栏移除标签页
     private void removeTabFromStrip(BrowserTabPanel tab) {
         ChromeTab chromeTab = chromeTabs.get(tab);
+        // 未找到对应 ChromeTab 则直接返回
         if (chromeTab == null) return;
         tabStripPanel.remove(chromeTab);
         tabStripPanel.revalidate();
@@ -434,6 +476,8 @@ public class BrowserToolWindowPanel {
     // 更新标签栏高亮状态
     private void updateTabStripHighlight() {
         BrowserTabPanel activeTab = tabManager.getActiveTab();
+
+        // 遍历所有标签页更新其活跃状态
         for (Map.Entry<BrowserTabPanel, ChromeTab> entry : chromeTabs.entrySet()) {
             entry.getValue().setActive(entry.getKey() == activeTab);
         }
@@ -441,19 +485,22 @@ public class BrowserToolWindowPanel {
 
     // 活跃标签页变更回调
     private void onActiveTabChanged(BrowserTabPanel tab) {
+        // 存在活跃标签页则更新界面状态
         if (tab != null) {
             addressBar.setUrl(tab.getCurrentUrl());
             statusLabel.setText(tab.isLoading() ? "加载中..." : "就绪");
             updateBrowserContent(tab);
             updateTabStripHighlight();
             updateTabTitle(tab);
+            // 通知外部标题变更
             if (onTitleChanged != null) {
                 onTitleChanged.accept(tab.getTabTitle());
             }
-        } else {
+        } else { // 无活跃标签页，重置界面
             addressBar.setUrl("");
             statusLabel.setText("就绪");
             updateBrowserContent(null);
+            // 恢复默认标题
             if (onTitleChanged != null) {
                 onTitleChanged.accept("Web Browser");
             }
@@ -463,7 +510,9 @@ public class BrowserToolWindowPanel {
     // 更新浏览器内容区域（含 DevTools 拆分面板）
     private void updateBrowserContent(BrowserTabPanel tab) {
         browserContentPanel.removeAll();
+        // 有标签页则添加其组件
         if (tab != null) {
+            // DevTools 已打开则使用拆分面板
             if (tab.isEmbeddedDevToolsOpen()) {
                 Component devToolsComp = tab.getEmbeddedDevToolsComponent();
                 JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tab.component, devToolsComp);
@@ -471,7 +520,7 @@ public class BrowserToolWindowPanel {
                 splitPane.setDividerSize(4);
                 splitPane.setContinuousLayout(true);
                 browserContentPanel.add(splitPane, BorderLayout.CENTER);
-            } else {
+            } else { // DevTools 未打开，只添加浏览器组件
                 browserContentPanel.add(tab.component, BorderLayout.CENTER);
             }
         }
@@ -482,15 +531,17 @@ public class BrowserToolWindowPanel {
     // 切换书签状态（当前 URL 已收藏则删除，未收藏则弹出添加对话框）
     private void toggleBookmark(String url) {
         BookmarkPersistentState bookmarkState = BookmarkPersistentState.getInstance();
+        // URL 已收藏则删除书签
         if (bookmarkState.contains(url)) {
             bookmarkState.removeBookmark(url);
             bookmarkSidebar.refreshBookmarks();
             addressBar.updateStarIcon(url);
-        } else {
+        } else { // URL 未收藏则弹出添加对话框
             BrowserTabPanel tab = tabManager.getActiveTab();
             String defaultTitle = tab != null && !tab.getPageTitle().isBlank()
                     ? tab.getPageTitle() : url;
             String[] result = BookmarkSidebar.showBookmarkEditDialog(defaultTitle, url);
+            // 用户确认添加则保存书签
             if (result != null) {
                 bookmarkState.addBookmark(new Bookmark(result[0], result[1]));
                 bookmarkSidebar.refreshBookmarks();
@@ -503,9 +554,10 @@ public class BrowserToolWindowPanel {
     private void onNavigateRequested(String rawUrl) {
         String url = normalizeUrl(rawUrl);
         BrowserTabPanel tab = tabManager.getActiveTab();
+        // 有活跃标签页则直接导航，否则新建标签页
         if (tab != null) {
             tab.navigate(url);
-        } else {
+        } else { // 无活跃标签页，创建新标签页并导航
             tabManager.createTab(url);
         }
     }
@@ -513,9 +565,10 @@ public class BrowserToolWindowPanel {
     // 处理书签选中事件
     private void onBookmarkSelected(Bookmark bookmark) {
         BrowserTabPanel tab = tabManager.getActiveTab();
+        // 有活跃标签页则直接导航，否则新建标签页
         if (tab != null) {
             tab.navigate(bookmark.getUrl());
-        } else {
+        } else { // 无活跃标签页，创建新标签页
             tabManager.createTab(bookmark.getUrl());
         }
     }
@@ -523,9 +576,10 @@ public class BrowserToolWindowPanel {
     // 处理历史记录条目点击事件
     private void onHistoryEntryClicked(String url) {
         BrowserTabPanel tab = tabManager.getActiveTab();
+        // 有活跃标签页则直接导航，否则新建标签页
         if (tab != null) {
             tab.navigate(url);
-        } else {
+        } else { // 无活跃标签页，创建新标签页
             tabManager.createTab(url);
         }
     }
@@ -533,6 +587,7 @@ public class BrowserToolWindowPanel {
     // 更新标签标题显示
     private void updateTabTitle(BrowserTabPanel tab) {
         ChromeTab chromeTab = chromeTabs.get(tab);
+        // 找到对应的 ChromeTab 则更新标题文本
         if (chromeTab != null) {
             chromeTab.titleLabel.setText(tab.getTabTitle());
         }
@@ -542,6 +597,7 @@ public class BrowserToolWindowPanel {
     private void showZoomToast(String text) {
         zoomToast.setText(text);
         zoomToast.setVisible(true);
+        // 有之前的定时器则先停止
         if (zoomToastTimer != null) {
             zoomToastTimer.stop();
         }
@@ -565,8 +621,11 @@ public class BrowserToolWindowPanel {
     // 规范化 URL 输入（无协议头自动补充 https://，含空格视为搜索）
     private String normalizeUrl(String input) {
         String trimmed = input.trim();
+        // 空输入返回空白页
         if (trimmed.isEmpty()) return "about:blank";
+        // 已有协议头则直接返回
         if (trimmed.matches("^[a-zA-Z][a-zA-Z0-9+.-]*://.*")) return trimmed;
+        // 包含点且不含空格视为域名，补充 https://
         if (trimmed.contains(".") && !trimmed.contains(" ")) return "https://" + trimmed;
         try {
             return "https://www.google.com/search?q=" + URLEncoder.encode(trimmed, StandardCharsets.UTF_8.name());

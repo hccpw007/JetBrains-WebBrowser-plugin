@@ -34,21 +34,32 @@ import java.util.stream.Collectors;
 // 单个浏览器标签页，封装 JBCefBrowser，管理导航历史、缩放、DevTools
 public class BrowserTabPanel {
 
+    // JBCefBrowser 实例，用于加载和显示网页
     public final JBCefBrowser browser;
+    // 浏览器组件，用于嵌入到 Swing 布局中
     public final JComponent component;
 
-    private final String initialUrl;
+    // 导航历史栈，按访问顺序存储 URL
     private final ArrayDeque<String> navigationHistory = new ArrayDeque<>();
 
+    // 当前在导航历史中的位置索引
     private int currentHistoryIndex = -1;
+    // 当前页面的 URL
     private String currentUrl;
+    // 当前页面的标题
     private String pageTitle = "新标签页";
+    // 页面是否正在加载中
     private boolean isLoading = false;
+    // 当前缩放级别（1.0 为 100%）
     private double zoomLevel = 1.0;
 
+    // URL 变更时的回调
     private Consumer<String> onUrlChanged = null;
+    // 标题变更时的回调
     private Consumer<String> onTitleChanged = null;
+    // 加载状态变更时的回调
     private Consumer<Boolean> onLoadingStateChanged = null;
+    // 弹出窗口 URL 的回调
     private Consumer<String> onPopupUrl = null;
 
     // 嵌入式 DevTools（直接加载 CDP 返回的 devtoolsFrontendUrl）
@@ -59,7 +70,6 @@ public class BrowserTabPanel {
     }
 
     public BrowserTabPanel(String initialUrl) {
-        this.initialUrl = initialUrl;
         this.currentUrl = initialUrl;
 
         // 创建浏览器并设置背景色
@@ -76,7 +86,9 @@ public class BrowserTabPanel {
         browser.getJBCefClient().addLifeSpanHandler(new CefLifeSpanHandlerAdapter() {
             @Override
             public boolean onBeforePopup(CefBrowser browser, CefFrame frame, String targetUrl, String targetFrameName) {
+                // 如果目标 URL 非空且不是空白页，则通过回调通知外部
                 if (!targetUrl.isBlank() && !"about:blank".equals(targetUrl)) {
+                    // 如果弹窗 URL 回调已注册，则调用
                     if (onPopupUrl != null) {
                         onPopupUrl.accept(targetUrl);
                     }
@@ -89,8 +101,10 @@ public class BrowserTabPanel {
         browser.getJBCefClient().addLoadHandler(new CefLoadHandlerAdapter() {
             @Override
             public void onLoadEnd(CefBrowser browser, CefFrame frame, int httpStatusCode) {
+                // 仅处理主框架的加载完成事件
                 if (frame.isMain()) {
                     currentUrl = frame.getURL();
+                    // 如果 URL 变更回调已注册，则调用
                     if (onUrlChanged != null) {
                         onUrlChanged.accept(frame.getURL());
                     }
@@ -100,6 +114,7 @@ public class BrowserTabPanel {
             @Override
             public void onLoadingStateChange(CefBrowser browser, boolean isLoading, boolean canGoBack, boolean canGoForward) {
                 BrowserTabPanel.this.isLoading = isLoading;
+                // 如果加载状态变更回调已注册，则调用
                 if (onLoadingStateChanged != null) {
                     onLoadingStateChanged.accept(isLoading);
                 }
@@ -107,8 +122,10 @@ public class BrowserTabPanel {
 
             @Override
             public void onLoadError(CefBrowser browser, CefFrame frame, CefLoadHandler.ErrorCode errorCode, String errorText, String failedUrl) {
+                // 仅处理主框架的加载错误
                 if (frame.isMain()) {
                     currentUrl = failedUrl;
+                    // 如果 URL 变更回调已注册，则调用
                     if (onUrlChanged != null) {
                         onUrlChanged.accept(failedUrl);
                     }
@@ -120,8 +137,10 @@ public class BrowserTabPanel {
         browser.getJBCefClient().addDisplayHandler(new CefDisplayHandlerAdapter() {
             @Override
             public void onAddressChange(CefBrowser browser, CefFrame frame, String url) {
+                // 仅处理主框架的地址变更
                 if (frame.isMain()) {
                     currentUrl = url;
+                    // 如果 URL 变更回调已注册，则调用
                     if (onUrlChanged != null) {
                         onUrlChanged.accept(url);
                     }
@@ -131,6 +150,7 @@ public class BrowserTabPanel {
             @Override
             public void onTitleChange(CefBrowser browser, String title) {
                 pageTitle = title;
+                // 如果标题变更回调已注册，则调用
                 if (onTitleChanged != null) {
                     onTitleChanged.accept(title);
                 }
@@ -211,6 +231,7 @@ public class BrowserTabPanel {
 
     // 后退
     public void goBack() {
+        // 检查是否可以后退
         if (canGoBack()) {
             currentHistoryIndex--;
             browser.getCefBrowser().goBack();
@@ -219,6 +240,7 @@ public class BrowserTabPanel {
 
     // 前进
     public void goForward() {
+        // 检查是否可以前进
         if (canGoForward()) {
             currentHistoryIndex++;
             browser.getCefBrowser().goForward();
@@ -266,14 +288,16 @@ public class BrowserTabPanel {
     // 获取标签页显示标题（截断超过 20 字符的长标题）
     public String getTabTitle() {
         String rawTitle;
+        // 如果页面标题非空且不是空白页，则使用页面标题
         if (!pageTitle.isBlank() && !"about:blank".equals(pageTitle)) {
             rawTitle = pageTitle;
-        } else if (!currentUrl.isBlank() && !"about:blank".equals(currentUrl)) {
+        } else if (!currentUrl.isBlank() && !"about:blank".equals(currentUrl)) { // 否则使用 URL（去掉协议前缀）
             rawTitle = currentUrl.replaceFirst("^https://", "").replaceFirst("^http://", "");
+            // 如果 URL 末尾有斜杠则去掉
             if (rawTitle.endsWith("/")) {
                 rawTitle = rawTitle.substring(0, rawTitle.length() - 1);
             }
-        } else {
+        } else { // 默认显示"新标签页"
             rawTitle = "新标签页";
         }
         return rawTitle.length() > 20 ? rawTitle.substring(0, 20) + "..." : rawTitle;
@@ -290,9 +314,10 @@ public class BrowserTabPanel {
         // 在后台线程查找 DevTools 端口
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
             Integer port = findDevToolsPort();
+            // 如果找到有效端口，则连接 DevTools
             if (port != null && port > 0) {
                 connectDevTools(port, callback);
-            } else {
+            } else { // 未找到端口，通知回调失败
                 System.err.println("[WebBrowser] DevTools port not found");
                 ApplicationManager.getApplication().invokeLater(() -> callback.accept(null));
             }
@@ -310,8 +335,10 @@ public class BrowserTabPanel {
                 result.set(port);
                 latch.countDown();
             });
+            // 等待端口查询结果，超时 3 秒
             if (latch.await(3, TimeUnit.SECONDS)) {
                 Integer port = result.get();
+                // 如果端口有效则直接返回
                 if (port != null && port > 0) {
                     System.err.println("[WebBrowser] DevTools port via JBCefApp: " + port);
                     return port;
@@ -325,11 +352,13 @@ public class BrowserTabPanel {
         try {
             List<Path> candidates = new ArrayList<>();
             Path systemDir = PathManager.getSystemDir();
+            // 如果系统目录不为空，添加 jcef_cache 作为候选路径
             if (systemDir != null) {
                 candidates.add(systemDir.resolve("jcef_cache"));
             }
             try {
                 String userHome = System.getProperty("user.home");
+                // 如果用户主目录不为空，添加 JetBrains 缓存目录作为候选路径
                 if (userHome != null) {
                     candidates.add(Path.of(userHome, "Library", "Caches", "JetBrains"));
                 }
@@ -337,17 +366,22 @@ public class BrowserTabPanel {
                 // 忽略，继续尝试其他候选路径
             }
 
+            // 遍历所有候选路径，查找 DevToolsActivePort 文件
             for (Path root : candidates) {
+                // 跳过非目录的候选路径
                 if (!Files.isDirectory(root)) continue;
                 java.util.Optional<Path> optionalPath = Files.walk(root, 6)
                         .filter(p -> "DevToolsActivePort".equals(p.getFileName().toString()))
                         .findFirst();
+                // 如果找到 DevToolsActivePort 文件，读取其中的端口号
                 if (optionalPath.isPresent()) {
                     Path foundPath = optionalPath.get();
                     List<String> lines = Files.readAllLines(foundPath);
+                    // 如果文件内容不为空，解析端口号
                     if (!lines.isEmpty()) {
                         try {
                             Integer port = Integer.parseInt(lines.get(0).trim());
+                            // 如果端口有效则返回
                             if (port > 0) {
                                 System.err.println("[WebBrowser] DevTools port via file: " + port + " (" + foundPath + ")");
                                 return port;
@@ -380,11 +414,14 @@ public class BrowserTabPanel {
 
             // 按当前 URL 匹配 page 目标
             JsonObject matchedPage = null;
+            // 遍历 CDP 返回的所有页面列表
             for (JsonElement page : pages) {
                 JsonObject obj = page.getAsJsonObject();
                 JsonElement typeElem = obj.get("type");
+                // 只筛选类型为 "page" 的页面
                 if (typeElem != null && "page".equals(typeElem.getAsString())) {
                     String pageUrl = obj.get("url") != null ? obj.get("url").getAsString() : "";
+                    // 按 URL 精确匹配或包含匹配，空白页时直接用第一个
                     if (pageUrl.equals(currentUrl) ||
                             (!"about:blank".equals(currentUrl) && pageUrl.contains(currentUrl)) ||
                             ("about:blank".equals(currentUrl) && pages.size() == 1)) {
@@ -397,9 +434,11 @@ public class BrowserTabPanel {
             // 如果没匹配到，则使用第一个可用的 page 目标
             if (matchedPage == null) {
                 System.err.println("[WebBrowser] No page matched '" + currentUrl + "', using first available");
+                // 遍历页面列表，取第一个类型为 "page" 的页面
                 for (JsonElement page : pages) {
                     JsonObject obj = page.getAsJsonObject();
                     JsonElement typeElem = obj.get("type");
+                    // 只筛选类型为 "page" 的页面
                     if (typeElem != null && "page".equals(typeElem.getAsString())) {
                         matchedPage = obj;
                         break;
@@ -407,9 +446,11 @@ public class BrowserTabPanel {
                 }
             }
 
+            // 如果匹配到了目标页面
             if (matchedPage != null) {
                 JsonElement devtoolsUrlElem = matchedPage.get("devtoolsFrontendUrl");
                 String devtoolsUrl = devtoolsUrlElem != null ? devtoolsUrlElem.getAsString() : null;
+                // 如果 devtoolsFrontendUrl 有效，则加载嵌入式 DevTools
                 if (devtoolsUrl != null && !devtoolsUrl.isBlank()) {
                     System.err.println("[WebBrowser] Loading DevTools frontend: " + devtoolsUrl);
                     final String finalDevtoolsUrl = devtoolsUrl;
@@ -423,11 +464,11 @@ public class BrowserTabPanel {
                             callback.accept(null);
                         }
                     });
-                } else {
+                } else { // devtoolsFrontendUrl 为空，通知回调失败
                     System.err.println("[WebBrowser] No devtoolsFrontendUrl in /json response: " + matchedPage);
                     ApplicationManager.getApplication().invokeLater(() -> callback.accept(null));
                 }
-            } else {
+            } else { // 未找到可用的 page 目标，通知回调失败
                 System.err.println("[WebBrowser] No page found in /json list");
                 ApplicationManager.getApplication().invokeLater(() -> callback.accept(null));
             }
@@ -439,15 +480,17 @@ public class BrowserTabPanel {
 
     // 关闭嵌入式 DevTools
     public void closeEmbeddedDevTools() {
+        // 只有嵌入式 DevTools 已打开时才需要关闭
         if (embeddedDevTools != null) {
             JBCefBrowser devTools = embeddedDevTools;
             Runnable disposeRunnable = () -> {
                 devTools.dispose();
                 embeddedDevTools = null;
             };
+            // 如果在调度线程中，直接执行；否则在调度线程中执行
             if (ApplicationManager.getApplication().isDispatchThread()) {
                 disposeRunnable.run();
-            } else {
+            } else { // 不在调度线程中，通过 invokeLater 调度
                 ApplicationManager.getApplication().invokeLater(disposeRunnable);
             }
         }
@@ -464,15 +507,17 @@ public class BrowserTabPanel {
         Runnable disposeRunnable = () -> {
             browser.dispose();
         };
+        // 如果在调度线程中，直接释放浏览器；否则在调度线程中执行
         if (ApplicationManager.getApplication().isDispatchThread()) {
             disposeRunnable.run();
-        } else {
+        } else { // 不在调度线程中，通过 invokeLater 调度
             ApplicationManager.getApplication().invokeLater(disposeRunnable);
         }
     }
 
     // 将 URL 加入导航历史，并清理当前位置之后的记录
     private void pushHistory(String url) {
+        // 移除当前位置之后的所有历史记录（当从历史中间导航到新页面时）
         while (navigationHistory.size() > currentHistoryIndex + 1) {
             navigationHistory.removeLast();
         }

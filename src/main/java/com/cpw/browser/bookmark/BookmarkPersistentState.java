@@ -28,11 +28,13 @@ public class BookmarkPersistentState implements PersistentStateComponent<Bookmar
 
     private State state = new State();
 
+    // 获取持久化状态
     @Override
     public @Nullable State getState() {
         return state;
     }
 
+    // 加载持久化状态
     @Override
     public void loadState(@NotNull State state) {
         this.state = state;
@@ -79,12 +81,12 @@ public class BookmarkPersistentState implements PersistentStateComponent<Bookmar
             if (!exists) {
                 state.getBookmarks().add(new Bookmark(newTitle, newUrl, bookmark.getCreatedAt()));
             }
-        } else {
-            // URL 不变时仅更新标题
+        } else { // URL 不变时仅更新标题
             state.getBookmarks().set(index, new Bookmark(newTitle, bookmark.getUrl(), bookmark.getCreatedAt()));
         }
     }
 
+    // 获取 BookmarkPersistentState 单例
     public static BookmarkPersistentState getInstance() {
         return ApplicationManager.getApplication().getService(BookmarkPersistentState.class);
     }

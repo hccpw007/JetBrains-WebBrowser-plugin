@@ -17,10 +17,10 @@ public final class WebBrowserIcons {
     public static final Icon TOOL_WINDOW = load("toolwindow");
     public static final Icon STAR = load("star");
     public static final Icon STAR_FILLED = load("star-filled");
-    public static final Icon SHOW_BOOKMARK = load("显示书签");
-    public static final Icon ZOOM_IN = load("放大镜");
-    public static final Icon ZOOM_OUT = load("缩小镜");
-    public static final Icon GOOGLE = load("谷歌");
+    public static final Icon SHOW_BOOKMARK = load("show-bookmark");
+    public static final Icon ZOOM_IN = load("zoom-in");
+    public static final Icon ZOOM_OUT = load("zoom-out");
+    public static final Icon GOOGLE = load("google");
 
     private WebBrowserIcons() {
         // 工具类，禁止实例化

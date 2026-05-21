@@ -58,6 +58,7 @@ public class AddressBar extends JPanel {
             public void mouseClicked(MouseEvent e) {
                 // 点击星标触发书签切换
                 String url = urlField.getText().trim();
+                // URL 不为空且不是空白页时才切换书签
                 if (!url.isEmpty() && !"about:blank".equals(url)) {
                     onToggleBookmark.accept(url);
                 }
@@ -93,6 +94,7 @@ public class AddressBar extends JPanel {
         urlField.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
+                // 按下回车键时触发导航
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                     navigate();
                 }
@@ -127,6 +129,7 @@ public class AddressBar extends JPanel {
     public void setUrl(String url) {
         // 设置地址栏文本并更新星标状态
         String displayText = "about:blank".equals(url) ? "" : url;
+        // 文本不一致时才更新输入框
         if (!displayText.equals(urlField.getText())) {
             urlField.setText(displayText);
         }
@@ -135,20 +138,23 @@ public class AddressBar extends JPanel {
 
     public void updateStarIcon(String url) {
         // 根据书签状态更新星标图标和提示
+        // URL 不为空且不是空白页时检查书签状态
         if (!url.isEmpty() && !"about:blank".equals(url)) {
             boolean bookmarked = isUrlBookmarked.test(url);
             starLabel.setIcon(bookmarked ? WebBrowserIcons.STAR_FILLED : WebBrowserIcons.STAR);
             starLabel.setToolTipText(bookmarked ? "从书签中移除" : "添加书签");
-        } else {
+        } else { // URL 为空或空白页时显示默认星标
             starLabel.setIcon(WebBrowserIcons.STAR);
             starLabel.setToolTipText("添加书签");
         }
     }
 
+    // 获取地址栏文本（去前后空格）
     public String getUrl() {
         return urlField.getText().trim();
     }
 
+    // 聚焦地址栏并全选文本
     public void requestFocusOnField() {
         // 聚焦地址栏并全选文本
         urlField.requestFocus();
@@ -158,6 +164,7 @@ public class AddressBar extends JPanel {
     // 触发地址栏导航
     private void navigate() {
         String text = getUrl();
+        // 地址栏内容不为空时触发导航回调
         if (!text.isEmpty()) {
             onNavigate.accept(text);
         }

@@ -11,6 +11,7 @@ import java.util.List;
 // 供嵌入式 DevTools 通过 CDP 连接使用。
 class JcefArgsProvider implements JBCefAppRequiredArgumentsProvider {
 
+    // 获取 JCEF 启动参数，启用远程调试端口
     @Override
     public @NotNull List<String> getOptions() {
         return Arrays.asList(

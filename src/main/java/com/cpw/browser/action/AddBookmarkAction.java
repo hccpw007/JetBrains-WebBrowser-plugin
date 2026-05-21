@@ -15,6 +15,7 @@ public class AddBookmarkAction extends AnAction {
     private final BrowserTabManager tabManager;
     private final Runnable onBookmarkChanged;
 
+    // 构造添加书签 Action
     public AddBookmarkAction(BrowserTabManager tabManager, Runnable onBookmarkChanged) {
         super("添加书签", "将当前页面添加到书签", WebBrowserIcons.BOOKMARK_ADD);
         this.tabManager = tabManager;
@@ -27,6 +28,7 @@ public class AddBookmarkAction extends AnAction {
         e.getPresentation().setEnabled(tabManager.getActiveTab() != null);
     }
 
+    // 执行添加书签操作
     @Override
     public void actionPerformed(AnActionEvent e) {
         BrowserTabPanel tab = tabManager.getActiveTab();

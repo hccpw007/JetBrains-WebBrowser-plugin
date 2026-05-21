@@ -12,6 +12,7 @@ public class GoHomeAction extends AnAction {
 
     private final BrowserTabManager tabManager;
 
+    // 构造主页导航 Action
     public GoHomeAction(BrowserTabManager tabManager) {
         super("主页", "回到主页", WebBrowserIcons.HOME);
         this.tabManager = tabManager;
@@ -23,6 +24,7 @@ public class GoHomeAction extends AnAction {
         e.getPresentation().setEnabled(tabManager.getActiveTab() != null);
     }
 
+    // 执行主页导航
     @Override
     public void actionPerformed(AnActionEvent e) {
         BrowserSettingsState settings = BrowserSettingsState.getInstance();

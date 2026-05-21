@@ -22,11 +22,13 @@ public class BrowserFileEditorProvider implements FileEditorProvider, DumbAware 
         return new BrowserFileEditor(project, file);
     }
 
+    // 获取编辑器类型唯一标识
     @Override
     public @NotNull String getEditorTypeId() {
         return "webbrowser-editor";
     }
 
+    // 获取编辑器策略：隐藏默认编辑器
     @Override
     public @NotNull FileEditorPolicy getPolicy() {
         return FileEditorPolicy.HIDE_DEFAULT_EDITOR;

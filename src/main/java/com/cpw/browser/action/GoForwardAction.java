@@ -11,6 +11,7 @@ public class GoForwardAction extends AnAction {
 
     private final BrowserTabManager tabManager;
 
+    // 构造前进导航 Action
     public GoForwardAction(BrowserTabManager tabManager) {
         super("前进", "前进到下一页", WebBrowserIcons.FORWARD);
         this.tabManager = tabManager;
@@ -23,6 +24,7 @@ public class GoForwardAction extends AnAction {
         e.getPresentation().setEnabled(activeTab != null && activeTab.canGoForward());
     }
 
+    // 执行前进导航
     @Override
     public void actionPerformed(AnActionEvent e) {
         BrowserTabPanel activeTab = tabManager.getActiveTab();

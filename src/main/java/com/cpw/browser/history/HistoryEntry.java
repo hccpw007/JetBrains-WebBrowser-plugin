@@ -8,27 +8,34 @@ public class HistoryEntry {
     private final String title;
     private final long timestamp; // epoch millis
 
+    // 全参构造，创建历史记录条目
     public HistoryEntry(String url, String title, long timestamp) {
         this.url = url;
         this.title = title;
         this.timestamp = timestamp;
     }
 
+    // 获取访问的 URL
     public String getUrl() {
         return url;
     }
 
+    // 获取页面标题
     public String getTitle() {
         return title;
     }
 
+    // 获取访问时间戳
     public long getTimestamp() {
         return timestamp;
     }
 
+    // 判断两个历史条目是否相等
     @Override
     public boolean equals(Object o) {
+        // 引用相同则相等
         if (this == o) return true;
+        // 类型不匹配则不相等
         if (o == null || getClass() != o.getClass()) return false;
         HistoryEntry that = (HistoryEntry) o;
         return timestamp == that.timestamp &&
@@ -36,11 +43,13 @@ public class HistoryEntry {
                Objects.equals(title, that.title);
     }
 
+    // 计算历史条目的哈希码
     @Override
     public int hashCode() {
         return Objects.hash(url, title, timestamp);
     }
 
+    // 返回历史条目的字符串表示
     @Override
     public String toString() {
         return "HistoryEntry{" +

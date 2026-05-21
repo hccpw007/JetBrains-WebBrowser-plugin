@@ -31,11 +31,13 @@ public class BrowsingHistoryState implements PersistentStateComponent<BrowsingHi
 
     private State state = new State();
 
+    // 获取持久化状态
     @Override
     public @Nullable State getState() {
         return state;
     }
 
+    // 加载持久化状态
     @Override
     public void loadState(@NotNull State state) {
         this.state = state;
@@ -109,6 +111,7 @@ public class BrowsingHistoryState implements PersistentStateComponent<BrowsingHi
         state.getEntries().removeIf(entry -> entry.getTimestamp() >= cutoff);
     }
 
+    // 获取 BrowsingHistoryState 单例
     public static BrowsingHistoryState getInstance() {
         return ApplicationManager.getApplication().getService(BrowsingHistoryState.class);
     }

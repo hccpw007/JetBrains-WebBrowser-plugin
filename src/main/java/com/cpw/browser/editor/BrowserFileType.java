@@ -18,31 +18,37 @@ public final class BrowserFileType implements FileType {
         // 单例，禁止外部实例化
     }
 
+    // 获取文件类型名称
     @Override
     public @NotNull String getName() {
         return "WebBrowser";
     }
 
+    // 获取文件类型描述
     @Override
     public @NotNull String getDescription() {
         return "Web Browser";
     }
 
+    // 获取默认扩展名
     @Override
     public @NotNull String getDefaultExtension() {
         return "webbrowser";
     }
 
+    // 是否为二进制文件
     @Override
     public boolean isBinary() {
         return false;
     }
 
+    // 获取文件类型图标
     @Override
     public @Nullable Icon getIcon() {
         return TAB_ICON;
     }
 
+    // 获取文件字符编码
     @Override
     public @Nullable String getCharset(@NotNull VirtualFile file, @NotNull byte[] content) {
         return null;

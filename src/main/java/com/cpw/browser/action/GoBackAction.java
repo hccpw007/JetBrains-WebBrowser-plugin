@@ -11,6 +11,7 @@ public class GoBackAction extends AnAction {
 
     private final BrowserTabManager tabManager;
 
+    // 构造后退导航 Action
     public GoBackAction(BrowserTabManager tabManager) {
         super("后退", "返回上一页", WebBrowserIcons.BACK);
         this.tabManager = tabManager;
@@ -23,6 +24,7 @@ public class GoBackAction extends AnAction {
         e.getPresentation().setEnabled(activeTab != null && activeTab.canGoBack());
     }
 
+    // 执行后退导航
     @Override
     public void actionPerformed(AnActionEvent e) {
         BrowserTabPanel activeTab = tabManager.getActiveTab();
