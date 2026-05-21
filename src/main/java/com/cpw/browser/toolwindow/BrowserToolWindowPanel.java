@@ -324,6 +324,7 @@ public class BrowserToolWindowPanel {
     private void addTabToStrip(BrowserTabPanel tab) {
         ChromeTab chromeTab = new ChromeTab(
                 tab,
+                tabManager,
                 () -> {
                     int idx = tabManager.getTabs().indexOf(tab);
                     // 索引有效则切换到该标签页

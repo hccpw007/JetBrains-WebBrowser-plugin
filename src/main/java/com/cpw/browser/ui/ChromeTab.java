@@ -1,5 +1,6 @@
 package com.cpw.browser.ui;
 
+import com.cpw.browser.toolwindow.BrowserTabManager;
 import com.cpw.browser.toolwindow.BrowserTabPanel;
 import com.cpw.browser.util.TranslationUtil;
 import com.intellij.ui.JBColor;
@@ -16,7 +17,9 @@ import java.awt.geom.Path2D;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.border.EmptyBorder;
 
 // Chrome 风格的标签页组件，使用 custom painting 绘制标签形状
@@ -47,6 +50,9 @@ public class ChromeTab extends JPanel {
     // 标签关闭时的回调
     private final Runnable onClose;
 
+    // 标签页管理器引用，用于右键菜单关闭其他/关闭所有
+    private final BrowserTabManager tabManager;
+
     // 当前是否为活跃标签
     private boolean active;
 
@@ -61,10 +67,12 @@ public class ChromeTab extends JPanel {
 
     public ChromeTab(
             BrowserTabPanel browserTab,
+            BrowserTabManager tabManager,
             Runnable onSelect,
             Runnable onClose
     ) {
         this.browserTab = browserTab;
+        this.tabManager = tabManager;
         this.onSelect = onSelect;
         this.onClose = onClose;
         this.active = false;
@@ -100,7 +108,29 @@ public class ChromeTab extends JPanel {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+                // 右键点击弹出上下文菜单
+                if (e.isPopupTrigger()) {
+                    showContextMenu(e);
+                    return;
+                }
+                // 左键点击切换标签
                 onSelect.run();
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                // 平台相关：某些系统在 mousePressed 时触发 isPopupTrigger
+                if (e.isPopupTrigger()) {
+                    showContextMenu(e);
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                // 平台相关：某些系统在 mouseReleased 时触发 isPopupTrigger
+                if (e.isPopupTrigger()) {
+                    showContextMenu(e);
+                }
             }
 
             @Override
@@ -197,6 +227,48 @@ public class ChromeTab extends JPanel {
     // 刷新关闭按钮的 tooltip 文本，用于语言切换时更新
     public void refreshTooltip() {
         closeBtn.setToolTipText(TranslationUtil.getText("tab.close.tooltip"));
+    }
+
+    // 显示右键上下文菜单
+    private void showContextMenu(MouseEvent e) {
+        JPopupMenu popup = new JPopupMenu();
+
+        // 关闭当前标签
+        JMenuItem closeItem = new JMenuItem(TranslationUtil.getText("tab.close"));
+        closeItem.addActionListener(ev -> onClose.run());
+        popup.add(closeItem);
+
+        // 关闭其他标签
+        JMenuItem closeOthersItem = new JMenuItem(TranslationUtil.getText("tab.close.others"));
+        closeOthersItem.addActionListener(ev -> closeOtherTabs());
+        popup.add(closeOthersItem);
+
+        // 关闭所有标签
+        JMenuItem closeAllItem = new JMenuItem(TranslationUtil.getText("tab.close.all"));
+        closeAllItem.addActionListener(ev -> closeAllTabs());
+        popup.add(closeAllItem);
+
+        popup.show(this, e.getX(), e.getY());
+    }
+
+    // 关闭除当前标签外的所有标签
+    private void closeOtherTabs() {
+        int myIndex = tabManager.getTabs().indexOf(browserTab);
+        // 反向遍历关闭，避免索引偏移
+        for (int i = tabManager.getTabCount() - 1; i >= 0; i--) {
+            // 跳过当前标签
+            if (i != myIndex) {
+                tabManager.closeTab(i);
+            }
+        }
+    }
+
+    // 关闭所有标签
+    private void closeAllTabs() {
+        // 反向遍历关闭所有标签
+        for (int i = tabManager.getTabCount() - 1; i >= 0; i--) {
+            tabManager.closeTab(i);
+        }
     }
 
     // 构建 Chrome 风格标签的外形路径
