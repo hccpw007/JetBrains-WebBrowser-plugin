@@ -4,7 +4,6 @@ rootProject.name = "WebBrowser"
 
 pluginManagement {
     plugins {
-        id("org.jetbrains.kotlin.jvm") version "2.2.20"
         id("org.jetbrains.changelog") version "2.5.0"
     }
 }
