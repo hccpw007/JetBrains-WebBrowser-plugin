@@ -44,6 +44,8 @@ public class BrowsingHistoryState implements PersistentStateComponent<BrowsingHi
     // 加载持久化状态
     @Override
     public void loadState(@NotNull State state) {
+        // 清理 URL 为空的无效历史记录（XML 反序列化产生的空记录）
+        state.getEntries().removeIf(e -> e.getUrl() == null || e.getUrl().isBlank());
         this.state = state;
     }
 
