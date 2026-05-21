@@ -17,6 +17,9 @@ import java.util.Objects;
 @State(name = "BrowsingHistoryState", storages = @Storage("WebBrowser.xml"))
 public class BrowsingHistoryState implements PersistentStateComponent<BrowsingHistoryState.State> {
 
+    // 历史记录硬上限，防止用户设置不限时内存无限增长导致 OOM
+    private static final int MAX_HISTORY_HARD_LIMIT = 10000;
+
     // 浏览历史状态内部数据类
     public static class State {
         // 历史记录条目集合
@@ -72,7 +75,7 @@ public class BrowsingHistoryState implements PersistentStateComponent<BrowsingHi
         trimEntries();
     }
 
-    // 根据设置裁剪历史记录（按天数/条数限制）
+    // 根据设置裁剪历史记录（按天数/条数限制），并强制应用硬上限
     private void trimEntries() {
         BrowserSettingsState settings = BrowserSettingsState.getInstance();
         if (settings.getMaxHistoryDays() > 0) {
@@ -81,6 +84,10 @@ public class BrowsingHistoryState implements PersistentStateComponent<BrowsingHi
         }
         if (settings.getMaxHistoryCount() > 0 && state.getEntries().size() > settings.getMaxHistoryCount()) {
             state.getEntries().subList(0, state.getEntries().size() - settings.getMaxHistoryCount()).clear();
+        }
+        // 强制硬上限保护：即使用户设置 unlimited，也不超过 MAX_HISTORY_HARD_LIMIT 条，防止 OOM
+        if (state.getEntries().size() > MAX_HISTORY_HARD_LIMIT) {
+            state.getEntries().subList(0, state.getEntries().size() - MAX_HISTORY_HARD_LIMIT).clear();
         }
     }
 

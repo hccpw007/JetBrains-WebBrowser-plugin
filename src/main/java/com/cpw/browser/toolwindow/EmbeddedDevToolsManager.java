@@ -56,13 +56,30 @@ public class EmbeddedDevToolsManager {
 
         // 在后台线程查找 DevTools 端口
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
-            Integer port = findDevToolsPort();
-            // 如果找到有效端口，则连接 DevTools
-            if (port != null && port > 0) {
-                connectDevTools(port, callback);
-            } else { // 未找到端口，通知回调失败
-                System.err.println("[WebBrowser] DevTools port not found");
-                ApplicationManager.getApplication().invokeLater(() -> callback.accept(null));
+            try {
+                Integer port = findDevToolsPort();
+                // 如果找到有效端口，则连接 DevTools
+                if (port != null && port > 0) {
+                    connectDevTools(port, callback);
+                } else { // 未找到端口，通知回调失败
+                    System.err.println("[WebBrowser] DevTools port not found");
+                    ApplicationManager.getApplication().invokeLater(() -> {
+                        try {
+                            callback.accept(null);
+                        } catch (Throwable t) {
+                            System.err.println("[WebBrowser] DevTools port callback error: " + t.getMessage());
+                        }
+                    });
+                }
+            } catch (Throwable t) {
+                System.err.println("[WebBrowser] DevTools open error: " + t.getMessage());
+                ApplicationManager.getApplication().invokeLater(() -> {
+                    try {
+                        callback.accept(null);
+                    } catch (Throwable t2) {
+                        System.err.println("[WebBrowser] DevTools fallback callback error: " + t2.getMessage());
+                    }
+                });
             }
         });
     }
@@ -72,16 +89,14 @@ public class EmbeddedDevToolsManager {
         // 只有嵌入式 DevTools 已打开时才需要关闭
         if (embeddedDevTools != null) {
             JBCefBrowser devTools = embeddedDevTools;
-            Runnable disposeRunnable = () -> {
-                devTools.dispose();
-                embeddedDevTools = null;
-            };
-            // 如果在调度线程中，直接执行；否则在调度线程中执行
-            if (ApplicationManager.getApplication().isDispatchThread()) {
-                disposeRunnable.run();
-            } else { // 不在调度线程中，通过 invokeLater 调度
-                ApplicationManager.getApplication().invokeLater(disposeRunnable);
-            }
+            embeddedDevTools = null;
+            ApplicationManager.getApplication().invokeLater(() -> {
+                try {
+                    devTools.dispose();
+                } catch (Throwable t) {
+                    System.err.println("[WebBrowser] DevTools dispose error: " + t.getMessage());
+                }
+            });
         }
     }
 
@@ -109,7 +124,7 @@ public class EmbeddedDevToolsManager {
             System.err.println("[WebBrowser] JBCefApp.getRemoteDebuggingPort failed: " + t.getMessage());
         }
 
-        // 尝试通过 DevToolsActivePort 文件查找端口
+        // 尝试通过 DevToolsActivePort 文件查找端口（限制搜索深度为 2，防止在大缓存目录中长时间遍历）
         try {
             List<Path> candidates = new ArrayList<>();
             Path systemDir = PathManager.getSystemDir();
@@ -127,30 +142,34 @@ public class EmbeddedDevToolsManager {
                 // 忽略，继续尝试其他候选路径
             }
 
-            // 遍历所有候选路径，查找 DevToolsActivePort 文件
+            // 遍历所有候选路径，查找 DevToolsActivePort 文件（限制搜索深度为 2 层）
             for (Path root : candidates) {
                 // 跳过非目录的候选路径
                 if (!Files.isDirectory(root)) continue;
-                java.util.Optional<Path> optionalPath = Files.walk(root, 6)
-                        .filter(p -> "DevToolsActivePort".equals(p.getFileName().toString()))
-                        .findFirst();
-                // 如果找到 DevToolsActivePort 文件，读取其中的端口号
-                if (optionalPath.isPresent()) {
-                    Path foundPath = optionalPath.get();
-                    List<String> lines = Files.readAllLines(foundPath);
-                    // 如果文件内容不为空，解析端口号
-                    if (!lines.isEmpty()) {
-                        try {
-                            Integer port = Integer.parseInt(lines.get(0).trim());
-                            // 如果端口有效则返回
-                            if (port > 0) {
-                                System.err.println("[WebBrowser] DevTools port via file: " + port + " (" + foundPath + ")");
-                                return port;
+                try {
+                    java.util.Optional<Path> optionalPath = Files.walk(root, 2)
+                            .filter(p -> "DevToolsActivePort".equals(p.getFileName().toString()))
+                            .findFirst();
+                    // 如果找到 DevToolsActivePort 文件，读取其中的端口号
+                    if (optionalPath.isPresent()) {
+                        Path foundPath = optionalPath.get();
+                        List<String> lines = Files.readAllLines(foundPath);
+                        // 如果文件内容不为空，解析端口号
+                        if (!lines.isEmpty()) {
+                            try {
+                                Integer port = Integer.parseInt(lines.get(0).trim());
+                                // 如果端口有效则返回
+                                if (port > 0) {
+                                    System.err.println("[WebBrowser] DevTools port via file: " + port + " (" + foundPath + ")");
+                                    return port;
+                                }
+                            } catch (NumberFormatException e) {
+                                // 忽略无效端口
                             }
-                        } catch (NumberFormatException e) {
-                            // 忽略无效端口
                         }
                     }
+                } catch (Throwable t) {
+                    System.err.println("[WebBrowser] DevToolsActivePort search in " + root + " failed: " + t.getMessage());
                 }
             }
         } catch (Throwable t) {
@@ -221,22 +240,44 @@ public class EmbeddedDevToolsManager {
                             JBCefBrowser devBrowser = new JBCefBrowser(finalDevtoolsUrl);
                             embeddedDevTools = devBrowser;
                             callback.accept(devBrowser);
-                        } catch (Exception e) {
+                        } catch (Throwable e) {
                             System.err.println("[WebBrowser] Failed to create DevTools browser: " + e.getMessage());
-                            callback.accept(null);
+                            try {
+                                callback.accept(null);
+                            } catch (Throwable t2) {
+                                System.err.println("[WebBrowser] DevTools fallback callback error: " + t2.getMessage());
+                            }
                         }
                     });
                 } else { // devtoolsFrontendUrl 为空，通知回调失败
                     System.err.println("[WebBrowser] No devtoolsFrontendUrl in /json response: " + matchedPage);
-                    ApplicationManager.getApplication().invokeLater(() -> callback.accept(null));
+                    ApplicationManager.getApplication().invokeLater(() -> {
+                        try {
+                            callback.accept(null);
+                        } catch (Throwable t) {
+                            System.err.println("[WebBrowser] DevTools callback error: " + t.getMessage());
+                        }
+                    });
                 }
             } else { // 未找到可用的 page 目标，通知回调失败
                 System.err.println("[WebBrowser] No page found in /json list");
-                ApplicationManager.getApplication().invokeLater(() -> callback.accept(null));
+                ApplicationManager.getApplication().invokeLater(() -> {
+                    try {
+                        callback.accept(null);
+                    } catch (Throwable t) {
+                        System.err.println("[WebBrowser] DevTools callback error: " + t.getMessage());
+                    }
+                });
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             System.err.println("[WebBrowser] DevTools connection failed: " + e.getMessage());
-            ApplicationManager.getApplication().invokeLater(() -> callback.accept(null));
+            ApplicationManager.getApplication().invokeLater(() -> {
+                try {
+                    callback.accept(null);
+                } catch (Throwable t) {
+                    System.err.println("[WebBrowser] DevTools fallback callback error: " + t.getMessage());
+                }
+            });
         }
     }
 }

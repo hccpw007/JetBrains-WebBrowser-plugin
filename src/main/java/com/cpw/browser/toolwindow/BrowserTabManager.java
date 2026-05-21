@@ -9,6 +9,9 @@ import java.util.function.Consumer;
 // 多标签页管理器，支持创建/关闭/切换标签页，管理回调事件
 public class BrowserTabManager {
 
+    // 最大标签页数量，防止打开过多标签页导致内存溢出
+    private static final int MAX_TABS = 20;
+
     // 所有标签页的列表
     private final List<BrowserTabPanel> tabs = new ArrayList<>();
     // 当前活跃标签页的索引
@@ -62,6 +65,11 @@ public class BrowserTabManager {
 
     // 创建新标签页并导航到指定 URL
     public BrowserTabPanel createTab(String initialUrl) {
+        // 达到最大标签页数量上限时拒绝创建，防止 OOM
+        if (tabs.size() >= MAX_TABS) {
+            System.err.println("[WebBrowser] 已达到最大标签页数量限制 (" + MAX_TABS + ")，无法创建更多标签页");
+            return null;
+        }
         BrowserTabPanel tab = new BrowserTabPanel(initialUrl);
 
         // 标签内部状态变更 -> 仅当是当前活动标签时才通知

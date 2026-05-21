@@ -11,10 +11,14 @@ import org.cef.handler.CefLoadHandlerAdapter;
 
 import javax.swing.JComponent;
 import java.util.ArrayDeque;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 // 单个浏览器标签页，封装 JBCefBrowser，管理导航历史、缩放、DevTools
 public class BrowserTabPanel {
+
+    // 导航历史最大记录数，防止内存无限增长
+    private static final int MAX_HISTORY_SIZE = 100;
 
     // JBCefBrowser 实例，用于加载和显示网页
     public final JBCefBrowser browser;
@@ -68,12 +72,23 @@ public class BrowserTabPanel {
         browser.getJBCefClient().addLifeSpanHandler(new CefLifeSpanHandlerAdapter() {
             @Override
             public boolean onBeforePopup(CefBrowser browser, CefFrame frame, String targetUrl, String targetFrameName) {
-                // 如果目标 URL 非空且不是空白页，则通过回调通知外部
-                if (!targetUrl.isBlank() && !"about:blank".equals(targetUrl)) {
-                    // 如果弹窗 URL 回调已注册，则调用
-                    if (onPopupUrl != null) {
-                        onPopupUrl.accept(targetUrl);
+                try {
+                    // 如果目标 URL 非空且不是空白页，则通过回调通知外部
+                    if (!targetUrl.isBlank() && !"about:blank".equals(targetUrl)) {
+                        // 弹窗回调需要在 EDT 中执行，因为可能创建新的标签页
+                        if (onPopupUrl != null) {
+                            String url = targetUrl;
+                            ApplicationManager.getApplication().invokeLater(() -> {
+                                try {
+                                    onPopupUrl.accept(url);
+                                } catch (Throwable t) {
+                                    System.err.println("[WebBrowser] onPopupUrl callback error: " + t.getMessage());
+                                }
+                            });
+                        }
                     }
+                } catch (Throwable t) {
+                    System.err.println("[WebBrowser] onBeforePopup error: " + t.getMessage());
                 }
                 return true;
             }
@@ -83,34 +98,67 @@ public class BrowserTabPanel {
         browser.getJBCefClient().addLoadHandler(new CefLoadHandlerAdapter() {
             @Override
             public void onLoadEnd(CefBrowser browser, CefFrame frame, int httpStatusCode) {
-                // 仅处理主框架的加载完成事件
-                if (frame.isMain()) {
-                    currentUrl = frame.getURL();
-                    // 如果 URL 变更回调已注册，则调用
-                    if (onUrlChanged != null) {
-                        onUrlChanged.accept(frame.getURL());
+                try {
+                    // 仅处理主框架的加载完成事件
+                    if (frame.isMain()) {
+                        currentUrl = frame.getURL();
+                        // 如果 URL 变更回调已注册，则在 EDT 中调用
+                        if (onUrlChanged != null) {
+                            String url = frame.getURL();
+                            ApplicationManager.getApplication().invokeLater(() -> {
+                                try {
+                                    onUrlChanged.accept(url);
+                                } catch (Throwable t) {
+                                    System.err.println("[WebBrowser] onUrlChanged callback error: " + t.getMessage());
+                                }
+                            });
+                        }
                     }
+                } catch (Throwable t) {
+                    System.err.println("[WebBrowser] onLoadEnd error: " + t.getMessage());
                 }
             }
 
             @Override
             public void onLoadingStateChange(CefBrowser browser, boolean isLoading, boolean canGoBack, boolean canGoForward) {
-                BrowserTabPanel.this.isLoading = isLoading;
-                // 如果加载状态变更回调已注册，则调用
-                if (onLoadingStateChanged != null) {
-                    onLoadingStateChanged.accept(isLoading);
+                try {
+                    BrowserTabPanel.this.isLoading = isLoading;
+                    // 如果加载状态变更回调已注册，则在 EDT 中调用
+                    if (onLoadingStateChanged != null) {
+                        boolean loading = isLoading;
+                        ApplicationManager.getApplication().invokeLater(() -> {
+                            try {
+                                onLoadingStateChanged.accept(loading);
+                            } catch (Throwable t) {
+                                System.err.println("[WebBrowser] onLoadingStateChanged callback error: " + t.getMessage());
+                            }
+                        });
+                    }
+                } catch (Throwable t) {
+                    System.err.println("[WebBrowser] onLoadingStateChange error: " + t.getMessage());
                 }
             }
 
             @Override
             public void onLoadError(CefBrowser browser, CefFrame frame, CefLoadHandler.ErrorCode errorCode, String errorText, String failedUrl) {
-                // 仅处理主框架的加载错误
-                if (frame.isMain()) {
-                    currentUrl = failedUrl;
-                    // 如果 URL 变更回调已注册，则调用
-                    if (onUrlChanged != null) {
-                        onUrlChanged.accept(failedUrl);
+                try {
+                    // 仅处理主框架的加载错误
+                    if (frame.isMain()) {
+                        currentUrl = failedUrl;
+                        // 如果 URL 变更回调已注册，则在 EDT 中调用
+                        if (onUrlChanged != null) {
+                            String url = failedUrl;
+                            ApplicationManager.getApplication().invokeLater(() -> {
+                                try {
+                                    onUrlChanged.accept(url);
+                                } catch (Throwable t) {
+                                    System.err.println("[WebBrowser] onUrlChanged callback error: " + t.getMessage());
+                                }
+                            });
+                        }
                     }
+                } catch (Throwable t) {
+                    System.err.println("[WebBrowser] onLoadError error: " + t.getMessage());
                 }
             }
         }, browser.getCefBrowser());
@@ -119,22 +167,42 @@ public class BrowserTabPanel {
         browser.getJBCefClient().addDisplayHandler(new CefDisplayHandlerAdapter() {
             @Override
             public void onAddressChange(CefBrowser browser, CefFrame frame, String url) {
-                // 仅处理主框架的地址变更
-                if (frame.isMain()) {
-                    currentUrl = url;
-                    // 如果 URL 变更回调已注册，则调用
-                    if (onUrlChanged != null) {
-                        onUrlChanged.accept(url);
+                try {
+                    // 仅处理主框架的地址变更
+                    if (frame.isMain()) {
+                        currentUrl = url;
+                        // 如果 URL 变更回调已注册，则在 EDT 中调用
+                        if (onUrlChanged != null) {
+                            ApplicationManager.getApplication().invokeLater(() -> {
+                                try {
+                                    onUrlChanged.accept(url);
+                                } catch (Throwable t) {
+                                    System.err.println("[WebBrowser] onUrlChanged callback error: " + t.getMessage());
+                                }
+                            });
+                        }
                     }
+                } catch (Throwable t) {
+                    System.err.println("[WebBrowser] onAddressChange error: " + t.getMessage());
                 }
             }
 
             @Override
             public void onTitleChange(CefBrowser browser, String title) {
-                pageTitle = title;
-                // 如果标题变更回调已注册，则调用
-                if (onTitleChanged != null) {
-                    onTitleChanged.accept(title);
+                try {
+                    pageTitle = title;
+                    // 如果标题变更回调已注册，则在 EDT 中调用
+                    if (onTitleChanged != null) {
+                        ApplicationManager.getApplication().invokeLater(() -> {
+                            try {
+                                onTitleChanged.accept(title);
+                            } catch (Throwable t) {
+                                System.err.println("[WebBrowser] onTitleChanged callback error: " + t.getMessage());
+                            }
+                        });
+                    }
+                } catch (Throwable t) {
+                    System.err.println("[WebBrowser] onTitleChange error: " + t.getMessage());
                 }
             }
         }, browser.getCefBrowser());
@@ -305,24 +373,34 @@ public class BrowserTabPanel {
     // 释放资源
     public void dispose() {
         devToolsManager.close();
-        Runnable disposeRunnable = () -> {
-            browser.dispose();
-        };
-        // 如果在调度线程中，直接释放浏览器；否则在调度线程中执行
-        if (ApplicationManager.getApplication().isDispatchThread()) {
-            disposeRunnable.run();
-        } else { // 不在调度线程中，通过 invokeLater 调度
-            ApplicationManager.getApplication().invokeLater(disposeRunnable);
-        }
+        ApplicationManager.getApplication().invokeLater(() -> {
+            try {
+                browser.dispose();
+            } catch (Throwable t) {
+                System.err.println("[WebBrowser] browser.dispose error: " + t.getMessage());
+            }
+        });
     }
 
     // 将 URL 加入导航历史，并清理当前位置之后的记录
     private void pushHistory(String url) {
+        // 防止相同 URL 连续入栈（重复刷新等场景）
+        if (!navigationHistory.isEmpty() && Objects.equals(navigationHistory.getLast(), url)) {
+            return;
+        }
         // 移除当前位置之后的所有历史记录（当从历史中间导航到新页面时）
         while (navigationHistory.size() > currentHistoryIndex + 1) {
             navigationHistory.removeLast();
         }
         navigationHistory.addLast(url);
+        // 限制导航历史大小，超过上限时丢弃最旧的记录
+        if (navigationHistory.size() > MAX_HISTORY_SIZE) {
+            navigationHistory.removeFirst();
+            // 移除最旧记录后，当前索引需要相应调整
+            if (currentHistoryIndex > 0) {
+                currentHistoryIndex--;
+            }
+        }
         currentHistoryIndex = navigationHistory.size() - 1;
     }
 }
