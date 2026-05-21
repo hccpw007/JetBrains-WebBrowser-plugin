@@ -49,6 +49,11 @@ public class HistoryEntry {
         return timestamp;
     }
 
+    // 设置访问时间戳（XmlSerializer 反序列化时使用）
+    private void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
     // 判断两个历史条目是否相等
     @Override
     public boolean equals(Object o) {

@@ -54,6 +54,11 @@ public class Bookmark {
         return createdAt;
     }
 
+    // 设置书签创建时间戳（XmlSerializer 反序列化时使用）
+    private void setCreatedAt(long createdAt) {
+        this.createdAt = createdAt;
+    }
+
     // 判断两个书签是否相等
     @Override
     public boolean equals(Object o) {
