@@ -137,19 +137,21 @@
 ```
 src/main/java/                 # 生产 Java 源码
   com/cpw/browser/
-    BrowserToolWindowFactory.java  # 工具窗口工厂入口
-    ToggleBrowserAction.java       # 切换浏览器工具窗口的 Action
+    JcefArgsProvider.java          # JCEF 启动参数（remote-debugging-port）
+    MyMessageBundle.java           # 国际化消息工具类
+    PluginFirstRunActivity.java    # 首次运行弹窗提示重启
     WebBrowserIcons.java           # 图标常量（UPPER_SNAKE_CASE 命名）
-    action/                        # Action 类（导航/缩放/侧边栏/设置/系统浏览器）
-    bookmark/                      # 书签数据模型、持久化、编辑工具类
-    editor/                        # 文件编辑器集成（BrowserFileEditor）
-    history/                       # 浏览历史数据模型、持久化、列表渲染
-    settings/                      # 插件设置页面与持久化
-    toolwindow/                    # 工具窗口主面板（BrowserToolWindowPanel、BrowserTabPanel、BrowserTabManager）
-    ui/                            # UI 组件（地址栏、Chrome风格标签页、书签侧边栏、列表渲染器）
+    action/                        # Action 类（ToggleBrowser、导航、书签、DevTools）
+    bookmark/                      # 书签数据模型、持久化（BookmarkPersistentState）
+    editor/                        # 文件编辑器集成（BrowserFileEditor、BrowserFileType）
+    history/                       # 浏览历史数据模型、持久化（BrowsingHistoryState）
+    settings/                      # 插件设置页面与持久化（BrowserSettingsPage、BrowserSettingsState）
+    toolwindow/                    # 工具窗口主面板（BrowserToolWindowPanel）、标签页（BrowserTabPanel/Manager）、工厂
+    ui/                            # UI 组件（地址栏 AddressBar、ChromeTab、书签侧边栏 BookmarkSidebar）
 src/main/resources/          # 资源文件
   META-INF/plugin.xml        # 插件描述符（ID、名称、依赖、扩展点）
   META-INF/pluginIcon.svg    # 插件图标
+  icons/                     # SVG 图标（英文命名，支持 xxx_dark.svg 深色主题）
   messages/                  # i18n 消息包（.properties）
 ```
 
