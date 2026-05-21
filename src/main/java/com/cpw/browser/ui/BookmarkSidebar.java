@@ -6,6 +6,11 @@ import com.cpw.browser.bookmark.BookmarkPersistentState;
 import com.cpw.browser.history.BrowsingHistoryState;
 import com.cpw.browser.history.HistoryEntry;
 import com.cpw.browser.util.TranslationUtil;
+import com.intellij.openapi.actionSystem.ActionManager;
+import com.intellij.openapi.actionSystem.ActionPopupMenu;
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.actionSystem.DefaultActionGroup;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.ui.CollectionListModel;
 import com.intellij.ui.JBColor;
@@ -14,15 +19,13 @@ import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextField;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.BorderFactory;
-import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
-import javax.swing.border.EmptyBorder;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Component;
@@ -333,38 +336,39 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
         }
     }
 
-    // 弹出清空历史记录菜单
+    // 弹出清空历史记录菜单（使用 IntelliJ ActionPopupMenu 风格）
     private void showClearPopup() {
-        JPopupMenu popup = new JPopupMenu();
-        popup.setOpaque(true);
-        popup.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new JBColor(0xC0C0C0, 0x4A4A4A), 1, true),
-                BorderFactory.createEmptyBorder(2, 0, 2, 0)
-        ));
-        popup.add(createClearItem(TranslationUtil.getText("history.clear.1h"), 1L));
-        popup.add(createClearItem(TranslationUtil.getText("history.clear.24h"), 24L));
-        popup.add(createClearItem(TranslationUtil.getText("history.clear.all"), null));
-        popup.show(clearLabel, 0, clearLabel.getHeight() + 2);
-    }
+        DefaultActionGroup group = new DefaultActionGroup();
 
-    // 创建清空历史记录的菜单项
-    private JButton createClearItem(String text, Long hours) {
-        JButton button = new JButton(text);
-        button.setBorderPainted(false);
-        button.setContentAreaFilled(false);
-        button.setFocusPainted(false);
-        button.setFont(button.getFont().deriveFont(12f));
-        button.setHorizontalAlignment(SwingConstants.LEFT);
-        button.setBorder(new EmptyBorder(4, 12, 4, 12));
-        button.addActionListener(e -> {
-            if (hours == null) {
-                BrowsingHistoryState.getInstance().clearEntries();
-            } else {
-                BrowsingHistoryState.getInstance().clearEntries(hours);
+        // 清空过去 1 小时记录
+        group.add(new AnAction(TranslationUtil.getText("history.clear.1h")) {
+            @Override
+            public void actionPerformed(@NotNull AnActionEvent e) {
+                BrowsingHistoryState.getInstance().clearEntries(1L);
+                refreshHistory();
             }
-            refreshHistory();
         });
-        return button;
+
+        // 清空过去 24 小时记录
+        group.add(new AnAction(TranslationUtil.getText("history.clear.24h")) {
+            @Override
+            public void actionPerformed(@NotNull AnActionEvent e) {
+                BrowsingHistoryState.getInstance().clearEntries(24L);
+                refreshHistory();
+            }
+        });
+
+        // 清空所有记录
+        group.add(new AnAction(TranslationUtil.getText("history.clear.all")) {
+            @Override
+            public void actionPerformed(@NotNull AnActionEvent e) {
+                BrowsingHistoryState.getInstance().clearEntries();
+                refreshHistory();
+            }
+        });
+
+        ActionPopupMenu popup = ActionManager.getInstance().createActionPopupMenu("HistoryClearPopup", group);
+        popup.getComponent().show(clearLabel, 0, clearLabel.getHeight() + 2);
     }
 
     // 弹出书签编辑/添加对话框

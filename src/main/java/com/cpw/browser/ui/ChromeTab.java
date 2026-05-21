@@ -3,8 +3,14 @@ package com.cpw.browser.ui;
 import com.cpw.browser.toolwindow.BrowserTabManager;
 import com.cpw.browser.toolwindow.BrowserTabPanel;
 import com.cpw.browser.util.TranslationUtil;
+import com.intellij.openapi.actionSystem.ActionManager;
+import com.intellij.openapi.actionSystem.ActionPopupMenu;
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.actionSystem.DefaultActionGroup;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBLabel;
+import org.jetbrains.annotations.NotNull;
 import java.awt.BorderLayout;
 import java.awt.Cursor;
 import java.awt.Dimension;
@@ -17,9 +23,7 @@ import java.awt.geom.Path2D;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.border.EmptyBorder;
 
 // Chrome 风格的标签页组件，使用 custom painting 绘制标签形状
@@ -229,26 +233,36 @@ public class ChromeTab extends JPanel {
         closeBtn.setToolTipText(TranslationUtil.getText("tab.close.tooltip"));
     }
 
-    // 显示右键上下文菜单
+    // 显示右键上下文菜单（使用 IntelliJ ActionPopupMenu 风格）
     private void showContextMenu(MouseEvent e) {
-        JPopupMenu popup = new JPopupMenu();
+        DefaultActionGroup group = new DefaultActionGroup();
 
         // 关闭当前标签
-        JMenuItem closeItem = new JMenuItem(TranslationUtil.getText("tab.close"));
-        closeItem.addActionListener(ev -> onClose.run());
-        popup.add(closeItem);
+        group.add(new AnAction(TranslationUtil.getText("tab.close")) {
+            @Override
+            public void actionPerformed(@NotNull AnActionEvent ev) {
+                onClose.run();
+            }
+        });
 
         // 关闭其他标签
-        JMenuItem closeOthersItem = new JMenuItem(TranslationUtil.getText("tab.close.others"));
-        closeOthersItem.addActionListener(ev -> closeOtherTabs());
-        popup.add(closeOthersItem);
+        group.add(new AnAction(TranslationUtil.getText("tab.close.others")) {
+            @Override
+            public void actionPerformed(@NotNull AnActionEvent ev) {
+                closeOtherTabs();
+            }
+        });
 
         // 关闭所有标签
-        JMenuItem closeAllItem = new JMenuItem(TranslationUtil.getText("tab.close.all"));
-        closeAllItem.addActionListener(ev -> closeAllTabs());
-        popup.add(closeAllItem);
+        group.add(new AnAction(TranslationUtil.getText("tab.close.all")) {
+            @Override
+            public void actionPerformed(@NotNull AnActionEvent ev) {
+                closeAllTabs();
+            }
+        });
 
-        popup.show(this, e.getX(), e.getY());
+        ActionPopupMenu popup = ActionManager.getInstance().createActionPopupMenu("ChromeTabPopup", group);
+        popup.getComponent().show(this, e.getX(), e.getY());
     }
 
     // 关闭除当前标签外的所有标签
