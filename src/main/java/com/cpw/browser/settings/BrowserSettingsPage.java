@@ -95,7 +95,7 @@ public class BrowserSettingsPage implements Configurable {
         c.fill = GridBagConstraints.NONE;
         c.weightx = 0.0;
         c.insets = new Insets(12, 0, 0, 8);
-        homePageLabel = new JLabel(TranslationUtil.getText("settings.homepage.url") + ":");
+        homePageLabel = new JLabel(TranslationUtil.getText("settings.homepage.url"));
         panel.add(homePageLabel, c);
         c.gridx = 1;
         c.fill = GridBagConstraints.HORIZONTAL;
@@ -297,7 +297,7 @@ public class BrowserSettingsPage implements Configurable {
         int devIdx = devToolsModeCombo.getSelectedIndex();
         int langIdx = languageCombo.getSelectedIndex();
 
-        homePageLabel.setText(TranslationUtil.getText("settings.homepage.url") + ":");
+        homePageLabel.setText(TranslationUtil.getText("settings.homepage.url"));
         openHomeCheckBox.setText(TranslationUtil.getText("settings.homepage.open"));
         historySeparator.setText(TranslationUtil.getText("settings.history"));
         historyDaysLabel.setText(TranslationUtil.getText("settings.history.days"));
