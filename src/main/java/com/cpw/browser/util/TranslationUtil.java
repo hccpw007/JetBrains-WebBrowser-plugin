@@ -4,6 +4,8 @@ package com.cpw.browser.util;
 import com.cpw.browser.settings.BrowserSettingsState;
 
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Locale;
@@ -74,11 +76,11 @@ public final class TranslationUtil {
         bundleCache.put(lang, props);
     }
 
-    // 从 classpath 加载 Properties 文件，追加到已有 Properties 对象
+    // 从 classpath 加载 Properties 文件（UTF-8 编码），追加到已有 Properties 对象
     private static void loadPropertiesFile(String path, Properties target) {
         try (InputStream is = TranslationUtil.class.getResourceAsStream(path)) {
             if (is != null) {
-                target.load(is);
+                target.load(new InputStreamReader(is, StandardCharsets.UTF_8));
             }
         } catch (Exception ignored) {
         }
