@@ -17,6 +17,8 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.Objects;
 
+import com.cpw.browser.util.TranslationUtil;
+
 public class BrowserSettingsPage implements Configurable {
 
     // 主页 URL 输入框
@@ -31,6 +33,8 @@ public class BrowserSettingsPage implements Configurable {
     private JComboBox<String> displayPositionCombo;
     // 开发者工具打开方式下拉框
     private JComboBox<String> devToolsModeCombo;
+    // 界面语言下拉框
+    private JComboBox<String> languageCombo;
 
     @Override
     public String getDisplayName() {
@@ -144,8 +148,32 @@ public class BrowserSettingsPage implements Configurable {
         displayPositionCombo = new JComboBox<>(new String[]{"工具栏", "编辑区"});
         panel.add(displayPositionCombo, c);
 
-        // Row 8: 右下角签名
+        // Row 8: 分隔线 — 语言
         c.gridy = 8;
+        c.gridx = 0;
+        c.gridwidth = 2;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = new Insets(12, 0, 8, 0);
+        c.weightx = 0.0;
+        panel.add(new TitledSeparator(TranslationUtil.getText("settings.language")), c);
+
+        // Row 9: 语言下拉框 — 标签和下拉框
+        c.gridy = 9;
+        c.gridx = 0;
+        c.gridwidth = 1;
+        c.fill = GridBagConstraints.NONE;
+        c.weightx = 0.0;
+        c.insets = new Insets(0, 0, 0, 8);
+        panel.add(new JLabel(TranslationUtil.getText("settings.language") + ":"), c);
+        c.gridx = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1.0;
+        c.insets = new Insets(0, 0, 0, 0);
+        languageCombo = new JComboBox<>(new String[]{"default", "zh", "en", "ja", "ko", "fr", "de"});
+        panel.add(languageCombo, c);
+
+        // Row 10: 右下角签名
+        c.gridy = 10;
         c.gridx = 1;
         c.gridwidth = 1;
         c.weightx = 1.0;
@@ -174,13 +202,15 @@ public class BrowserSettingsPage implements Configurable {
         String position = selectedItem != null ? positionToSetting(selectedItem) : null;
         String devToolsItem = devToolsModeCombo != null ? (String) devToolsModeCombo.getSelectedItem() : null;
         String devToolsMode = devToolsItem != null ? devToolsModeToSetting(devToolsItem) : null;
+        String lang = languageCombo != null ? (String) languageCombo.getSelectedItem() : null;
 
         return !Objects.equals(homeText, state.getHomePageUrl())
                 || !Objects.equals(openHome, state.isOpenHomeOnNewTab())
                 || !Objects.equals(days, state.getMaxHistoryDays())
                 || !Objects.equals(count, state.getMaxHistoryCount())
                 || !Objects.equals(position, state.getDisplayPosition())
-                || !Objects.equals(devToolsMode, state.getDevToolsMode());
+                || !Objects.equals(devToolsMode, state.getDevToolsMode())
+                || !Objects.equals(lang, state.getLanguage());
     }
 
     // 应用设置并保存到持久化状态
@@ -221,6 +251,10 @@ public class BrowserSettingsPage implements Configurable {
             String selected = (String) devToolsModeCombo.getSelectedItem();
             state.setDevToolsMode(devToolsModeToSetting(selected));
         }
+        // 语言下拉框存在时保存
+        if (languageCombo != null) {
+            state.setLanguage((String) languageCombo.getSelectedItem());
+        }
     }
 
     // 重置 UI 控件为当前持久化设置的值
@@ -250,6 +284,10 @@ public class BrowserSettingsPage implements Configurable {
         // 开发者工具下拉框存在时恢复
         if (devToolsModeCombo != null) {
             devToolsModeCombo.setSelectedItem(settingToDevToolsMode(state.getDevToolsMode()));
+        }
+        // 语言下拉框存在时恢复
+        if (languageCombo != null) {
+            languageCombo.setSelectedItem(state.getLanguage());
         }
     }
 

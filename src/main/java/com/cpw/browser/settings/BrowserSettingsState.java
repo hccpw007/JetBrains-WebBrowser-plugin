@@ -25,6 +25,8 @@ public class BrowserSettingsState implements PersistentStateComponent<BrowserSet
         private String displayPosition = "toolbar";
         // 开发者工具打开方式（split=当前页面下方/window=独立窗口）
         private String devToolsMode = "split";
+        // 界面语言（default=跟随系统/zh=中文/en=英语/ja=日语/ko=韩语/fr=法语/de=德语）
+        private String language = "default";
 
         // 获取主页 URL
         public String getHomePageUrl() {
@@ -84,6 +86,16 @@ public class BrowserSettingsState implements PersistentStateComponent<BrowserSet
         // 设置开发者工具打开方式
         public void setDevToolsMode(String devToolsMode) {
             this.devToolsMode = devToolsMode;
+        }
+
+        // 获取界面语言设置
+        public String getLanguage() {
+            return language;
+        }
+
+        // 设置界面语言
+        public void setLanguage(String language) {
+            this.language = language;
         }
     }
 
@@ -160,6 +172,16 @@ public class BrowserSettingsState implements PersistentStateComponent<BrowserSet
     // 设置开发者工具打开方式
     public void setDevToolsMode(String devToolsMode) {
         state.setDevToolsMode(devToolsMode);
+    }
+
+    // 获取界面语言设置
+    public String getLanguage() {
+        return state.getLanguage();
+    }
+
+    // 设置界面语言
+    public void setLanguage(String language) {
+        state.setLanguage(language);
     }
 
     // 获取 BrowserSettingsState 单例
