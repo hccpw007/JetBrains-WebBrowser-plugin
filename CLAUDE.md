@@ -127,12 +127,12 @@
 
 # 项目架构
 
-这是一个 **IntelliJ Platform 插件**，使用 **纯 Java + Gradle** 构建，目标平台为 IntelliJ IDEA 2025.3。
+这是一个 **IntelliJ Platform 插件**，使用 **纯 Java + Gradle** 构建，目标平台为 IntelliJ IDEA 2026.1.2。
 
 ## 技术栈
 - Java（无 Kotlin 依赖）
 - IntelliJ Platform Gradle Plugin 2.16.0
-- IntelliJ IDEA 2025.3（目标平台）
+- IntelliJ IDEA 2026.1.2（目标平台）
 - JUnit 4.13.2（测试）
 - JCEF（Java Chromium Embedded Framework，用于内嵌浏览器）
 - Group: `com.cpw.browser`, artifact: `WebBrowser`
