@@ -46,7 +46,7 @@ public class EmbeddedDevToolsManager {
         return embeddedDevTools != null ? embeddedDevTools.getComponent() : null;
     }
 
-    // 打开嵌入式 DevTools：通过 CDP 远程调试端口连接并加载 devtoolsFrontendUrl
+    // 打开嵌入式 DevTools：通过 CDP 远程调试端口连接并加载本地 DevTools 前端
     public void open(Consumer<JBCefBrowser> callback) {
         // 如果已经打开，直接返回
         if (embeddedDevTools != null) {
@@ -229,9 +229,11 @@ public class EmbeddedDevToolsManager {
 
             // 如果匹配到了目标页面
             if (matchedPage != null) {
-                JsonElement devtoolsUrlElem = matchedPage.get("devtoolsFrontendUrl");
-                String devtoolsUrl = devtoolsUrlElem != null ? devtoolsUrlElem.getAsString() : null;
-                // 如果 devtoolsFrontendUrl 有效，则加载嵌入式 DevTools
+                // 使用本地 DevTools 地址（避免访问 chrome-devtools-frontend.appspot.com）
+                JsonElement idElem = matchedPage.get("id");
+                String pageId = idElem != null ? idElem.getAsString() : "";
+                String devtoolsUrl = "http://127.0.0.1:" + port + "/devtools/inspector.html?ws=127.0.0.1:" + port + "/" + pageId;
+                // 如果 devtoolsUrl 有效，则加载嵌入式 DevTools
                 if (devtoolsUrl != null && !devtoolsUrl.isBlank()) {
                     System.err.println("[WebBrowser] Loading DevTools frontend: " + devtoolsUrl);
                     final String finalDevtoolsUrl = devtoolsUrl;
@@ -249,8 +251,8 @@ public class EmbeddedDevToolsManager {
                             }
                         }
                     });
-                } else { // devtoolsFrontendUrl 为空，通知回调失败
-                    System.err.println("[WebBrowser] No devtoolsFrontendUrl in /json response: " + matchedPage);
+                } else { // devtoolsUrl 为空，通知回调失败
+                    System.err.println("[WebBrowser] No devtools id in /json response: " + matchedPage);
                     ApplicationManager.getApplication().invokeLater(() -> {
                         try {
                             callback.accept(null);
