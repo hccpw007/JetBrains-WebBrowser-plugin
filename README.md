@@ -164,7 +164,7 @@ Restart the IDE if prompted.
 
 ```bash
 git clone https://github.com/hccpw007/JetBrains-WebBrowser-plugin.git
-cd WebBrowser
+cd JetBrains-WebBrowser-plugin
 ./gradlew build
 ```
 
