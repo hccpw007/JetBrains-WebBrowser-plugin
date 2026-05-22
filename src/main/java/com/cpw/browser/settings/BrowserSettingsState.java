@@ -24,7 +24,7 @@ public class BrowserSettingsState implements PersistentStateComponent<BrowserSet
         // 显示位置（toolbar/editor）
         private String displayPosition = "editor";
         // 开发者工具打开方式（split=当前页面下方/window=独立窗口）
-        private String devToolsMode = "split";
+        private String devToolsMode = "window";
         // 界面语言（default=跟随系统/zh=中文/en=英语/ja=日语/ko=韩语/fr=法语/de=德语）
         private String language = "default";
         // 默认搜索引擎
