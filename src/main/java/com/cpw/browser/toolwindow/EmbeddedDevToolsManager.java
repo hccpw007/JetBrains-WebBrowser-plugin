@@ -243,18 +243,27 @@ public class EmbeddedDevToolsManager {
                     ApplicationManager.getApplication().invokeLater(() -> {
                         try {
                             JBCefBrowser devBrowser = new JBCefBrowser(finalDevtoolsUrl);
-                            // DevTools 加载完成后，删除 shadow DOM 中的 screencast 元素
+                            // DevTools 加载完成后：关闭 screencast 模式，然后删除 screencast 工具栏按钮
                             devBrowser.getJBCefClient().addLoadHandler(new CefLoadHandlerAdapter() {
                                 @Override
                                 public void onLoadEnd(CefBrowser browser, CefFrame frame, int httpStatusCode) {
                                     // 仅处理主框架
                                     if (frame.isMain()) {
-                                        // 递归遍历 shadow DOM 删除 screencast 元素
+                                        /*
+                                         * 解决开发者工具打开默认会显示页面iframe的问题
+                                         * 如果class="icon only-icon primary-toggle"的元素的有个属性 aria-pressed="true",
+                                         * 则点击一下这个元素,
+                                         * 然后200毫秒后删除class="toolbar-button" aria-label="Toggle screencast"的元素
+                                         */
                                         browser.executeJavaScript(
                                             "setTimeout(function(){" +
-                                            "!function r(n){try{n.querySelectorAll('.widget.vbox.screencast').forEach(function(e){e.remove()})}catch(e){}" +
-                                            "try{n.querySelectorAll('*').forEach(function(e){if(e.shadowRoot)r(e.shadowRoot)})}catch(e){}}" +
-                                            "(document)},1000)",
+                                            "var w=function r(n){try{n.querySelectorAll('.icon.only-icon.primary-toggle').forEach(function(e){" +
+                                            "if(e.getAttribute('aria-pressed')==='true')e.click()})}catch(e){}" +
+                                            "try{n.querySelectorAll('*').forEach(function(e){if(e.shadowRoot)r(e.shadowRoot)})}catch(e){}};" +
+                                            "w(document);" +
+                                            "setTimeout(function(){!function r(n){try{n.querySelectorAll('.toolbar-button[aria-label=\"Toggle screencast\"]').forEach(function(e){e.remove()})}catch(e){}" +
+                                            "try{n.querySelectorAll('*').forEach(function(e){if(e.shadowRoot)r(e.shadowRoot)})}catch(e){}}(document)},200)" +
+                                            "},1000)",
                                             "", 0);
                                     }
                                 }
