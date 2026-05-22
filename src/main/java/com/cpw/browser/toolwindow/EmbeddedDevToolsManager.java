@@ -232,7 +232,7 @@ public class EmbeddedDevToolsManager {
                 // 使用本地 DevTools 地址（避免访问 chrome-devtools-frontend.appspot.com）
                 JsonElement idElem = matchedPage.get("id");
                 String pageId = idElem != null ? idElem.getAsString() : "";
-                String devtoolsUrl = "http://127.0.0.1:" + port + "/devtools/inspector.html?ws=127.0.0.1:" + port + "/" + pageId;
+                String devtoolsUrl = "http://127.0.0.1:" + port + "/devtools/inspector.html?ws=127.0.0.1:" + port + "/devtools/page/" + pageId;
                 // 如果 devtoolsUrl 有效，则加载嵌入式 DevTools
                 if (devtoolsUrl != null && !devtoolsUrl.isBlank()) {
                     System.err.println("[WebBrowser] Loading DevTools frontend: " + devtoolsUrl);
