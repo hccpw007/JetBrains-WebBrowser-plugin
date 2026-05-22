@@ -46,7 +46,7 @@ public final class PanelActions {
         public void actionPerformed(AnActionEvent e) {
             tabManager.zoomIn();
             BrowserTabPanel activeTab = tabManager.getActiveTab();
-            int pct = (int) ((activeTab != null ? activeTab.getZoomLevel() : 1.0) * 100);
+            int pct = (int) Math.round((activeTab != null ? activeTab.getZoomLevel() : 1.0) * 100);
             showZoomToast.accept(TranslationUtil.getText("zoom.toast.in", String.valueOf(pct)));
         }
     }
@@ -73,7 +73,7 @@ public final class PanelActions {
         public void actionPerformed(AnActionEvent e) {
             tabManager.zoomOut();
             BrowserTabPanel activeTab = tabManager.getActiveTab();
-            int pct = (int) ((activeTab != null ? activeTab.getZoomLevel() : 1.0) * 100);
+            int pct = (int) Math.round((activeTab != null ? activeTab.getZoomLevel() : 1.0) * 100);
             showZoomToast.accept(TranslationUtil.getText("zoom.toast.out", String.valueOf(pct)));
         }
     }
