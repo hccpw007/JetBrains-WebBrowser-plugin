@@ -104,6 +104,11 @@ public class BrowserTabPanel {
                 try {
                     // 仅处理主框架的加载完成事件
                     if (frame.isMain()) {
+                        // 重新应用缩放级别（JCEF 在页面加载后可能重置缩放）
+                        double currentZoom = BrowserTabPanel.this.zoomLevel;
+                        if (Math.abs(currentZoom - 1.0) > 0.001) {
+                            BrowserTabPanel.this.browser.setZoomLevel(currentZoom);
+                        }
                         currentUrl = frame.getURL();
                         // 如果 URL 变更回调已注册，则在 EDT 中调用
                         if (onUrlChanged != null) {
