@@ -243,16 +243,16 @@ public class EmbeddedDevToolsManager {
                     ApplicationManager.getApplication().invokeLater(() -> {
                         try {
                             JBCefBrowser devBrowser = new JBCefBrowser(finalDevtoolsUrl);
-                            // DevTools 加载完成后，删除 shadow DOM 中的 split-widget 主内容区域
+                            // DevTools 加载完成后，删除 shadow DOM 中的 screencast 元素
                             devBrowser.getJBCefClient().addLoadHandler(new CefLoadHandlerAdapter() {
                                 @Override
                                 public void onLoadEnd(CefBrowser browser, CefFrame frame, int httpStatusCode) {
                                     // 仅处理主框架
                                     if (frame.isMain()) {
-                                        // 递归遍历 shadow DOM 删除指定 class 的元素
+                                        // 递归遍历 shadow DOM 删除 screencast 元素
                                         browser.executeJavaScript(
                                             "setTimeout(function(){" +
-                                            "!function r(n){try{n.querySelectorAll('.shadow-split-widget-contents.shadow-split-widget-main.vbox').forEach(function(e){e.remove()})}catch(e){}" +
+                                            "!function r(n){try{n.querySelectorAll('.widget.vbox.screencast').forEach(function(e){e.remove()})}catch(e){}" +
                                             "try{n.querySelectorAll('*').forEach(function(e){if(e.shadowRoot)r(e.shadowRoot)})}catch(e){}}" +
                                             "(document)},1000)",
                                             "", 0);
