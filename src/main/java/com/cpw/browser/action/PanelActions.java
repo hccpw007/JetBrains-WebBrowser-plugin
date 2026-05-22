@@ -245,7 +245,7 @@ public final class PanelActions {
         private final BrowserTabManager tabManager;
 
         public OpenInSystemBrowser(BrowserTabManager tabManager) {
-            super(TranslationUtil.getText("action.open.system"), TranslationUtil.getText("action.open.system.desc"), WebBrowserIcons.GOOGLE);
+            super(TranslationUtil.getText("action.open.system"), TranslationUtil.getText("action.open.system.desc"), WebBrowserIcons.SYSTEM_BROWSER);
             this.tabManager = tabManager;
         }
 

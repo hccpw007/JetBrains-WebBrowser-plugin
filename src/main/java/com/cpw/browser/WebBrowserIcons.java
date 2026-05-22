@@ -34,8 +34,8 @@ public final class WebBrowserIcons {
     public static final Icon ZOOM_OUT = load("zoom-out");
     // 重置缩放图标
     public static final Icon ZOOM_RESET = load("zoom-reset");
-    // Google 图标
-    public static final Icon GOOGLE = load("google");
+    // 在系统浏览器中打开当前页面
+    public static final Icon SYSTEM_BROWSER = load("system-browser");
     // 更多菜单图标（三个竖点）
     public static final Icon MORE = load("more");
 
