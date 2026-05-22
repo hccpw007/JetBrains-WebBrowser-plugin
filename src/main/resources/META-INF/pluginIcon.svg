@@ -1,13 +1,1 @@
-<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="20" cy="20" r="16" fill="url(#g)"/>
-  <path d="M8 16 Q20 8 32 16" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.2"/>
-  <path d="M8 24 Q20 32 32 24" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.2"/>
-  <line x1="20" y1="4" x2="20" y2="36" stroke="rgba(255,255,255,0.55)" stroke-width="1.2"/>
-  <ellipse cx="20" cy="20" rx="5" ry="16" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.8" stroke-dasharray="2,2"/>
-  <defs>
-    <linearGradient id="g" x1="4" y1="4" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#42A5F5"/>
-      <stop offset="100%" stop-color="#1976D2"/>
-    </linearGradient>
-  </defs>
-</svg>
+<svg t="1779448204053" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="48451" width="16" height="16"><path d="M258.278 446.542L111.746 192.74C205.564 75.276 349.98 0 512 0c187.432 0 351.31 100.736 440.532 251H534.762c-7.504-0.65-15.092-1-22.762-1-121.874 0-224.578 83.644-253.722 196.542zM695.306 325h293.46C1011.506 382.93 1024 446.004 1024 512c0 280.826-226.1 508.804-506.186 511.926l209.394-362.678C756.688 618.87 774 567.422 774 512c0-73.17-30.164-139.42-78.694-187zM326 512c0-102.56 83.44-186 186-186s186 83.44 186 186-83.44 186-186 186-186-83.44-186-186z m256.182 252.442L435.604 1018.32C189.072 981.436 0 768.804 0 512c0-91.218 23.884-176.846 65.696-251.024l209.03 362.054C316.594 712.142 407.202 774 512 774c24.3 0 47.836-3.34 70.182-9.558z" fill="#50aac4" p-id="48452"></path></svg>
