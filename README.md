@@ -14,8 +14,8 @@ Embed web pages directly in the IDE with navigation, bookmarks, history, and Dev
 
 ### Runtime Requirements / 使用环境要求
 
-- **2025.1 or later** Any JetBrains product (IntelliJ IDEA, PyCharm, WebStorm, PhpStorm)
-- **2025.1 或更新版本** 任何 JetBrains 产品（IntelliJ IDEA、PyCharm、WebStorm、PhpStorm 等）
+- **2025.1 or later** Support for JetBrains products (IntelliJ IDEA, PyCharm, WebStorm, PhpStorm)
+- **2025.1 或更新版本** 支持 JetBrains 产品（IntelliJ IDEA、PyCharm、WebStorm、PhpStorm 等）
 
 ### Development Requirements / 开发环境要求
 
