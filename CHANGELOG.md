@@ -1,5 +1,15 @@
 <!-- Keep a Changelog guide -> https://keepachangelog.com -->
 
+## [1.0.1] - 2026-05-22
+
+### Changed
+- Minimum supported IDE version raised to 2025.3. 最低支持的 IDE 版本提升至 2025.3
+
+### Supported
+- IntelliJ IDEA 2025.3 and above. 支持 IntelliJ IDEA 2025.3 及以上版本
+- Java 21+ runtime. Java 21+ 运行时环境
+- Windows, macOS, Linux cross-platform. 跨平台支持 Windows、macOS、Linux
+
 ## [1.0.0] - 2026-05-22
 
 ### Added
