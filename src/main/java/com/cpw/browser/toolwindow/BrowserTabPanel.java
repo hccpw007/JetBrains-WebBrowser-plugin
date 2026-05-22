@@ -64,6 +64,8 @@ public class BrowserTabPanel {
         // 创建浏览器并设置背景色
         this.browser = new JBCefBrowser(initialUrl);
         this.browser.setPageBackgroundColor("white");
+        // 确保新窗口页面从 100% 缩放开始
+        this.browser.setZoomLevel(1.0);
         this.component = browser.getComponent();
 
         // 如果初始 URL 不是 about:blank，则记录历史
