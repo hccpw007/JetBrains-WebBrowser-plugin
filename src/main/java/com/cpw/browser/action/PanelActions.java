@@ -78,6 +78,31 @@ public final class PanelActions {
         }
     }
 
+    // 重置缩放
+    public static class ZoomReset extends AnAction implements DumbAware {
+
+        private final BrowserTabManager tabManager;
+        private final Consumer<String> showZoomToast;
+
+        public ZoomReset(BrowserTabManager tabManager, Consumer<String> showZoomToast) {
+            super(TranslationUtil.getText("action.zoom.reset"), TranslationUtil.getText("action.zoom.reset.desc"), WebBrowserIcons.ZOOM_RESET);
+            this.tabManager = tabManager;
+            this.showZoomToast = showZoomToast;
+        }
+
+        @Override
+        public void update(AnActionEvent e) {
+            e.getPresentation().setText(TranslationUtil.getText("action.zoom.reset"));
+            e.getPresentation().setDescription(TranslationUtil.getText("action.zoom.reset.desc"));
+        }
+
+        @Override
+        public void actionPerformed(AnActionEvent e) {
+            tabManager.zoomReset();
+            showZoomToast.accept(TranslationUtil.getText("zoom.toast.reset"));
+        }
+    }
+
     // 书签侧边栏显示/隐藏切换
     public static class ToggleBookmarkSidebar extends AnAction implements DumbAware {
 

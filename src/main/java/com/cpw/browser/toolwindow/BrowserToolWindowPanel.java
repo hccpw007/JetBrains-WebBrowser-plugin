@@ -224,6 +224,7 @@ public class BrowserToolWindowPanel {
         DefaultActionGroup rightGroup = new DefaultActionGroup();
         rightGroup.add(new PanelActions.ZoomIn(tabManager, this::showZoomToast));
         rightGroup.add(new PanelActions.ZoomOut(tabManager, this::showZoomToast));
+        rightGroup.add(new PanelActions.ZoomReset(tabManager, this::showZoomToast));
         rightGroup.addSeparator();
         rightGroup.add(new PanelActions.ToggleBookmarkSidebar(bookmarkSidebar, centerPanel));
         rightGroup.add(new PanelActions.OpenInSystemBrowser(tabManager));
