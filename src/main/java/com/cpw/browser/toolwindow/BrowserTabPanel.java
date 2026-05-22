@@ -106,10 +106,10 @@ public class BrowserTabPanel {
                 try {
                     // 仅处理主框架的加载完成事件
                     if (frame.isMain()) {
-                        // 重新应用缩放级别（JCEF 在页面加载后可能重置缩放）
+                        // 重新应用缩放级别（JCEF 在页面加载后可能重置 CSS zoom）
                         double currentZoom = BrowserTabPanel.this.zoomLevel;
                         if (Math.abs(currentZoom - 1.0) > 0.001) {
-                            BrowserTabPanel.this.browser.setZoomLevel(currentZoom);
+                            BrowserTabPanel.this.applyZoomJs();
                         }
                         currentUrl = frame.getURL();
                         // 如果 URL 变更回调已注册，则在 EDT 中调用
@@ -327,19 +327,26 @@ public class BrowserTabPanel {
     // 放大
     public void zoomIn() {
         zoomLevel += 0.05;
-        browser.setZoomLevel(zoomLevel);
+        applyZoomJs();
     }
 
     // 缩小
     public void zoomOut() {
         zoomLevel -= 0.05;
-        browser.setZoomLevel(zoomLevel);
+        applyZoomJs();
     }
 
     // 重置缩放
     public void zoomReset() {
         zoomLevel = 1.0;
-        browser.setZoomLevel(1.0);
+        applyZoomJs();
+    }
+
+    // 通过 CSS zoom 属性设置缩放（避免 JCEF HostZoomMap 跨标签页共享）
+    private void applyZoomJs() {
+        // 使用 document.body.style.zoom 实现独立缩放
+        String js = "document.body.style.zoom = '" + zoomLevel + "';";
+        browser.getCefBrowser().executeJavaScript(js, "", 0);
     }
 
     // 打开独立 DevTools 弹出窗口
