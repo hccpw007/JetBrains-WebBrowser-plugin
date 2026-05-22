@@ -163,7 +163,7 @@ Restart the IDE if prompted.
 ### Build from source / 从源码构建
 
 ```bash
-git clone https://github.com/hccpw007/JetBrains-IntelliJ-IDEA-Web-Browser.git
+git clone https://github.com/hccpw007/JetBrains-WebBrowser-plugin.git
 cd WebBrowser
 ./gradlew build
 ```

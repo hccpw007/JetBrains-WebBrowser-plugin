@@ -19,7 +19,7 @@
         一款支持多标签页、书签、历史记录和开发者工具的嵌入式网页浏览器插件，支持 JetBrains 产品（IntelliJ IDEA、PyCharm、WebStorm、PhpStorm 等）。<br>
         在 IDE 中直接嵌入网页浏览，基于 JCEF（Java Chromium Embedded Framework）实现。<br>
         <br>
-        GitHub: <a href="https://github.com/hccpw007/JetBrains-IntelliJ-IDEA-Web-Browser">https://github.com/hccpw007/JetBrains-IntelliJ-IDEA-Web-Browser</a>
+        GitHub: <a href="https://github.com/hccpw007/JetBrains-WebBrowser-plugin">https://github.com/hccpw007/JetBrains-WebBrowser-plugin</a>
     ]]></description>
 
     <!-- Product and plugin compatibility requirements. -->
