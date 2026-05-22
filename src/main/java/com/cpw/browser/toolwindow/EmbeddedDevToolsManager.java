@@ -10,6 +10,9 @@ import com.intellij.openapi.application.PathManager;
 import com.intellij.ui.jcef.JBCefApp;
 import com.intellij.ui.jcef.JBCefBrowser;
 
+import org.cef.browser.CefBrowser;
+import org.cef.browser.CefFrame;
+import org.cef.handler.CefLoadHandlerAdapter;
 import javax.swing.JComponent;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -240,6 +243,22 @@ public class EmbeddedDevToolsManager {
                     ApplicationManager.getApplication().invokeLater(() -> {
                         try {
                             JBCefBrowser devBrowser = new JBCefBrowser(finalDevtoolsUrl);
+                            // DevTools 加载完成后，删除 shadow DOM 中的 split-widget 主内容区域
+                            devBrowser.getJBCefClient().addLoadHandler(new CefLoadHandlerAdapter() {
+                                @Override
+                                public void onLoadEnd(CefBrowser browser, CefFrame frame, int httpStatusCode) {
+                                    // 仅处理主框架
+                                    if (frame.isMain()) {
+                                        // 递归遍历 shadow DOM 删除指定 class 的元素
+                                        browser.executeJavaScript(
+                                            "setTimeout(function(){" +
+                                            "!function r(n){try{n.querySelectorAll('.shadow-split-widget-contents.shadow-split-widget-main.vbox').forEach(function(e){e.remove()})}catch(e){}" +
+                                            "try{n.querySelectorAll('*').forEach(function(e){if(e.shadowRoot)r(e.shadowRoot)})}catch(e){}}" +
+                                            "(document)},1000)",
+                                            "", 0);
+                                    }
+                                }
+                            }, devBrowser.getCefBrowser());
                             embeddedDevTools = devBrowser;
                             callback.accept(devBrowser);
                         } catch (Throwable e) {
