@@ -1,9 +1,5 @@
 <!-- Keep a Changelog guide -> https://keepachangelog.com -->
 
-# WebBrowser Changelog
-
-## [Unreleased]
-
 ## [1.0.0] - 2026-05-22
 
 ### Added
