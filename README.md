@@ -1,7 +1,7 @@
 # WebBrowser
 
-An embedded web browser for IntelliJ IDEA with multi-tab, bookmark, history, and DevTools support.
-一个 IntelliJ IDEA 的内嵌网页浏览器插件，支持多标签页、书签、历史记录和开发者工具。
+An embedded web browser for IntelliJ IDEA, PyCharm, WebStorm, PhpStorm, and other JetBrains products with multi-tab, bookmark, history, and DevTools support.
+适用于 IntelliJ IDEA、PyCharm、WebStorm、PhpStorm 等 JetBrains 产品的内嵌网页浏览器插件，支持多标签页、书签、历史记录和开发者工具。
 
 Embed web pages directly in the IDE with navigation, bookmarks, history, and DevTools support. Powered by JCEF (Java Chromium Embedded Framework).
 在 IDE 中直接嵌入网页浏览功能，支持导航、书签、历史记录和开发者工具。基于 JCEF（Java Chromium Embedded Framework）构建。
@@ -14,9 +14,8 @@ Embed web pages directly in the IDE with navigation, bookmarks, history, and Dev
 
 ### Runtime Requirements / 使用环境要求
 
-- **IntelliJ IDEA** 2025.1 or later (Ultimate / Community)
-- **Java** 21+ (bundled with IDE)
-- **JCEF** (Java Chromium Embedded Framework, bundled with IntelliJ IDEA)
+- **2025.1 or later** Any JetBrains product (IntelliJ IDEA, PyCharm, WebStorm, PhpStorm)
+- **2025.1 或更新版本** 任何 JetBrains 产品（IntelliJ IDEA、PyCharm、WebStorm、PhpStorm 等）
 
 ### Development Requirements / 开发环境要求
 

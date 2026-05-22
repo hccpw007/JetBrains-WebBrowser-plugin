@@ -11,8 +11,21 @@
 
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager. -->
     <description><![CDATA[
-        An embedded web browser for IntelliJ IDEA with multi-tab, bookmark, history, and DevTools support.<br>
-        Embed web pages directly in the IDE. Powered by JCEF (Java Chromium Embedded Framework).
+        <h2>中文</h2>
+        一款支持多标签页、书签、历史记录和开发者工具的嵌入式网页浏览器插件，适用于所有 JetBrains 产品。<br>
+        在 IDE 中直接嵌入网页浏览，基于 JCEF（Java Chromium Embedded Framework）实现。<br>
+        <br>
+        支持 IntelliJ IDEA、PyCharm、WebStorm、PhpStorm、GoLand、RubyMine、CLion、DataGrip、Rider、<br>
+        RustRover、Aqua、DataSpell、Gateway、MPS、WriterSide 等所有 JetBrains 产品。<br>
+        <br>
+        <h2>English</h2>
+        An embedded web browser plugin with multi-tab, bookmark, history, and DevTools support for all JetBrains products.<br>
+        Embed web pages directly in the IDE. Powered by JCEF (Java Chromium Embedded Framework).<br>
+        <br>
+        Supports IntelliJ IDEA, PyCharm, WebStorm, PhpStorm, GoLand, RubyMine, CLion, DataGrip, Rider,<br>
+        RustRover, Aqua, DataSpell, Gateway, MPS, WriterSide, and all other JetBrains products.<br>
+        <br>
+        GitHub: <a href="https://github.com/hccpw007/JetBrains-IntelliJ-IDEA-Web-Browser">https://github.com/hccpw007/JetBrains-IntelliJ-IDEA-Web-Browser</a>
     ]]></description>
 
     <!-- Product and plugin compatibility requirements. -->
