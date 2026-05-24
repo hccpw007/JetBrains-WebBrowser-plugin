@@ -82,13 +82,6 @@ public class ToggleBrowserAction extends AnAction implements DumbAware {
         }
 
         try {
-            // 确保工具窗口已隐藏
-            ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow("WebBrowser");
-            // 工具窗口可见时将其隐藏
-            if (toolWindow != null && toolWindow.isVisible()) {
-                toolWindow.hide();
-            }
-
             // 创建临时文件作为标记，用于在编辑区打开浏览器
             File tempFile = new File(System.getProperty("java.io.tmpdir"), "Web Browser.webbrowser");
             // 临时文件已存在则删除重建
