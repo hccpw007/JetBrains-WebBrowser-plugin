@@ -11,12 +11,15 @@ import com.intellij.openapi.ui.popup.JBPopup;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBLabel;
+import com.intellij.ui.components.JBList;
+import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextField;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
@@ -39,6 +42,7 @@ import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -61,7 +65,7 @@ public class AddressBar extends JPanel {
     // 建议弹窗，根据历史记录和书签提供 URL 自动提示
     private JBPopup suggestionsPopup;
     // 建议列表，用于键盘上下键切换选中项
-    private JList<String> suggestionsList;
+    private JBList<String> suggestionsList;
     // 回车后禁止弹窗重新弹出，避免 setUrl 触发的 DocumentListener 再次显示弹窗
     private boolean suppressSuggestions;
     // 导航前地址栏中的旧 URL，仅过滤掉这一个回调，避免闪烁
@@ -69,8 +73,8 @@ public class AddressBar extends JPanel {
     // 最后一次由 setUrl 设置的稳定页面 URL，用于精确过滤旧页面地址回调
     private String lastStableUrl;
 
-    // 建议列表最大展示数量
-    private static final int MAX_SUGGESTIONS = 8;
+    // 建议列表最多查询条数
+    private static final int MAX_SUGGESTIONS = 100;
     // 触发建议的最小输入字符数
     private static final int MIN_SUGGESTION_CHARS = 3;
     // 切换书签状态的回调
@@ -233,7 +237,8 @@ public class AddressBar extends JPanel {
         preNavigationUrl = null;
         // 记录当前稳定页面 URL，用于后续导航时精确过滤旧页面地址
         lastStableUrl = url;
-        // 设置地址栏文本并更新星标状态
+        // 设置地址栏文本，临时禁止弹窗（避免程序化 setUrl 触发提示框）
+        suppressSuggestions = true;
         String displayText = "about:blank".equals(url) ? "" : url;
         if (!displayText.equals(urlField.getText())) {
             urlField.setText(displayText);
@@ -378,26 +383,43 @@ public class AddressBar extends JPanel {
                 allSuggestions.add(s);
             }
         }
-        suggestionsList = new JList<>(model);
-        // 弹窗宽度与地址栏保持一致
-        suggestionsList.setPreferredSize(new Dimension(urlField.getWidth(), suggestionsList.getPreferredSize().height));
-
-        // 自定义单元格渲染器：显示为 标题 + 网址 两行，左右留间距
+        suggestionsList = new JBList<>(model);
+        // 默认显示 8 条，多余的可滑动查看
+        suggestionsList.setVisibleRowCount(8);
+        // 先设置渲染器，再计算高度，确保多行渲染器生效
         suggestionsList.setCellRenderer(new SuggestionRenderer(allSuggestions));
+        // 鼠标点击建议项时导航
+        suggestionsList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int index = suggestionsList.locationToIndex(e.getPoint());
+                if (index >= 0) {
+                    String selected = suggestionsList.getModel().getElementAt(index);
+                    startNavigation(UrlUtils.normalize(selected));
+                }
+            }
+        });
+
+        // 列表放入滚动面板，超出默认高度时垂直滑动查看
+        JBScrollPane scrollPane = new JBScrollPane(suggestionsList);
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        // 计算 8 行的固定高度（使用渲染器获取单行高度）
+        int rowHeight = suggestionsList.getCellRenderer().getListCellRendererComponent(
+                suggestionsList, model.getElementAt(0), 0, false, false).getPreferredSize().height;
+        int visibleRows = Math.min(model.getSize(), 8);
+        int popupHeight = visibleRows * rowHeight + 5;
+        // 弹窗宽度与地址栏保持一致，高度固定为 8 行
+        scrollPane.setPreferredSize(new Dimension(urlField.getWidth(), popupHeight));
 
         suggestionsPopup = JBPopupFactory.getInstance()
-                .createListPopupBuilder(suggestionsList)
+                .createComponentPopupBuilder(scrollPane, suggestionsList)
                 .setRequestFocus(false)
-                .setItemChosenCallback(() -> {
-                    // 鼠标点击选中某条建议时导航（与回车走相同逻辑）
-                    String selected = suggestionsList.getSelectedValue();
-                    if (selected != null) {
-                        startNavigation(UrlUtils.normalize(selected));
-                    }
-                })
+                .setResizable(true)
                 .createPopup();
 
         suggestionsPopup.showUnderneathOf(urlField);
+        // 默认选中第一行（当前输入内容）
+        suggestionsList.setSelectedIndex(0);
 
         // 将弹窗左移使其左边与 urlField 对齐
         try {
@@ -417,6 +439,27 @@ public class AddressBar extends JPanel {
             suggestionsPopup = null;
             suggestionsList = null;
         }
+    }
+
+    // 根据可用宽度动态截断文本，只在实际超出时添加 ...
+    private static String truncateToWidth(String text, JList<?> list, Font font, int padding) {
+        int availableWidth = list.getWidth() - padding;
+        // 列表尚未布局时用字符数兜底
+        if (availableWidth <= 0) {
+            return text.length() > 60 ? text.substring(0, 60) + "..." : text;
+        }
+        FontMetrics fm = list.getFontMetrics(font);
+        if (fm.stringWidth(text) <= availableWidth) {
+            return text; // 未超出，不截断
+        }
+        // 逐字缩减直到适配可用宽度
+        for (int i = text.length(); i > 0; i--) {
+            String truncated = text.substring(0, i) + "...";
+            if (fm.stringWidth(truncated) <= availableWidth) {
+                return truncated;
+            }
+        }
+        return "...";
     }
 
     // 建议列表的单元格渲染器：标题（加粗）+ 网址（灰色），左右留间距
@@ -443,14 +486,16 @@ public class AddressBar extends JPanel {
             JPanel panel = new JPanel(new BorderLayout(0, 2));
             panel.setBorder(BorderFactory.createEmptyBorder(6, 10, 6, 10));
 
-            // 第一行：页面标题
+            // 第一行：页面标题（超出可用宽度时自动截断）
             String displayTitle = (match != null && !match.title.isEmpty()) ? match.title : url;
-            JLabel titleLabel = new JLabel(displayTitle);
-            titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD, 13f));
+            Font titleFont = new JLabel().getFont().deriveFont(Font.BOLD, 13f);
+            JLabel titleLabel = new JLabel(truncateToWidth(displayTitle, list, titleFont, 20));
+            titleLabel.setFont(titleFont);
 
-            // 第二行：完整 URL
-            JLabel urlLabel = new JLabel(url);
-            urlLabel.setFont(urlLabel.getFont().deriveFont(11f));
+            // 第二行：完整 URL（超出可用宽度时自动截断）
+            Font urlFont = new JLabel().getFont().deriveFont(11f);
+            JLabel urlLabel = new JLabel(truncateToWidth(url, list, urlFont, 20));
+            urlLabel.setFont(urlFont);
             urlLabel.setForeground(com.intellij.ui.JBColor.GRAY);
 
             panel.add(titleLabel, BorderLayout.NORTH);
