@@ -1,5 +1,6 @@
 package com.cpw.browser.toolwindow;
 
+import com.cpw.browser.settings.BrowserSettingsState;
 import com.cpw.browser.toolwindow.BrowserToolWindowPanel;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -23,7 +24,8 @@ public class BrowserToolWindowFactory implements ToolWindowFactory {
 
     @Override
     public boolean shouldBeAvailable(@NotNull Project project) {
-        return true;
+        // 编辑器模式下隐藏侧边栏按钮，工具栏模式下保持可用
+        return !"editor".equals(BrowserSettingsState.getInstance().getDisplayPosition());
     }
 
     @Override
@@ -32,8 +34,10 @@ public class BrowserToolWindowFactory implements ToolWindowFactory {
         Content content = ContentFactory.getInstance().createContent(panel.getContent(), null, false);
         toolWindow.getContentManager().addContent(content);
 
-        // 初始隐藏侧边栏按钮，由 ToggleBrowserAction 控制
-        toolWindow.setAvailable(false, null);
+        // 编辑器模式下隐藏侧边栏按钮，由 ToggleBrowserAction 控制
+        if ("editor".equals(BrowserSettingsState.getInstance().getDisplayPosition())) {
+            toolWindow.setAvailable(false, null);
+        }
 
         // 注册键盘快捷键
         registerShortcuts(panel, toolWindow);
