@@ -1,5 +1,6 @@
 package com.cpw.browser.editor;
 
+import com.cpw.browser.BrowserProjectService;
 import com.cpw.browser.toolwindow.BrowserToolWindowPanel;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
@@ -34,7 +35,8 @@ public class BrowserFileEditor implements FileEditor {
 
     public BrowserFileEditor(Project project, VirtualFile file) {
         this.file = file;
-        this.browserPanel = new BrowserToolWindowPanel(project);
+        // 从项目级服务获取共享的浏览器面板，确保关闭再打开编辑器时标签页不丢失
+        this.browserPanel = BrowserProjectService.getInstance(project).getEditorPanel();
 
         // 标题变更时同步到 VirtualFile 的 UserData，并通知 FileEditorManager 更新展示
         browserPanel.setOnTitleChanged(title -> {
@@ -95,10 +97,10 @@ public class BrowserFileEditor implements FileEditor {
         userDataHolder.putUserData(key, value);
     }
 
-    // 释放浏览器面板资源
+    // 释放编辑器资源（共享面板由 BrowserProjectService 在项目关闭时统一清理，此处不做释放）
     @Override
     public void dispose() {
-        browserPanel.dispose();
+        // 不移除共享面板中的标签页，保留状态供下次编辑器打开时复用
     }
 
     // 获取编辑器状态
