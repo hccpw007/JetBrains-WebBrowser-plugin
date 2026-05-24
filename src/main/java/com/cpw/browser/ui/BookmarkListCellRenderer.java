@@ -56,7 +56,7 @@ public class BookmarkListCellRenderer extends JPanel implements ListCellRenderer
 
         add(titleLabel, BorderLayout.CENTER);
         add(eastPanel, BorderLayout.EAST);
-        setBorder(new EmptyBorder(6, 8, 6, 2));
+        setBorder(new EmptyBorder(6, 8, 6, 14));
     }
 
     // 渲染书签列表项的组件

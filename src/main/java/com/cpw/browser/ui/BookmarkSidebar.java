@@ -38,9 +38,11 @@ import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 import java.util.function.Consumer;
 
 public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
@@ -112,6 +114,19 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
                 handleBookmarkClick(e);
             }
         });
+        // 书签列表鼠标移动时根据位置切换手型光标
+        bookmarkList.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                int index = bookmarkList.locationToIndex(e.getPoint());
+                if (index < 0) { bookmarkList.setCursor(Cursor.getDefaultCursor()); return; }
+                Rectangle bounds = bookmarkList.getCellBounds(index, index);
+                if (bounds == null) { bookmarkList.setCursor(Cursor.getDefaultCursor()); return; }
+                int rightEdge = bounds.x + bounds.width;
+                boolean overAction = e.getPoint().x >= rightEdge - 44;
+                bookmarkList.setCursor(overAction ? Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) : Cursor.getDefaultCursor());
+            }
+        });
         bookmarkScroll = new JBScrollPane(bookmarkList);
 
         // 历史
@@ -123,6 +138,20 @@ public class BookmarkSidebar extends JBPanel<BookmarkSidebar> {
             @Override
             public void mouseClicked(MouseEvent e) {
                 handleHistoryClick(e);
+            }
+        });
+        // 历史列表鼠标移动时根据位置切换手型光标
+        historyList.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                int index = historyList.locationToIndex(e.getPoint());
+                if (index < 0) { historyList.setCursor(Cursor.getDefaultCursor()); return; }
+                Object item = historyListModel.getElementAt(index);
+                Rectangle bounds = historyList.getCellBounds(index, index);
+                if (bounds == null || !(item instanceof HistoryEntry)) { historyList.setCursor(Cursor.getDefaultCursor()); return; }
+                int rightEdge = bounds.x + bounds.width;
+                boolean overDelete = e.getPoint().x >= rightEdge - 22;
+                historyList.setCursor(overDelete ? Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) : Cursor.getDefaultCursor());
             }
         });
         historyScroll = new JBScrollPane(historyList);

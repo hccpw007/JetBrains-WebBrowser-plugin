@@ -59,7 +59,7 @@ public class HistoryListRenderer extends JPanel implements ListCellRenderer<Obje
 
         add(contentPanel, BorderLayout.CENTER);
         add(deleteLabel, BorderLayout.EAST);
-        setBorder(new EmptyBorder(2, 8, 2, 2));
+        setBorder(new EmptyBorder(2, 8, 2, 14));
     }
 
     // 渲染列表项（支持分组标题、星期标题和历史条目三种类型）
