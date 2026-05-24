@@ -1,5 +1,39 @@
 <!-- Keep a Changelog guide -> https://keepachangelog.com -->
 
+## [1.0.1] - 2026-05-25
+
+### Added
+
+- URL auto-completion: show history and bookmark suggestions while typing in the address bar, navigate via arrow keys + Enter or mouse click.
+<br>URL 自动提示：在地址栏输入时根据浏览历史和书签提供建议，支持上下键 + 回车或鼠标点击导航。
+- Search bar displays first suggestion as the current input content, auto-selects for quick Enter navigation.
+<br>提示框第一行固定为当前输入内容，默认选中方便回车快速导航。
+
+### Fixed
+
+- Keep all tabs when closing and reopening the browser in editor mode.
+<br>编辑器模式下关闭再打开浏览器插件时保留所有标签页
+- Fix toggle button not working after IDE restart / session restore.
+<br>重启 IDE 恢复会话后浏览器切换按钮无效的问题
+- Auto-hide sidebar button in editor mode on IDE startup.
+<br>工具窗口侧边栏按钮在编辑器模式下启动时自动隐藏
+- Fix GitHub URL and README `cd` directory name description errors.
+<br>修复 README 中 GitHub URL 和 cd 目录名描述错误
+
+### Changed
+
+- Update plugin icon to globe style design.
+<br>更新插件图标为地球样式
+- Rename system browser icon from `google` to `system-browser`.
+<br>将系统浏览器图标由 google 改名为 system-browser
+- Bump target IntelliJ platform to 2025.3.
+<br>更新目标 IntelliJ 平台版本到 2025.3
+
+### Removed
+
+- Remove first-run restart prompt (`PluginFirstRunActivity`), as IDE handles restart natively after plugin install.
+<br>移除首次运行重启提示，IDE 在插件安装后会自动处理
+
 ## [1.0.0] - 2026-05-22
 
 ### Added

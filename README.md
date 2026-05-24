@@ -14,8 +14,8 @@ Embed web pages directly in the IDE with navigation, bookmarks, history, and Dev
 
 ### Runtime Requirements / 使用环境要求
 
-- **2025.1 or later** Support for JetBrains products (IntelliJ IDEA, PyCharm, WebStorm, PhpStorm)
-- **2025.1 或更新版本** 支持 JetBrains 产品（IntelliJ IDEA、PyCharm、WebStorm、PhpStorm 等）
+- **2025.3 or later** Support for JetBrains products (IntelliJ IDEA, PyCharm, WebStorm, PhpStorm)
+- **2025.3 或更新版本** 支持 JetBrains 产品（IntelliJ IDEA、PyCharm、WebStorm、PhpStorm 等）
 
 ### Development Requirements / 开发环境要求
 
@@ -44,8 +44,8 @@ Embed web pages directly in the IDE with navigation, bookmarks, history, and Dev
 - **主页** — 一键导航到您设置的主页。
 - **Refresh** — Reload the current page.
 - **刷新** — 重新加载当前页面。
-- **Smart address bar** — Type URLs or search terms; auto-completes with `https://` for domains, redirects to Google Search for keywords.
-- **智能地址栏** — 输入 URL 或搜索词，域名自动补全 `https://`，关键词自动跳转 Google 搜索。
+- **Smart address bar** — Type URLs or search terms; auto-completes with `https://` for domains, redirects to configured search engine for keywords. Auto-suggests matching URLs from browsing history and bookmarks while typing, navigable via arrow keys + Enter or mouse click.
+- **智能地址栏** — 输入 URL 或搜索词，域名自动补全 `https://`，关键词自动跳转搜索引擎。输入时根据浏览历史和书签自动提示匹配的网址，支持上下键 + 回车或鼠标点击导航。
 
 ### Tab Management / 标签页管理
 

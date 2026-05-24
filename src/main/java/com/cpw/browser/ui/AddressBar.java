@@ -1,7 +1,14 @@
 package com.cpw.browser.ui;
 
 import com.cpw.browser.WebBrowserIcons;
+import com.cpw.browser.bookmark.Bookmark;
+import com.cpw.browser.bookmark.BookmarkPersistentState;
+import com.cpw.browser.history.BrowsingHistoryState;
+import com.cpw.browser.history.HistoryEntry;
 import com.cpw.browser.util.TranslationUtil;
+import com.cpw.browser.util.UrlUtils;
+import com.intellij.openapi.ui.popup.JBPopup;
+import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
@@ -9,9 +16,11 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
+import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
@@ -19,13 +28,24 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import javax.swing.BorderFactory;
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.DefaultListModel;
+import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 import javax.swing.border.AbstractBorder;
 import javax.swing.border.Border;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 // 地址栏组件，包含 URL 输入框和书签星标
 public class AddressBar extends JPanel {
@@ -38,6 +58,21 @@ public class AddressBar extends JPanel {
     private final Consumer<String> onNavigate;
     // 判断指定 URL 是否已加入书签的函数
     private final Predicate<String> isUrlBookmarked;
+    // 建议弹窗，根据历史记录和书签提供 URL 自动提示
+    private JBPopup suggestionsPopup;
+    // 建议列表，用于键盘上下键切换选中项
+    private JList<String> suggestionsList;
+    // 回车后禁止弹窗重新弹出，避免 setUrl 触发的 DocumentListener 再次显示弹窗
+    private boolean suppressSuggestions;
+    // 导航前地址栏中的旧 URL，仅过滤掉这一个回调，避免闪烁
+    private String preNavigationUrl;
+    // 最后一次由 setUrl 设置的稳定页面 URL，用于精确过滤旧页面地址回调
+    private String lastStableUrl;
+
+    // 建议列表最大展示数量
+    private static final int MAX_SUGGESTIONS = 8;
+    // 触发建议的最小输入字符数
+    private static final int MIN_SUGGESTION_CHARS = 3;
     // 切换书签状态的回调
     private final Consumer<String> onToggleBookmark;
 
@@ -96,14 +131,71 @@ public class AddressBar extends JPanel {
             }
         });
 
-        // 按下回车时导航
+        // 按下回车时导航，上下键切换建议选择
         urlField.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
-                // 按下回车键时触发导航
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    navigate();
+                // 非回车键清除抑制标记，恢复弹窗功能
+                if (e.getKeyCode() != KeyEvent.VK_ENTER &&
+                    e.getKeyCode() != KeyEvent.VK_DOWN &&
+                    e.getKeyCode() != KeyEvent.VK_UP) {
+                    suppressSuggestions = false;
+                    preNavigationUrl = null;
                 }
+                // 回车处理：先保存弹窗选中项，关闭弹窗，再导航
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    String selected = null;
+                    // 弹窗可见且有用户选中项时记下选中 URL
+                    if (suggestionsPopup != null && suggestionsPopup.isVisible() && suggestionsList != null && suggestionsList.getSelectedIndex() >= 0) {
+                        selected = suggestionsList.getSelectedValue();
+                    }
+                    if (selected != null) {
+                        // 对选中的 URL 进行规范化并启动导航
+                        startNavigation(UrlUtils.normalize(selected));
+                    } else {
+                        // 对原始输入进行规范化（如 "github.com" → "https://github.com"）
+                        String rawText = urlField.getText().trim();
+                        String normalizedUrl = UrlUtils.normalize(rawText);
+                        // 地址栏内容不一致时先更新
+                        if (!normalizedUrl.equals(rawText)) {
+                            urlField.setText(normalizedUrl);
+                        }
+                        startNavigation(normalizedUrl);
+                    }
+                    e.consume();
+                    return;
+                }
+                // 弹窗可见时的上下键选择
+                if ((e.getKeyCode() == KeyEvent.VK_DOWN || e.getKeyCode() == KeyEvent.VK_UP) &&
+                    suggestionsPopup != null && suggestionsPopup.isVisible() && suggestionsList != null) {
+                    int idx = suggestionsList.getSelectedIndex();
+                    if (e.getKeyCode() == KeyEvent.VK_DOWN && idx < suggestionsList.getModel().getSize() - 1) {
+                        suggestionsList.setSelectedIndex(idx + 1);
+                        suggestionsList.ensureIndexIsVisible(idx + 1);
+                    } else if (e.getKeyCode() == KeyEvent.VK_UP && idx > 0) {
+                        suggestionsList.setSelectedIndex(idx - 1);
+                        suggestionsList.ensureIndexIsVisible(idx - 1);
+                    }
+                    e.consume();
+                }
+            }
+        });
+
+        // 监听输入变化，显示历史记录和书签建议
+        urlField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                updateSuggestions();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                updateSuggestions();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                updateSuggestions();
             }
         });
 
@@ -133,9 +225,16 @@ public class AddressBar extends JPanel {
     }
 
     public void setUrl(String url) {
+        // 仅过滤导航前的那一次旧 URL 回调，重定向等任何不同 URL 都正常更新
+        if (preNavigationUrl != null && url.equals(preNavigationUrl)) {
+            preNavigationUrl = null;
+            return;
+        }
+        preNavigationUrl = null;
+        // 记录当前稳定页面 URL，用于后续导航时精确过滤旧页面地址
+        lastStableUrl = url;
         // 设置地址栏文本并更新星标状态
         String displayText = "about:blank".equals(url) ? "" : url;
-        // 文本不一致时才更新输入框
         if (!displayText.equals(urlField.getText())) {
             urlField.setText(displayText);
         }
@@ -167,12 +266,204 @@ public class AddressBar extends JPanel {
         urlField.selectAll();
     }
 
+    // 启动导航的公共逻辑：过滤旧 URL 回调、抑制弹窗、关闭弹窗、更新地址栏、导航
+    private void startNavigation(String url) {
+        // 保存导航前的页面 URL，精确过滤旧页面回调
+        preNavigationUrl = lastStableUrl;
+        // 抑制弹窗再次弹出（setUrl 会触发 DocumentListener）
+        suppressSuggestions = true;
+        // 关闭弹窗
+        hideSuggestionsPopup();
+        // 更新地址栏
+        urlField.setText(url);
+        // 导航
+        onNavigate.accept(url);
+    }
+
     // 触发地址栏导航
     private void navigate() {
         String text = getUrl();
         // 地址栏内容不为空时触发导航回调
         if (!text.isEmpty()) {
             onNavigate.accept(text);
+        }
+    }
+
+    // 更新建议弹窗：根据当前输入查询并显示匹配的历史记录和书签
+    private void updateSuggestions() {
+        // 回车后暂时禁止弹窗，避免 setUrl 触发的文本变化重新弹出
+        if (suppressSuggestions) return;
+        String text = urlField.getText().trim();
+        // 输入少于指定字符数或为空白页时关闭弹窗
+        if (text.length() < MIN_SUGGESTION_CHARS || "about:blank".equals(text)) {
+            hideSuggestionsPopup();
+            return;
+        }
+        // 查询匹配的 URL 建议
+        List<Suggestion> suggestions = querySuggestions(text);
+        if (suggestions.isEmpty()) {
+            hideSuggestionsPopup();
+            return;
+        }
+        showSuggestionsPopup(suggestions);
+    }
+
+    // 建议条目信息：URL 和对应的页面标题
+    private static class Suggestion {
+        final String url;
+        final String title;
+
+        Suggestion(String url, String title) {
+            this.url = url;
+            this.title = title;
+        }
+    }
+
+    // 从历史记录和书签中查询匹配输入文本的 URL
+    private List<Suggestion> querySuggestions(String prefix) {
+        String lower = prefix.toLowerCase();
+        // 保存结果和已出现的 URL（用于去重）
+        List<Suggestion> result = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+
+        // 从浏览历史中匹配
+        for (HistoryEntry entry : BrowsingHistoryState.getInstance().getEntries()) {
+            if (result.size() >= MAX_SUGGESTIONS) break;
+            String url = entry.getUrl();
+            if (url.isEmpty() || "about:blank".equals(url)) continue;
+            String title = entry.getTitle();
+            // 匹配 URL 或标题（不区分大小写）
+            if (url.toLowerCase().contains(lower) || (title != null && title.toLowerCase().contains(lower))) {
+                if (seen.add(url)) {
+                    result.add(new Suggestion(url, title != null ? title : ""));
+                }
+            }
+        }
+        // 从书签中补充匹配（历史中没有的 URL）
+        for (Bookmark bookmark : BookmarkPersistentState.getInstance().getBookmarks()) {
+            if (result.size() >= MAX_SUGGESTIONS) break;
+            String url = bookmark.getUrl();
+            if (url.isEmpty() || "about:blank".equals(url)) continue;
+            String title = bookmark.getTitle();
+            if (url.toLowerCase().contains(lower) || (title != null && title.toLowerCase().contains(lower))) {
+                if (seen.add(url)) {
+                    result.add(new Suggestion(url, title != null ? title : ""));
+                }
+            }
+        }
+        return result;
+    }
+
+    // 在地址栏下方显示建议弹窗（左对齐）
+    private void showSuggestionsPopup(List<Suggestion> suggestions) {
+        hideSuggestionsPopup();
+
+        // 获取当前输入框内容作为固定建议
+        String inputText = urlField.getText().trim();
+        // 构建建议列表，第一行固定为当前输入的内容
+        DefaultListModel<String> model = new DefaultListModel<>();
+        // 第一行始终是当前输入内容
+        model.addElement(inputText);
+        for (Suggestion s : suggestions) {
+            // 不重复添加与输入相同的内容
+            if (!s.url.equals(inputText)) {
+                model.addElement(s.url);
+            }
+        }
+        // 为渲染器构建包含输入内容的完整建议列表
+        List<Suggestion> allSuggestions = new ArrayList<>();
+        allSuggestions.add(new Suggestion(inputText, inputText));
+        for (Suggestion s : suggestions) {
+            if (!s.url.equals(inputText)) {
+                allSuggestions.add(s);
+            }
+        }
+        suggestionsList = new JList<>(model);
+        // 弹窗宽度与地址栏保持一致
+        suggestionsList.setPreferredSize(new Dimension(urlField.getWidth(), suggestionsList.getPreferredSize().height));
+
+        // 自定义单元格渲染器：显示为 标题 + 网址 两行，左右留间距
+        suggestionsList.setCellRenderer(new SuggestionRenderer(allSuggestions));
+
+        suggestionsPopup = JBPopupFactory.getInstance()
+                .createListPopupBuilder(suggestionsList)
+                .setRequestFocus(false)
+                .setItemChosenCallback(() -> {
+                    // 鼠标点击选中某条建议时导航（与回车走相同逻辑）
+                    String selected = suggestionsList.getSelectedValue();
+                    if (selected != null) {
+                        startNavigation(UrlUtils.normalize(selected));
+                    }
+                })
+                .createPopup();
+
+        suggestionsPopup.showUnderneathOf(urlField);
+
+        // 将弹窗左移使其左边与 urlField 对齐
+        try {
+            java.awt.Window popupWindow = SwingUtilities.getWindowAncestor(suggestionsPopup.getContent());
+            Point urlLoc = urlField.getLocationOnScreen();
+            if (popupWindow != null && urlLoc != null) {
+                popupWindow.setLocation(urlLoc.x, popupWindow.getY());
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
+    // 关闭建议弹窗
+    private void hideSuggestionsPopup() {
+        if (suggestionsPopup != null) {
+            suggestionsPopup.cancel();
+            suggestionsPopup = null;
+            suggestionsList = null;
+        }
+    }
+
+    // 建议列表的单元格渲染器：标题（加粗）+ 网址（灰色），左右留间距
+    private static class SuggestionRenderer extends DefaultListCellRenderer {
+        private final List<Suggestion> suggestions;
+
+        SuggestionRenderer(List<Suggestion> suggestions) {
+            this.suggestions = suggestions;
+        }
+
+        @Override
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+            String url = (String) value;
+            // 从建议列表中查找对应的标题
+            Suggestion match = null;
+            for (Suggestion s : suggestions) {
+                if (s.url.equals(url)) {
+                    match = s;
+                    break;
+                }
+            }
+
+            // 使用两行布局的面板
+            JPanel panel = new JPanel(new BorderLayout(0, 2));
+            panel.setBorder(BorderFactory.createEmptyBorder(6, 10, 6, 10));
+
+            // 第一行：页面标题
+            String displayTitle = (match != null && !match.title.isEmpty()) ? match.title : url;
+            JLabel titleLabel = new JLabel(displayTitle);
+            titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD, 13f));
+
+            // 第二行：完整 URL
+            JLabel urlLabel = new JLabel(url);
+            urlLabel.setFont(urlLabel.getFont().deriveFont(11f));
+            urlLabel.setForeground(com.intellij.ui.JBColor.GRAY);
+
+            panel.add(titleLabel, BorderLayout.NORTH);
+            panel.add(urlLabel, BorderLayout.SOUTH);
+
+            // 选中状态的高亮色
+            if (isSelected) {
+                panel.setBackground(list.getSelectionBackground());
+            } else {
+                panel.setBackground(list.getBackground());
+            }
+
+            return panel;
         }
     }
 

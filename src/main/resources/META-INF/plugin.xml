@@ -11,13 +11,46 @@
 
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager. -->
     <description><![CDATA[
-        <h2>English</h2>
-        An embedded web browser plugin with multi-tab, bookmark, history, and DevTools support for JetBrains products (IntelliJ IDEA, PyCharm, WebStorm, PhpStorm, etc.).<br>
-        Embed web pages directly in the IDE. Powered by JCEF (Java Chromium Embedded Framework).<br>
+        <h2>English / 中文</h2>
+        WebBrowser is a fully-featured embedded web browser plugin for JetBrains IDEs. It supports the complete browser experience including multi-tab browsing, navigation, bookmarks, history, Chrome DevTools, zoom controls, and more — all without leaving your IDE. Compatible with IntelliJ IDEA, PyCharm, WebStorm, PhpStorm, GoLand, RubyMine, CLion, DataGrip, Rider, Android Studio, and other JetBrains products.<br>
+        WebBrowser 是一款功能完整的网页浏览器插件，无需离开 IDE 即可浏览任意网址。支持自定义网址、多标签页浏览、导航控制、书签管理、浏览历史、Chrome 开发者工具、缩放控制等完整浏览器功能。兼容 IntelliJ IDEA、PyCharm、WebStorm、PhpStorm、GoLand、RubyMine、CLion、DataGrip、Rider、Android Studio 等 JetBrains 产品。<br>
         <br>
-        <h2>中文</h2>
-        一款支持多标签页、书签、历史记录和开发者工具的嵌入式网页浏览器插件，支持 JetBrains 产品（IntelliJ IDEA、PyCharm、WebStorm、PhpStorm 等）。<br>
-        在 IDE 中直接嵌入网页浏览，基于 JCEF（Java Chromium Embedded Framework）实现。<br>
+        Powered by JCEF (Java Chromium Embedded Framework), it delivers a native Chromium rendering engine directly inside your IDE.<br>
+        基于 JCEF（Java Chromium Embedded Framework）实现，在 IDE 中直接嵌入原生 Chromium 渲染引擎。<br>
+        <br>
+        <b>Features / 功能特性：</b><br>
+        <ul>
+            <li><b>URL Browsing</b> — Enter any website URL in the address bar to browse directly.<br>
+            <b>网址浏览</b> — 在地址栏输入任意网址即可直接浏览网页。</li>
+            <li><b>Search Engine Integration</b> — If the input is not a valid URL, it automatically performs a web search using the configured search engine (Google, Bing, DuckDuckGo, Baidu).<br>
+            <b>搜索引擎集成</b> — 输入内容非网址时，自动使用配置的搜索引擎（Google、Bing、DuckDuckGo、百度）执行网络搜索。</li>
+            <li><b>Dual Display Modes</b> — Browse in a sidebar tool window or an editor tab, switch anytime via toolbar icon or <code>Alt+Shift+W</code>.<br>
+            <b>双显示模式</b> — 支持侧边栏工具窗口和编辑区标签页两种模式，通过工具栏图标或 <code>Alt+Shift+W</code> 一键切换。</li>
+            <li><b>Multi-Tab Browsing</b> — Create, close, and switch between up to 20 tabs with chrome-style tab UI, right-click context menu, and popup interception.<br>
+            <b>多标签页</b> — 支持创建、关闭、切换最多 20 个标签页，Chrome 风格标签栏、右键菜单和弹窗拦截。</li>
+            <li><b>Navigation Controls</b> — Back, forward, refresh, and configurable homepage.<br>
+            <b>导航控制</b> — 前进、后退、刷新、可配置主页。</li>
+            <li><b>Bookmarks</b> — Add, edit, delete bookmarks with star toggle in the address bar. Persistent storage across IDE restarts.<br>
+            <b>书签管理</b> — 添加、编辑、删除书签，地址栏星标快速操作，支持持久化存储。</li>
+            <li><b>Browsing History</b> — Auto-records visited URLs with grouped view (Today / This Week / Older), smart trimming, and quick deletion.<br>
+            <b>浏览历史</b> — 自动记录访问记录，按今天/本周/更早分组展示，智能裁剪和一键删除。</li>
+            <li><b>DevTools</b> — Chrome DevTools integration via CDP protocol, in embedded split-pane or separate window mode.<br>
+            <b>开发者工具</b> — 基于 CDP 协议的 Chrome DevTools 集成，支持嵌入分屏或独立窗口模式。</li>
+            <li><b>Zoom Controls</b> — Zoom in/out/reset with 5% steps and visual toast notification.<br>
+            <b>缩放控制</b> — 放大/缩小/重置，5% 步进，Toast 视觉提示。</li>
+            <li><b>Auto-Refresh</b> — Auto-reload pages at configurable intervals.<br>
+            <b>自动刷新</b> — 按可配置间隔自动重新加载页面。</li>
+            <li><b>Cache Clearing</b> — Clear localStorage, sessionStorage, caches API, and cookies with one click.<br>
+            <b>缓存清除</b> — 一键清除 localStorage、sessionStorage、caches API 和 cookies。</li>
+            <li><b>Open in System Browser</b> — Open the current page in your OS default browser.<br>
+            <b>系统浏览器打开</b> — 在操作系统默认浏览器中打开当前页面。</li>
+            <li><b>Keyboard Shortcuts</b> — <code>Alt+Shift+W</code> toggle browser, <code>Ctrl+L</code> focus address bar, <code>Ctrl+Shift+I</code> toggle DevTools.<br>
+            <b>键盘快捷键</b> — <code>Alt+Shift+W</code> 切换浏览器，<code>Ctrl+L</code> 聚焦地址栏，<code>Ctrl+Shift+I</code> 切换开发者工具。</li>
+            <li><b>Internationalization</b> — Supports 7 languages (English, Simplified Chinese, Japanese, Korean, French, German) with instant switching.<br>
+            <b>国际化</b> — 支持 7 种语言（英文、简体中文、日文、韩文、法文、德文），即时切换。</li>
+            <li><b>Customizable Settings</b> — Language, homepage, default search engine, display mode, DevTools mode, history retention.<br>
+            <b>可自定义设置</b> — 语言、主页、默认搜索引擎、显示模式、开发者工具模式、历史记录保留策略。</li>
+        </ul>
         <br>
         GitHub: <a href="https://github.com/hccpw007/JetBrains-WebBrowser-plugin">https://github.com/hccpw007/JetBrains-WebBrowser-plugin</a>
     ]]></description>
