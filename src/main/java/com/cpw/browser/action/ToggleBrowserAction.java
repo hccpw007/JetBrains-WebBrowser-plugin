@@ -56,20 +56,20 @@ public class ToggleBrowserAction extends AnAction implements DumbAware {
 
         FileEditorManager manager = FileEditorManager.getInstance(project);
 
-        // 检查是否已有浏览器编辑器打开
-        boolean hasBrowserEditor = false;
+        // 查找已打开的浏览器编辑器
+        BrowserFileEditor existingEditor = null;
         for (FileEditor fe : manager.getAllEditors()) {
             // 找到已打开的浏览器编辑器实例
             if (fe instanceof BrowserFileEditor) {
-                hasBrowserEditor = true;
+                existingEditor = (BrowserFileEditor) fe;
                 break;
             }
         }
 
         // 已存在浏览器编辑器时关闭并清理
-        if (hasBrowserEditor) {
-            // 已打开，关闭它
-            VirtualFile vf = projectFiles.remove(project);
+        if (existingEditor != null) {
+            // 直接从编辑器获取 VirtualFile 关闭（兼容 IDE 重启恢复会话后 projectFiles 为空的场景）
+            VirtualFile vf = existingEditor.getFile();
             // 成功获取到有效文件时关闭编辑器
             if (vf != null && vf.isValid()) {
                 manager.closeFile(vf);
@@ -77,6 +77,7 @@ public class ToggleBrowserAction extends AnAction implements DumbAware {
                 // 临时文件存在则删除
                 if (localFile.exists()) localFile.delete();
             }
+            projectFiles.remove(project);
             return;
         }
 
@@ -114,12 +115,13 @@ public class ToggleBrowserAction extends AnAction implements DumbAware {
         for (FileEditor fe : manager.getAllEditors()) {
             // 找到已打开的浏览器编辑器实例并关闭
             if (fe instanceof BrowserFileEditor) {
-                VirtualFile vf = projectFiles.remove(project);
+                VirtualFile vf = fe.getFile();
                 // 成功获取到有效文件时关闭并删除临时文件
                 if (vf != null && vf.isValid()) {
                     manager.closeFile(vf);
                     vf.toNioPath().toFile().delete();
                 }
+                projectFiles.remove(project);
                 break;
             }
         }
