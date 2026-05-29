@@ -1,5 +1,12 @@
 <!-- Keep a Changelog guide -> https://keepachangelog.com -->
 
+## [1.0.2] - 2026-05-29
+
+### Fixed
+
+- Fix bookmark and history delete icons not clickable, increase right padding to avoid scrollbar covering.
+  <br>修复书签和历史记录删除图标点击不到的问题，增加右侧内边距避免被滚动条遮挡。
+
 ## [1.0.1] - 2026-05-25
 
 ### Added
