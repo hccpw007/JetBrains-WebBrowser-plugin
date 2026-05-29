@@ -11,16 +11,12 @@
 
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager. -->
     <description><![CDATA[
-        WebBrowser is a fully-featured embedded web browser plugin for JetBrains IDEs. It supports the complete browser experience including multi-tab browsing, navigation, bookmarks, history, Chrome DevTools, zoom controls, and more — all without leaving your IDE. Compatible with IntelliJ IDEA, PyCharm, WebStorm, PhpStorm, GoLand, RubyMine, CLion, DataGrip, Rider, Android Studio, and other JetBrains products.<br>
-        WebBrowser 是一款功能完整的网页浏览器插件，无需离开 IDE 即可浏览任意网址。支持自定义网址、多标签页浏览、导航控制、书签管理、浏览历史、Chrome 开发者工具、缩放控制等完整浏览器功能。兼容 IntelliJ IDEA、PyCharm、WebStorm、PhpStorm、GoLand、RubyMine、CLion、DataGrip、Rider、Android Studio 等 JetBrains 产品。<br>
-        <br>
-        Powered by JCEF (Java Chromium Embedded Framework), it delivers a native Chromium rendering engine directly inside your IDE.<br>
-        基于 JCEF（Java Chromium Embedded Framework）实现，在 IDE 中直接嵌入原生 Chromium 渲染引擎。<br>
-        <br>
+        A fully-featured embedded web browser plugin for JetBrains IDEs.  <br>
+        一款功能完整的网页浏览器插件，无需离开 IDE 即可浏览任意网址.<br>
         <b>Features / 功能特性：</b><br>
         <ul>
-            <li><b>URL Browsing</b> — Enter any website URL in the address bar to browse directly.<br>
-            <b>网址浏览</b> — 在地址栏输入任意网址即可直接浏览网页。</li>
+            <li><b>Any URL</b> — Enter any website URL in the address bar to browse directly.<br>
+            <b>任意网址</b> — 在地址栏输入任意网址即可直接浏览网页。</li>
             <li><b>Search Engine Integration</b> — If the input is not a valid URL, it automatically performs a web search using the configured search engine (Google, Bing, DuckDuckGo, Baidu).<br>
             <b>搜索引擎集成</b> — 输入内容非网址时，自动使用配置的搜索引擎（Google、Bing、DuckDuckGo、百度）执行网络搜索。</li>
             <li><b>Dual Display Modes</b> — Browse in a sidebar tool window or an editor tab, switch anytime via toolbar icon or <code>Alt+Shift+W</code>.<br>
