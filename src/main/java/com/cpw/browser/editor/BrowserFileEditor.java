@@ -70,7 +70,7 @@ public class BrowserFileEditor implements FileEditor {
     // 获取编辑器名称
     @Override
     public @NotNull String getName() {
-        return "WebBrowser";
+        return "Web Browser";
     }
 
     // 编辑器内容从未被外部修改

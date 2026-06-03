@@ -4,7 +4,7 @@
     <id>com.cpw.browser.WebBrowser</id>
 
     <!-- Public plugin name should be written in Title Case. -->
-    <name>WebBrowser</name>
+    <name>Web Browser</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
     <vendor>Pengwei Chen</vendor>
@@ -72,7 +72,7 @@
 
         <applicationConfigurable
             instance="com.cpw.browser.settings.BrowserSettingsPage"
-            displayName="WebBrowser"
+            displayName="Web Browser"
             id="com.cpw.browser.settings.BrowserSettingsPage"/>
 
         <fileEditorProvider
@@ -94,7 +94,7 @@
         <action
             id="com.cpw.browser.ToggleBrowserAction"
             class="com.cpw.browser.action.ToggleBrowserAction"
-            text="WebBrowser"
+            text="Web Browser"
             description="Open or close the web browser tool window"
             icon="/icons/toolwindow.svg">
             <add-to-group group-id="MainToolbarRight" anchor="first" />
