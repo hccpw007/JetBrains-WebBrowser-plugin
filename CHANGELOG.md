@@ -1,5 +1,12 @@
 <!-- Keep a Changelog guide -> https://keepachangelog.com -->
 
+## [1.0.3] - 2026-06-04
+
+### Fixed
+
+- Fix back button not enabled after internal page navigation (SPA pushState/link click), record URL changes in `onAddressChange` to the navigation history stack.
+  <br>修复页面内部跳转（SPA pushState/链接点击）后后退按钮不亮的问题，在 `onAddressChange` 中记录 URL 变化到导航历史栈。
+
 ## [1.0.2] - 2026-05-29
 
 ### Fixed
