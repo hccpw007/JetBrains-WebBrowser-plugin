@@ -40,6 +40,8 @@ public class BrowserTabPanel {
     private boolean isLoading = false;
     // 当前缩放级别（1.0 为 100%）
     private double zoomLevel = 1.0;
+    // 标记当前是否正在后退或前进导航，用于 onAddressChange 中跳过 pushHistory
+    private boolean skipHistoryPush = false;
 
     // URL 变更时的回调
     private Consumer<String> onUrlChanged = null;
@@ -181,6 +183,11 @@ public class BrowserTabPanel {
                     // 仅处理主框架的地址变更
                     if (frame.isMain()) {
                         currentUrl = url;
+                        // 页面内部导航（SPA pushState/link 点击等）：记录到历史栈
+                        if (!skipHistoryPush) {
+                            pushHistory(url);
+                        }
+                        skipHistoryPush = false;
                         // 如果 URL 变更回调已注册，则在 EDT 中调用
                         if (onUrlChanged != null) {
                             ApplicationManager.getApplication().invokeLater(() -> {
@@ -287,6 +294,7 @@ public class BrowserTabPanel {
     public void navigate(String url) {
         // 忽略 null 或空 URL，防止 ArrayDeque.addLast 抛 NPE
         if (url == null || url.isBlank()) return;
+        skipHistoryPush = false;
         pushHistory(url);
         browser.loadURL(url);
     }
@@ -295,6 +303,7 @@ public class BrowserTabPanel {
     public void goBack() {
         // 检查是否可以后退
         if (canGoBack()) {
+            skipHistoryPush = true;
             currentHistoryIndex--;
             browser.getCefBrowser().goBack();
         }
@@ -304,6 +313,7 @@ public class BrowserTabPanel {
     public void goForward() {
         // 检查是否可以前进
         if (canGoForward()) {
+            skipHistoryPush = true;
             currentHistoryIndex++;
             browser.getCefBrowser().goForward();
         }
