@@ -4,7 +4,7 @@
     <id>com.cpw.browser.WebBrowser</id>
 
     <!-- Public plugin name should be written in Title Case. -->
-    <name>Web Browser</name>
+    <name><![CDATA[Web Browser - Free & Chrome-Like]]></name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
     <vendor>Pengwei Chen</vendor>

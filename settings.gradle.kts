@@ -1,6 +1,6 @@
 import org.jetbrains.intellij.platform.gradle.extensions.intellijPlatform
 
-rootProject.name = "Web Browser"
+rootProject.name = "Web Browser - Free & Chrome-like"
 
 pluginManagement {
     plugins {
