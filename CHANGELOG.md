@@ -1,5 +1,12 @@
 <!-- Keep a Changelog guide -> https://keepachangelog.com -->
 
+## [1.0.4] - 2026-06-05
+
+### Fixed
+
+- Fix IDE crash on project reopen after shutdown: JCEF native resources were not released due to `invokeLater` not executing during IDE shutdown. Resources are now disposed synchronously.
+  <br>修复关闭 IDE 后重新打开项目时闪退的问题：`invokeLater` 在 IDE 关闭期间不执行导致 JCEF 原生资源未释放，现改为同步释放。
+
 ## [1.0.3] - 2026-06-04
 
 ### Fixed
