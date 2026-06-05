@@ -15,7 +15,6 @@ import com.cpw.browser.util.UrlUtils;
 import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.actionSystem.ActionToolbar;
 import com.intellij.openapi.actionSystem.DefaultActionGroup;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBLabel;
@@ -284,7 +283,7 @@ public class BrowserToolWindowPanel {
 
     // 释放所有浏览器标签页资源
     public void dispose() {
-        ApplicationManager.getApplication().invokeLater(tabManager::disposeAll);
+        tabManager.disposeAll();
     }
 
     // 聚焦地址栏输入框

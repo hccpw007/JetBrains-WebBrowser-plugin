@@ -452,13 +452,11 @@ public class BrowserTabPanel {
     // 释放资源
     public void dispose() {
         devToolsManager.close();
-        ApplicationManager.getApplication().invokeLater(() -> {
-            try {
-                browser.dispose();
-            } catch (Throwable t) {
-                System.err.println("[WebBrowser] browser.dispose error: " + t.getMessage());
-            }
-        });
+        try {
+            browser.dispose();
+        } catch (Throwable t) {
+            System.err.println("[WebBrowser] browser.dispose error: " + t.getMessage());
+        }
     }
 
     // 将 URL 加入导航历史，并清理当前位置之后的记录
