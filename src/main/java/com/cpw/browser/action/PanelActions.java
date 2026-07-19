@@ -143,9 +143,13 @@ public final class PanelActions {
 
         @Override
         public void update(AnActionEvent e) {
-            e.getPresentation().setText(TranslationUtil.getText("action.toggle.bookmark.bar"));
-            // 根据书签栏可见性切换图标：可见显示展开图标，隐藏显示折叠图标
+            // 书签栏当前是否可见
             boolean visible = bookmarkBar.isVisible();
+            // 提示文字描述点击后将执行的操作：可见时提示"隐藏"，隐藏时提示"显示"
+            String tipKey = visible ? "action.hide.bookmark.bar" : "action.show.bookmark.bar";
+            e.getPresentation().setText(TranslationUtil.getText(tipKey));
+            e.getPresentation().setDescription(TranslationUtil.getText(tipKey));
+            // 根据可见性切换图标：可见显示展开图标，隐藏显示折叠图标
             e.getPresentation().setIcon(visible ? WebBrowserIcons.BOOKMARK_BAR : WebBrowserIcons.BOOKMARK_BAR_HIDDEN);
         }
 

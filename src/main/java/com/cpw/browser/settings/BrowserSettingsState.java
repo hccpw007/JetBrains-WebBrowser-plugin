@@ -31,6 +31,8 @@ public class BrowserSettingsState implements PersistentStateComponent<BrowserSet
         private String language = "default";
         // 默认搜索引擎
         private String searchEngine = "google";
+        // 点击书签时是否打开新标签页（true=新增 tab 并跳转；false=在当前 tab 导航）
+        private boolean bookmarkOpenNewTab = false;
         // 是否显示书签栏（持久化，不暴露设置页 UI）
         private boolean alwaysShowBookmarkBar = true;
 
@@ -122,6 +124,16 @@ public class BrowserSettingsState implements PersistentStateComponent<BrowserSet
         // 设置默认搜索引擎
         public void setSearchEngine(String searchEngine) {
             this.searchEngine = searchEngine;
+        }
+
+        // 点击书签时是否打开新标签页
+        public boolean isBookmarkOpenNewTab() {
+            return bookmarkOpenNewTab;
+        }
+
+        // 设置点击书签时是否打开新标签页
+        public void setBookmarkOpenNewTab(boolean bookmarkOpenNewTab) {
+            this.bookmarkOpenNewTab = bookmarkOpenNewTab;
         }
 
         // 是否显示书签栏
@@ -238,6 +250,16 @@ public class BrowserSettingsState implements PersistentStateComponent<BrowserSet
     // 设置默认搜索引擎
     public void setSearchEngine(String searchEngine) {
         state.setSearchEngine(searchEngine);
+    }
+
+    // 点击书签时是否打开新标签页
+    public boolean isBookmarkOpenNewTab() {
+        return state.isBookmarkOpenNewTab();
+    }
+
+    // 设置点击书签时是否打开新标签页
+    public void setBookmarkOpenNewTab(boolean bookmarkOpenNewTab) {
+        state.setBookmarkOpenNewTab(bookmarkOpenNewTab);
     }
 
     // 是否显示书签栏
