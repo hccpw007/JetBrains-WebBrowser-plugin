@@ -1,6 +1,7 @@
 package com.cpw.browser.action;
 
 import com.cpw.browser.editor.BrowserFileEditor;
+import com.cpw.browser.editor.BrowserFileType;
 import com.cpw.browser.settings.BrowserSettingsState;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -12,6 +13,7 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
+import com.intellij.testFramework.LightVirtualFile;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -24,6 +26,9 @@ public class ToggleBrowserAction extends AnAction implements DumbAware {
 
     // 存储每个项目对应的浏览器编辑器临时文件
     private static final Map<Project, VirtualFile> projectFiles = new WeakHashMap<>();
+
+    // 每个项目的编辑区独立标签页序号计数器（保证文件名唯一）
+    private static final Map<Project, Integer> nextTabIndex = new WeakHashMap<>();
 
     @Override
     public void update(@NotNull AnActionEvent e) {
@@ -43,9 +48,38 @@ public class ToggleBrowserAction extends AnAction implements DumbAware {
 
         // 根据设置中的显示位置决定切换模式
         if ("editor".equals(settings.getDisplayPosition())) {
-            toggleEditorMode(project);
+            // 编辑区模式下根据 editorNewTabOnClick 决定行为
+            if (settings.isEditorNewTabOnClick()) {
+                // 每次点击新建独立 IDEA 标签页
+                createNewEditorTab(project);
+            } else { // 维持现状：toggle 单个共享标签页
+                toggleEditorMode(project);
+            }
         } else { // 使用工具窗口侧边栏模式
             toggleToolbarMode(project);
+        }
+    }
+
+    // 每次点击都新建一个独立的 IDEA 编辑区标签页（使用内存虚拟文件）
+    private void createNewEditorTab(Project project) {
+        // 确保侧边栏按钮隐藏
+        hideToolWindowStrip(project);
+
+        FileEditorManager manager = FileEditorManager.getInstance(project);
+
+        // 递增计数器保证文件名唯一，避免 FileEditorManager 同名合并
+        int idx = nextTabIndex.getOrDefault(project, 0) + 1;
+        nextTabIndex.put(project, idx);
+
+        try {
+            // 创建内存虚拟文件（不落盘，无需清理）
+            LightVirtualFile vfile = new LightVirtualFile("Web Browser " + idx + ".webbrowser");
+            vfile.setFileType(BrowserFileType.INSTANCE);
+
+            // 在编辑区打开新标签页
+            manager.openFile(vfile, true);
+        } catch (Exception ex) {
+            // ignore
         }
     }
 

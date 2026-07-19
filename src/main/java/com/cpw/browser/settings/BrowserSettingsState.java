@@ -23,6 +23,8 @@ public class BrowserSettingsState implements PersistentStateComponent<BrowserSet
         private int maxHistoryCount = 200;
         // 显示位置（toolbar/editor）
         private String displayPosition = "editor";
+        // 编辑区模式下点击图标的行为（true=每次新建独立 IDEA 标签页；false=维持 toggle 单个共享 tab）
+        private boolean editorNewTabOnClick = false;
         // 开发者工具打开方式（split=当前页面下方/window=独立窗口）
         private String devToolsMode = "window";
         // 界面语言（default=跟随系统/zh=中文/en=英语/ja=日语/ko=韩语/fr=法语/de=德语）
@@ -78,6 +80,16 @@ public class BrowserSettingsState implements PersistentStateComponent<BrowserSet
         // 设置显示位置
         public void setDisplayPosition(String displayPosition) {
             this.displayPosition = displayPosition;
+        }
+
+        // 是否每次点击图标新建独立编辑区标签页
+        public boolean isEditorNewTabOnClick() {
+            return editorNewTabOnClick;
+        }
+
+        // 设置是否每次点击图标新建独立编辑区标签页
+        public void setEditorNewTabOnClick(boolean editorNewTabOnClick) {
+            this.editorNewTabOnClick = editorNewTabOnClick;
         }
 
         // 获取开发者工具打开方式
@@ -174,6 +186,16 @@ public class BrowserSettingsState implements PersistentStateComponent<BrowserSet
     // 设置显示位置
     public void setDisplayPosition(String displayPosition) {
         state.setDisplayPosition(displayPosition);
+    }
+
+    // 是否每次点击图标新建独立编辑区标签页
+    public boolean isEditorNewTabOnClick() {
+        return state.isEditorNewTabOnClick();
+    }
+
+    // 设置是否每次点击图标新建独立编辑区标签页
+    public void setEditorNewTabOnClick(boolean editorNewTabOnClick) {
+        state.setEditorNewTabOnClick(editorNewTabOnClick);
     }
 
     // 获取开发者工具打开方式

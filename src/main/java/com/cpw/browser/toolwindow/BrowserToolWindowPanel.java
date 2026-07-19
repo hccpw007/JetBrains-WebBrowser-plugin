@@ -50,6 +50,9 @@ public class BrowserToolWindowPanel {
     // 当前项目
     private final Project project;
 
+    // 是否为编辑区独立标签页模式（true 时隐藏插件内部 tab 栏，由 IDEA 原生 tab 管理）
+    private final boolean editorMode;
+
     // 标签页管理器
     private final BrowserTabManager tabManager;
 
@@ -89,9 +92,15 @@ public class BrowserToolWindowPanel {
     // 新建标签页按钮
     private final JButton addTabButton;
 
-    // 构造浏览器工具窗口主面板
+    // 构造浏览器工具窗口主面板（默认非编辑区独立标签页模式）
     public BrowserToolWindowPanel(Project project) {
+        this(project, false);
+    }
+
+    // 构造浏览器面板，editorMode 为 true 时隐藏插件内部 tab 栏（编辑区独立标签页模式）
+    public BrowserToolWindowPanel(Project project, boolean editorMode) {
         this.project = project;
+        this.editorMode = editorMode;
 
         // 初始化标签页管理器
         tabManager = new BrowserTabManager();
@@ -187,6 +196,11 @@ public class BrowserToolWindowPanel {
         tabStripPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
         tabStripPanel.setBorder(BorderFactory.createEmptyBorder(4, 4, 0, 4));
 
+        // 编辑区独立标签页模式隐藏插件内部 tab 栏
+        if (editorMode) {
+            tabStripPanel.setVisible(false);
+        }
+
         // ---- 初始化书签侧边栏 ----
         bookmarkSidebar = new BookmarkSidebar(
                 bookmark -> onBookmarkSelected(bookmark),
@@ -248,7 +262,10 @@ public class BrowserToolWindowPanel {
         mainPanel.add(centerPanel, BorderLayout.CENTER);
         mainPanel.add(statusLabel, BorderLayout.SOUTH);
 
-        tabStripPanel.add(addTabButton);
+        // 编辑区独立标签页模式不添加新建标签页按钮（由 IDEA 原生 tab 管理）
+        if (!editorMode) {
+            tabStripPanel.add(addTabButton);
+        }
         tabManager.createTab();
 
         // 注册语言变更监听，刷新 UI 文本

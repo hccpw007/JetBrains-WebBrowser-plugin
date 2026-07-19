@@ -30,6 +30,8 @@ public class BrowserSettingsPage implements Configurable {
     private JBTextField maxHistoryCountField;
     // 显示位置下拉框
     private JComboBox<String> displayPositionCombo;
+    // 编辑区模式下点击图标是否新建独立标签页复选框
+    private JBCheckBox editorNewTabOnClickCheckBox;
     // 开发者工具打开方式下拉框
     private JComboBox<String> devToolsModeCombo;
     // 界面语言下拉框
@@ -227,8 +229,26 @@ public class BrowserSettingsPage implements Configurable {
         });
         panel.add(displayPositionCombo, c);
 
-        // Row 11: 右下角签名
+        // Row 11: 编辑区模式下点击图标行为（仅 editor 模式显示）
         c.gridy = 11;
+        c.gridx = 0;
+        c.gridwidth = 2;
+        c.fill = GridBagConstraints.NONE;
+        c.weightx = 0.0;
+        c.insets = new Insets(4, 0, 0, 0);
+        editorNewTabOnClickCheckBox = new JBCheckBox(TranslationUtil.getText("settings.editor.new.tab.on.click"));
+        editorNewTabOnClickCheckBox.setVisible(false);
+        panel.add(editorNewTabOnClickCheckBox, c);
+
+        // 显示位置变化时控制 checkbox 显隐
+        displayPositionCombo.addItemListener(e -> {
+            // 选中 editor（索引 1）时显示 checkbox，否则隐藏
+            boolean isEditor = displayPositionCombo.getSelectedIndex() == 1;
+            editorNewTabOnClickCheckBox.setVisible(isEditor);
+        });
+
+        // Row 12: 右下角签名
+        c.gridy = 12;
         c.gridx = 1;
         c.gridwidth = 1;
         c.weightx = 1.0;
@@ -265,6 +285,11 @@ public class BrowserSettingsPage implements Configurable {
         String lang = languageCombo != null ? languageDisplayIndexToCode(languageCombo.getSelectedIndex()) : null;
         String searchEngine = searchEngineCombo != null ? searchEngineIndexToCode(searchEngineCombo.getSelectedIndex()) : null;
 
+        // editorNewTabOnClick 仅在 checkbox 可见时（editor 模式）比较
+        boolean newTabModified = editorNewTabOnClickCheckBox != null
+                && editorNewTabOnClickCheckBox.isVisible()
+                && editorNewTabOnClickCheckBox.isSelected() != state.isEditorNewTabOnClick();
+
         return !Objects.equals(homeText, state.getHomePageUrl())
                 || !Objects.equals(openHome, state.isOpenHomeOnNewTab())
                 || !Objects.equals(days, state.getMaxHistoryDays())
@@ -272,7 +297,8 @@ public class BrowserSettingsPage implements Configurable {
                 || !Objects.equals(position, state.getDisplayPosition())
                 || !Objects.equals(devToolsMode, state.getDevToolsMode())
                 || !Objects.equals(lang, state.getLanguage())
-                || !Objects.equals(searchEngine, state.getSearchEngine());
+                || !Objects.equals(searchEngine, state.getSearchEngine())
+                || newTabModified;
     }
 
     @Override
@@ -311,6 +337,10 @@ public class BrowserSettingsPage implements Configurable {
         if (searchEngineCombo != null) {
             state.setSearchEngine(searchEngineIndexToCode(searchEngineCombo.getSelectedIndex()));
         }
+        // editorNewTabOnClick 仅在 checkbox 可见时（editor 模式）写入
+        if (editorNewTabOnClickCheckBox != null && editorNewTabOnClickCheckBox.isVisible()) {
+            state.setEditorNewTabOnClick(editorNewTabOnClickCheckBox.isSelected());
+        }
 
         // 语言发生变更则刷新当前页面标签并通知所有 UI 组件
         String newLang = state.getLanguage();
@@ -336,6 +366,10 @@ public class BrowserSettingsPage implements Configurable {
         devToolsSeparator.setText(TranslationUtil.getText("settings.devtools"));
         devToolsModeLabel.setText(TranslationUtil.getText("settings.devtools.mode"));
         displayPositionLabel.setText(TranslationUtil.getText("settings.display.position"));
+        // 刷新 editorNewTabOnClick checkbox 文本
+        if (editorNewTabOnClickCheckBox != null) {
+            editorNewTabOnClickCheckBox.setText(TranslationUtil.getText("settings.editor.new.tab.on.click"));
+        }
         languageSeparator.setText(TranslationUtil.getText("settings.language"));
         languageLabel.setText(TranslationUtil.getText("settings.language") + ":");
         developerLabel.setText(TranslationUtil.getText("settings.developer"));
@@ -378,6 +412,10 @@ public class BrowserSettingsPage implements Configurable {
         }
         if (displayPositionCombo != null) {
             displayPositionCombo.setSelectedIndex(settingToPositionIndex(state.getDisplayPosition()));
+        }
+        if (editorNewTabOnClickCheckBox != null) {
+            // displayPositionCombo 的 ItemListener 会先更新 checkbox 显隐，此处再设置选中值
+            editorNewTabOnClickCheckBox.setSelected(state.isEditorNewTabOnClick());
         }
         if (devToolsModeCombo != null) {
             devToolsModeCombo.setSelectedIndex(settingToDevToolsIndex(state.getDevToolsMode()));
