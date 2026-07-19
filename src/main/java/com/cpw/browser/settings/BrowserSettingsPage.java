@@ -84,7 +84,7 @@ public class BrowserSettingsPage implements Configurable {
     // 字段说明文字字号
     private static final float COMMENT_FONT_SIZE = 11f;
     // 段内字段相对段标题的左缩进（突出段标题层级）
-    private static final int SECTION_INDENT = JBUI.scale(16);
+    private static final int SECTION_INDENT = JBUI.scale(24);
     // 复选框下方说明文字的左缩进（对齐 checkbox 文本起点）
     private static final int CHECKBOX_COMMENT_INDENT = 24;
     // 数值字段列宽
