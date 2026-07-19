@@ -201,7 +201,7 @@ public class BookmarkBar extends JBPanel<BookmarkBar> {
         int btnWidth = measureButtonWidth(bookmark.getTitle());
         button.setMinimumSize(new Dimension(btnWidth, 28));
         button.setPreferredSize(new Dimension(btnWidth, 28));
-        button.setMaximumSize(new Dimension(MAX_BUTTON_WIDTH, 28));
+        button.setMaximumSize(new Dimension(btnWidth, 28));
         button.setToolTipText(bookmark.getTitle() + " - " + bookmark.getUrl());
         button.addMouseListener(new MouseAdapter() {
             @Override
