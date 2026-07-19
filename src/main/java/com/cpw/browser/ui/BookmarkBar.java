@@ -10,12 +10,14 @@ import com.intellij.openapi.ui.Messages;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBPanel;
 
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Cursor;
@@ -190,7 +192,10 @@ public class BookmarkBar extends JBPanel<BookmarkBar> {
         button.setContentAreaFilled(false);
         button.setFocusPainted(false);
         button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        // 左对齐
+        // 文字左对齐，左右内边距 BUTTON_PADDING
+        button.setHorizontalAlignment(SwingConstants.LEFT);
+        button.setBorder(BorderFactory.createEmptyBorder(0, BUTTON_PADDING, 0, BUTTON_PADDING));
+        // 按钮在容器中左对齐
         button.setAlignmentX(Component.LEFT_ALIGNMENT);
         // 宽度自适应文本，最大不超过 MAX_BUTTON_WIDTH
         int btnWidth = measureButtonWidth(bookmark.getTitle());
