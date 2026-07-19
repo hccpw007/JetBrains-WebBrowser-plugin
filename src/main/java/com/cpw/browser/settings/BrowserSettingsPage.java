@@ -6,6 +6,7 @@ import com.intellij.openapi.options.Configurable;
 import com.intellij.ui.TitledSeparator;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBTextField;
+import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
 
 import javax.swing.JComboBox;
@@ -82,6 +83,8 @@ public class BrowserSettingsPage implements Configurable {
     private static final String[] SEARCH_ENGINE_DISPLAY_NAMES = {"Google", "Bing", "DuckDuckGo", "Baidu"};
     // 字段说明文字字号
     private static final float COMMENT_FONT_SIZE = 11f;
+    // 段内字段相对段标题的左缩进（突出段标题层级）
+    private static final int SECTION_INDENT = JBUI.scale(16);
     // 复选框下方说明文字的左缩进（对齐 checkbox 文本起点）
     private static final int CHECKBOX_COMMENT_INDENT = 24;
     // 数值字段列宽
@@ -108,7 +111,7 @@ public class BrowserSettingsPage implements Configurable {
         languageLabel = new JLabel(TranslationUtil.getText("settings.language"));
         languageCombo = new JComboBox<>(buildLanguageDisplayItems());
         languageComment = createCommentLabel(TranslationUtil.getText("settings.language.comment"));
-        row = addLabeledRow(panel, c, row, languageLabel, languageCombo, true, languageComment);
+        row = addLabeledRow(panel, c, row, languageLabel, languageCombo, true, SECTION_INDENT, languageComment);
 
         // 段 2：主页与搜索
         homepageSearchSeparator = new TitledSeparator(TranslationUtil.getText("settings.section.homepage.search"));
@@ -116,14 +119,14 @@ public class BrowserSettingsPage implements Configurable {
         homePageLabel = new JLabel(TranslationUtil.getText("settings.homepage.url"));
         homePageField = new JBTextField();
         homePageUrlComment = createCommentLabel(TranslationUtil.getText("settings.homepage.url.comment"));
-        row = addLabeledRow(panel, c, row, homePageLabel, homePageField, true, homePageUrlComment);
+        row = addLabeledRow(panel, c, row, homePageLabel, homePageField, true, SECTION_INDENT, homePageUrlComment);
         openHomeCheckBox = new JBCheckBox(TranslationUtil.getText("settings.homepage.open"));
         // 新标签页打开主页文案已自解释，无需说明
-        row = addCheckbox(panel, c, row, openHomeCheckBox, null);
+        row = addCheckbox(panel, c, row, openHomeCheckBox, SECTION_INDENT, null);
         searchEngineLabel = new JLabel(TranslationUtil.getText("settings.search.engine"));
         searchEngineCombo = new JComboBox<>(SEARCH_ENGINE_DISPLAY_NAMES);
         searchEngineComment = createCommentLabel(TranslationUtil.getText("settings.search.engine.comment"));
-        row = addLabeledRow(panel, c, row, searchEngineLabel, searchEngineCombo, true, searchEngineComment);
+        row = addLabeledRow(panel, c, row, searchEngineLabel, searchEngineCombo, true, SECTION_INDENT, searchEngineComment);
 
         // 段 3：历史记录
         historySeparator = new TitledSeparator(TranslationUtil.getText("settings.history"));
@@ -132,12 +135,12 @@ public class BrowserSettingsPage implements Configurable {
         maxHistoryDaysField = new JBTextField();
         maxHistoryDaysField.setColumns(NUMERIC_FIELD_COLUMNS);
         historyDaysComment = createCommentLabel(TranslationUtil.getText("settings.history.days.comment"));
-        row = addLabeledRow(panel, c, row, historyDaysLabel, maxHistoryDaysField, false, historyDaysComment);
+        row = addLabeledRow(panel, c, row, historyDaysLabel, maxHistoryDaysField, false, SECTION_INDENT, historyDaysComment);
         historyCountLabel = new JLabel(TranslationUtil.getText("settings.history.entries"));
         maxHistoryCountField = new JBTextField();
         maxHistoryCountField.setColumns(NUMERIC_FIELD_COLUMNS);
         historyCountComment = createCommentLabel(TranslationUtil.getText("settings.history.entries.comment"));
-        row = addLabeledRow(panel, c, row, historyCountLabel, maxHistoryCountField, false, historyCountComment);
+        row = addLabeledRow(panel, c, row, historyCountLabel, maxHistoryCountField, false, SECTION_INDENT, historyCountComment);
 
         // 段 4：界面与显示
         displaySeparator = new TitledSeparator(TranslationUtil.getText("settings.section.display"));
@@ -148,16 +151,16 @@ public class BrowserSettingsPage implements Configurable {
                 TranslationUtil.getText("settings.position.editor")
         });
         displayPositionComment = createCommentLabel(TranslationUtil.getText("settings.display.position.comment"));
-        row = addLabeledRow(panel, c, row, displayPositionLabel, displayPositionCombo, true, displayPositionComment);
+        row = addLabeledRow(panel, c, row, displayPositionLabel, displayPositionCombo, true, SECTION_INDENT, displayPositionComment);
         editorNewTabOnClickCheckBox = new JBCheckBox(TranslationUtil.getText("settings.editor.new.tab.on.click"));
         editorNewTabComment = createCommentLabel(TranslationUtil.getText("settings.editor.new.tab.on.click.comment"));
         // 仅在编辑区模式下可见
         editorNewTabOnClickCheckBox.setVisible(false);
         editorNewTabComment.setVisible(false);
-        row = addCheckbox(panel, c, row, editorNewTabOnClickCheckBox, editorNewTabComment);
+        row = addCheckbox(panel, c, row, editorNewTabOnClickCheckBox, SECTION_INDENT, editorNewTabComment);
         bookmarkOpenNewTabCheckBox = new JBCheckBox(TranslationUtil.getText("settings.bookmark.open.new.tab"));
         bookmarkNewTabComment = createCommentLabel(TranslationUtil.getText("settings.bookmark.open.new.tab.comment"));
-        row = addCheckbox(panel, c, row, bookmarkOpenNewTabCheckBox, bookmarkNewTabComment);
+        row = addCheckbox(panel, c, row, bookmarkOpenNewTabCheckBox, SECTION_INDENT, bookmarkNewTabComment);
 
         // 显示位置变化时同步控制 editorNewTabOnClick 及其说明文字显隐
         displayPositionCombo.addItemListener(e -> {
@@ -176,7 +179,7 @@ public class BrowserSettingsPage implements Configurable {
                 TranslationUtil.getText("settings.devtools.window")
         });
         devToolsModeComment = createCommentLabel(TranslationUtil.getText("settings.devtools.mode.comment"));
-        row = addLabeledRow(panel, c, row, devToolsModeLabel, devToolsModeCombo, true, devToolsModeComment);
+        row = addLabeledRow(panel, c, row, devToolsModeLabel, devToolsModeCombo, true, SECTION_INDENT, devToolsModeComment);
 
         // 页脚：右下角开发者署名
         c.gridx = 0;
@@ -215,9 +218,9 @@ public class BrowserSettingsPage implements Configurable {
         return row + 1;
     }
 
-    // 添加"标签 + 控件 + 下方说明"行，返回下一行行号。fillHorizontal 控制控件是否横向填充
-    private int addLabeledRow(JPanel panel, GridBagConstraints c, int row, JLabel label, JComponent field, boolean fillHorizontal, JLabel comment) {
-        // 标签列，固定宽度
+    // 添加"标签 + 控件 + 下方说明"行，返回下一行行号。fillHorizontal 控制控件是否横向填充，indent 为段内左缩进
+    private int addLabeledRow(JPanel panel, GridBagConstraints c, int row, JLabel label, JComponent field, boolean fillHorizontal, int indent, JLabel comment) {
+        // 标签列，固定宽度，左缩进以突出段标题
         c.gridy = row;
         c.gridx = 0;
         c.gridwidth = 1;
@@ -225,7 +228,7 @@ public class BrowserSettingsPage implements Configurable {
         c.weightx = 0.0;
         c.weighty = 0.0;
         c.anchor = GridBagConstraints.WEST;
-        c.insets = new Insets(0, 0, 0, 8);
+        c.insets = new Insets(0, indent, 0, 8);
         panel.add(label, c);
         // 控件列
         c.gridx = 1;
@@ -252,8 +255,8 @@ public class BrowserSettingsPage implements Configurable {
         return row + 1;
     }
 
-    // 添加跨整行的复选框，可选下方缩进说明，返回下一行行号
-    private int addCheckbox(JPanel panel, GridBagConstraints c, int row, JBCheckBox checkBox, JLabel comment) {
+    // 添加跨整行的复选框，可选下方缩进说明，返回下一行行号。indent 为段内左缩进
+    private int addCheckbox(JPanel panel, GridBagConstraints c, int row, JBCheckBox checkBox, int indent, JLabel comment) {
         c.gridy = row;
         c.gridx = 0;
         c.gridwidth = 2;
@@ -261,19 +264,20 @@ public class BrowserSettingsPage implements Configurable {
         c.weightx = 0.0;
         c.weighty = 0.0;
         c.anchor = GridBagConstraints.WEST;
-        c.insets = new Insets(4, 0, 0, 0);
+        // 左缩进以突出段标题
+        c.insets = new Insets(4, indent, 0, 0);
         panel.add(checkBox, c);
         // 无说明时直接返回
         if (comment == null) {
             return row + 1;
         }
-        // 复选框下方缩进的灰色说明
+        // 复选框下方缩进的灰色说明，在段缩进基础上再缩进对齐 checkbox 文本
         row++;
         c.gridy = row;
         c.gridx = 0;
         c.gridwidth = 2;
         c.fill = GridBagConstraints.NONE;
-        c.insets = new Insets(2, CHECKBOX_COMMENT_INDENT, 0, 0);
+        c.insets = new Insets(2, indent + CHECKBOX_COMMENT_INDENT, 0, 0);
         panel.add(comment, c);
         return row + 1;
     }
