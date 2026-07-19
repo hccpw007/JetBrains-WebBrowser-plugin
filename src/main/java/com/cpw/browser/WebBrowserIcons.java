@@ -32,6 +32,8 @@ public final class WebBrowserIcons {
     public static final Icon BOOKMARK_BAR = load("bookmark-bar");
     // 显示/隐藏书签栏图标（折叠状态）
     public static final Icon BOOKMARK_BAR_HIDDEN = load("bookmark-bar-hidden");
+    // 书签栏前导标识图标（书本形状，放在书签栏最前面作为标识）
+    public static final Icon BOOKMARK_BAR_LEADING = load("bookmark-bar-leading");
     // 放大图标
     public static final Icon ZOOM_IN = load("zoom-in");
     // 缩小图标

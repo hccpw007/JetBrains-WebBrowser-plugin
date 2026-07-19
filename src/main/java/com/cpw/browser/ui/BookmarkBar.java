@@ -1,6 +1,7 @@
 // 横向书签栏组件，类似 Chrome 书签栏，在地址栏下方横向展示书签按钮
 package com.cpw.browser.ui;
 
+import com.cpw.browser.WebBrowserIcons;
 import com.cpw.browser.bookmark.Bookmark;
 import com.cpw.browser.bookmark.BookmarkPersistentState;
 import com.cpw.browser.util.TranslationUtil;
@@ -13,6 +14,7 @@ import com.intellij.ui.components.JBPanel;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -90,6 +92,10 @@ public class BookmarkBar extends JBPanel<BookmarkBar> {
             }
         });
 
+        // 书签栏前导标识图标，固定在最左侧，不参与 relayout 的 removeAll
+        JLabel leadingIcon = new JLabel(WebBrowserIcons.BOOKMARK_BAR_LEADING);
+        leadingIcon.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 4));
+        add(leadingIcon, BorderLayout.WEST);
         add(visiblePanel, BorderLayout.CENTER);
         add(overflowButton, BorderLayout.EAST);
 
