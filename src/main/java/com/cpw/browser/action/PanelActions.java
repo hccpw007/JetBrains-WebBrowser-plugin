@@ -3,8 +3,10 @@ package com.cpw.browser.action;
 
 import com.cpw.browser.WebBrowserIcons;
 import com.cpw.browser.settings.BrowserSettingsPage;
+import com.cpw.browser.settings.BrowserSettingsState;
 import com.cpw.browser.toolwindow.BrowserTabManager;
 import com.cpw.browser.toolwindow.BrowserTabPanel;
+import com.cpw.browser.ui.BookmarkBar;
 import com.cpw.browser.ui.BookmarkSidebar;
 import com.cpw.browser.util.TranslationUtil;
 import com.intellij.icons.AllIcons;
@@ -126,6 +128,33 @@ public final class PanelActions {
             bookmarkSidebar.setVisible(!bookmarkSidebar.isVisible());
             centerPanel.revalidate();
             centerPanel.repaint();
+        }
+    }
+
+    // 书签栏显示/隐藏切换，写回持久化
+    public static class ToggleBookmarkBar extends AnAction implements DumbAware {
+
+        private final BookmarkBar bookmarkBar;
+
+        public ToggleBookmarkBar(BookmarkBar bookmarkBar) {
+            super(TranslationUtil.getText("action.toggle.bookmark.bar"), TranslationUtil.getText("action.toggle.bookmark.bar"), WebBrowserIcons.BOOKMARK_BAR);
+            this.bookmarkBar = bookmarkBar;
+        }
+
+        @Override
+        public void update(AnActionEvent e) {
+            e.getPresentation().setText(TranslationUtil.getText("action.toggle.bookmark.bar"));
+        }
+
+        @Override
+        public void actionPerformed(AnActionEvent e) {
+            // 切换可见性
+            boolean visible = !bookmarkBar.isVisible();
+            bookmarkBar.setVisible(visible);
+            // 写回持久化
+            BrowserSettingsState.getInstance().setAlwaysShowBookmarkBar(visible);
+            bookmarkBar.revalidate();
+            bookmarkBar.repaint();
         }
     }
 

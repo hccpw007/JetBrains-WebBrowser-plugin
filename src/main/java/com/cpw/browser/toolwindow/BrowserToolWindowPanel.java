@@ -9,6 +9,7 @@ import com.cpw.browser.bookmark.BookmarkPersistentState;
 import com.cpw.browser.history.BrowsingHistoryState;
 import com.cpw.browser.settings.BrowserSettingsState;
 import com.cpw.browser.ui.AddressBar;
+import com.cpw.browser.ui.BookmarkBar;
 import com.cpw.browser.ui.BookmarkSidebar;
 import com.cpw.browser.ui.ChromeTab;
 import com.cpw.browser.util.UrlUtils;
@@ -61,6 +62,9 @@ public class BrowserToolWindowPanel {
 
     // 书签侧边栏
     private BookmarkSidebar bookmarkSidebar;
+
+    // 横向书签栏
+    private final BookmarkBar bookmarkBar;
 
     // 标签页栏面板
     private final JPanel tabStripPanel;
@@ -212,6 +216,22 @@ public class BrowserToolWindowPanel {
         bookmarkSidebar.setMinimumSize(new Dimension(sideW, 0));
         bookmarkSidebar.setMaximumSize(new Dimension(sideW, Integer.MAX_VALUE));
 
+        // ---- 初始化横向书签栏 ----
+        bookmarkBar = new BookmarkBar(
+                bookmark -> onBookmarkSelected(bookmark),
+                () -> {
+                    // 书签变更后刷新侧边栏和地址栏星标
+                    bookmarkSidebar.refreshBookmarks();
+                    BrowserTabPanel tab = tabManager.getActiveTab();
+                    // 有活跃标签页则刷新地址栏星标
+                    if (tab != null) {
+                        addressBar.updateStarIcon(tab.getCurrentUrl());
+                    }
+                }
+        );
+        // 按持久化值初始化可见性
+        bookmarkBar.setVisible(BrowserSettingsState.getInstance().isAlwaysShowBookmarkBar());
+
         // 居中区域：[书签侧边栏(可隐藏)] [浏览器内容层(含 toast 叠加)]
         centerPanel.add(bookmarkSidebar, BorderLayout.WEST);
         centerPanel.add(browserLayer, BorderLayout.CENTER);
@@ -240,6 +260,7 @@ public class BrowserToolWindowPanel {
         rightGroup.add(new PanelActions.ZoomReset(tabManager, this::showZoomToast));
         rightGroup.addSeparator();
         rightGroup.add(new PanelActions.ToggleBookmarkSidebar(bookmarkSidebar, centerPanel));
+        rightGroup.add(new PanelActions.ToggleBookmarkBar(bookmarkBar));
         rightGroup.add(new PanelActions.OpenInSystemBrowser(tabManager));
         rightGroup.add(new PanelActions.MoreMenu(project, tabManager, this::openDevTools));
         ActionToolbar rightToolbar = ActionManager.getInstance().createActionToolbar("WebBrowser.RightActions", rightGroup, true);
@@ -252,11 +273,12 @@ public class BrowserToolWindowPanel {
         navAddressBar.add(addressBar, BorderLayout.CENTER);
         navAddressBar.add(rightToolbar.getComponent(), BorderLayout.EAST);
 
-        // 顶部区域：[标签页栏] [地址栏]
+        // 顶部区域：[标签页栏] [地址栏] [书签栏]
         JPanel topSection = new JPanel();
         topSection.setLayout(new BoxLayout(topSection, BoxLayout.Y_AXIS));
         topSection.add(tabStripPanel);
         topSection.add(navAddressBar);
+        topSection.add(bookmarkBar);
 
         mainPanel.add(topSection, BorderLayout.NORTH);
         mainPanel.add(centerPanel, BorderLayout.CENTER);
@@ -276,6 +298,8 @@ public class BrowserToolWindowPanel {
             addressBar.updateStarIcon(addressBar.getUrl());
             // 刷新书签侧边栏标签
             bookmarkSidebar.refreshLabels();
+            // 刷新横向书签栏标签
+            bookmarkBar.refreshLabels();
             // 刷新所有标签页中的 ChromeTab 关闭按钮提示
             for (Map.Entry<BrowserTabPanel, ChromeTab> entry : chromeTabs.entrySet()) {
                 entry.getValue().refreshTooltip();
@@ -471,6 +495,7 @@ public class BrowserToolWindowPanel {
         if (bookmarkState.contains(url)) {
             bookmarkState.removeBookmark(url);
             bookmarkSidebar.refreshBookmarks();
+            bookmarkBar.refreshBookmarks();
             addressBar.updateStarIcon(url);
         } else { // URL 未收藏则弹出添加对话框
             BrowserTabPanel tab = tabManager.getActiveTab();
@@ -481,6 +506,7 @@ public class BrowserToolWindowPanel {
             if (result != null) {
                 bookmarkState.addBookmark(new Bookmark(result[0], result[1]));
                 bookmarkSidebar.refreshBookmarks();
+                bookmarkBar.refreshBookmarks();
                 addressBar.updateStarIcon(result[1]);
             }
         }

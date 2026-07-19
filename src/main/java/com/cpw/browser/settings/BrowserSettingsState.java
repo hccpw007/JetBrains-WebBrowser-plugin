@@ -31,6 +31,8 @@ public class BrowserSettingsState implements PersistentStateComponent<BrowserSet
         private String language = "default";
         // 默认搜索引擎
         private String searchEngine = "google";
+        // 是否显示书签栏（持久化，不暴露设置页 UI）
+        private boolean alwaysShowBookmarkBar = true;
 
         // 获取主页 URL
         public String getHomePageUrl() {
@@ -120,6 +122,16 @@ public class BrowserSettingsState implements PersistentStateComponent<BrowserSet
         // 设置默认搜索引擎
         public void setSearchEngine(String searchEngine) {
             this.searchEngine = searchEngine;
+        }
+
+        // 是否显示书签栏
+        public boolean isAlwaysShowBookmarkBar() {
+            return alwaysShowBookmarkBar;
+        }
+
+        // 设置是否显示书签栏
+        public void setAlwaysShowBookmarkBar(boolean alwaysShowBookmarkBar) {
+            this.alwaysShowBookmarkBar = alwaysShowBookmarkBar;
         }
     }
 
@@ -226,6 +238,16 @@ public class BrowserSettingsState implements PersistentStateComponent<BrowserSet
     // 设置默认搜索引擎
     public void setSearchEngine(String searchEngine) {
         state.setSearchEngine(searchEngine);
+    }
+
+    // 是否显示书签栏
+    public boolean isAlwaysShowBookmarkBar() {
+        return state.isAlwaysShowBookmarkBar();
+    }
+
+    // 设置是否显示书签栏
+    public void setAlwaysShowBookmarkBar(boolean alwaysShowBookmarkBar) {
+        state.setAlwaysShowBookmarkBar(alwaysShowBookmarkBar);
     }
 
     // 获取 BrowserSettingsState 单例

@@ -28,6 +28,8 @@ public final class WebBrowserIcons {
     public static final Icon STAR_FILLED = load("star-filled");
     // 显示/隐藏书签侧边栏图标
     public static final Icon SHOW_BOOKMARK = load("show-bookmark");
+    // 显示/隐藏书签栏图标
+    public static final Icon BOOKMARK_BAR = load("bookmark-bar");
     // 放大图标
     public static final Icon ZOOM_IN = load("zoom-in");
     // 缩小图标
