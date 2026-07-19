@@ -1,5 +1,41 @@
 <!-- Keep a Changelog guide -> https://keepachangelog.com -->
 
+## [1.1.1] - 2026-07-19
+
+### Added
+
+- Horizontal bookmark bar below the address bar for quick bookmark access.
+  <br>新增地址栏下方横向书签栏，快速访问书签。
+- Bookmark icon (open book silhouette) at the front of the bookmark bar for visual identity.
+  <br>书签栏最前面新增书本形状标识图标，增强视觉辨识度。
+- Editor mode: clicking the browser icon creates a new independent IDEA tab each time.
+  <br>编辑区模式支持每次点击浏览器图标新建独立的 IDEA 标签页。
+- "Open bookmark in new tab" setting option, works in both tool window and editor modes.
+  <br>新增"点击书签打开新标签页"设置项，工具窗口和编辑器模式均适用。
+
+### Changed
+
+- Bookmark bar leading icon replaced with an open book silhouette, improving visual consistency.
+  <br>书签栏前导图标替换为打开的书本剪影，提升视觉一致性。
+- Bookmark bar style optimized: left-aligned, adaptive width, smaller font, toggle button dual-state icons.
+  <br>优化书签栏样式：文字左对齐、自适应宽度、字号缩小、切换按钮双状态图标。
+- Settings page reorganized into 5 functional sections with unified styling for better readability.
+  <br>设置页面按功能重组为 5 段并统一样式，提升可读性。
+
+### Fixed
+
+- Language bundle text was escaped to Unicode by IDE replace tool, now preserves original Chinese text.
+  <br>修复语言包被 IDE replace 工具转义为 Unicode 转义码的问题，保留原始中文文本。
+- Bookmark button text now left-aligned with adaptive width based on content length.
+  <br>书签按钮文字左对齐并按文本宽度自适应。
+- Bookmark toggle button tooltip text updates based on current sidebar visibility state.
+  <br>书签栏切换按钮提示文字按可见性切换显示/隐藏。
+
+### Style
+
+- Section field indentation increased to highlight section title hierarchy in settings page.
+  <br>设置页段内字段增加左缩进，突出段标题层级区分。
+
 ## [1.0.4] - 2026-06-05
 
 ### Fixed
