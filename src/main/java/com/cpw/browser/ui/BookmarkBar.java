@@ -17,6 +17,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.ListSelectionModel;
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
@@ -37,6 +38,8 @@ public class BookmarkBar extends JBPanel<BookmarkBar> {
     private static final int BUTTON_PADDING = 12;
     // 溢出按钮预留宽度
     private static final int OVERFLOW_BUTTON_WIDTH = 36;
+    // 书签按钮字体大小
+    private static final float BUTTON_FONT_SIZE = 11f;
 
     // 可见书签按钮容器
     private final JPanel visiblePanel;
@@ -66,6 +69,7 @@ public class BookmarkBar extends JBPanel<BookmarkBar> {
 
         // 溢出按钮，点击弹出溢出书签列表
         overflowButton = new JButton("»");
+        overflowButton.setFont(overflowButton.getFont().deriveFont(BUTTON_FONT_SIZE));
         overflowButton.setBorderPainted(false);
         overflowButton.setContentAreaFilled(false);
         overflowButton.setFocusPainted(false);
@@ -73,6 +77,7 @@ public class BookmarkBar extends JBPanel<BookmarkBar> {
         overflowButton.setToolTipText(TranslationUtil.getText("bookmark.bar.overflow"));
         overflowButton.setVisible(false);
         overflowButton.setPreferredSize(new Dimension(OVERFLOW_BUTTON_WIDTH, 28));
+        overflowButton.setAlignmentY(Component.CENTER_ALIGNMENT);
         overflowButton.addActionListener(e -> showOverflowPopup());
 
         // 监听尺寸变化重新布局
@@ -118,6 +123,11 @@ public class BookmarkBar extends JBPanel<BookmarkBar> {
         return buttonWidths.size();
     }
 
+    // 获取书签按钮字体的 FontMetrics
+    private FontMetrics getButtonFontMetrics() {
+        return getFontMetrics(getFont().deriveFont(BUTTON_FONT_SIZE));
+    }
+
     // 重新布局书签按钮
     private void relayout() {
         visiblePanel.removeAll();
@@ -144,7 +154,7 @@ public class BookmarkBar extends JBPanel<BookmarkBar> {
 
     // 测量书签标题对应的按钮宽度
     private int measureButtonWidth(String title) {
-        FontMetrics fm = getFontMetrics(getFont());
+        FontMetrics fm = getButtonFontMetrics();
         int textWidth = fm.stringWidth(title);
         return Math.min(MAX_BUTTON_WIDTH, textWidth + BUTTON_PADDING * 2);
     }
@@ -170,16 +180,23 @@ public class BookmarkBar extends JBPanel<BookmarkBar> {
     // bookmark 为书签数据
     // 返回配置好的书签按钮
     private JButton createBookmarkButton(Bookmark bookmark) {
-        FontMetrics fm = getFontMetrics(getFont());
+        // 按钮字体小一号
+        FontMetrics fm = getButtonFontMetrics();
         // 截断后的显示文本
         String display = truncateTitle(bookmark.getTitle(), fm);
         JButton button = new JButton(display);
+        button.setFont(getFont().deriveFont(BUTTON_FONT_SIZE));
         button.setBorderPainted(false);
         button.setContentAreaFilled(false);
         button.setFocusPainted(false);
         button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        // 左对齐
+        button.setAlignmentX(Component.LEFT_ALIGNMENT);
+        // 宽度自适应文本，最大不超过 MAX_BUTTON_WIDTH
+        int btnWidth = measureButtonWidth(bookmark.getTitle());
+        button.setMinimumSize(new Dimension(btnWidth, 28));
+        button.setPreferredSize(new Dimension(btnWidth, 28));
         button.setMaximumSize(new Dimension(MAX_BUTTON_WIDTH, 28));
-        button.setPreferredSize(new Dimension(measureButtonWidth(bookmark.getTitle()), 28));
         button.setToolTipText(bookmark.getTitle() + " - " + bookmark.getUrl());
         button.addMouseListener(new MouseAdapter() {
             @Override

@@ -144,6 +144,9 @@ public final class PanelActions {
         @Override
         public void update(AnActionEvent e) {
             e.getPresentation().setText(TranslationUtil.getText("action.toggle.bookmark.bar"));
+            // 根据书签栏可见性切换图标：可见显示展开图标，隐藏显示折叠图标
+            boolean visible = bookmarkBar.isVisible();
+            e.getPresentation().setIcon(visible ? WebBrowserIcons.BOOKMARK_BAR : WebBrowserIcons.BOOKMARK_BAR_HIDDEN);
         }
 
         @Override
@@ -153,6 +156,8 @@ public final class PanelActions {
             bookmarkBar.setVisible(visible);
             // 写回持久化
             BrowserSettingsState.getInstance().setAlwaysShowBookmarkBar(visible);
+            // 立即切换图标
+            e.getPresentation().setIcon(visible ? WebBrowserIcons.BOOKMARK_BAR : WebBrowserIcons.BOOKMARK_BAR_HIDDEN);
             bookmarkBar.revalidate();
             bookmarkBar.repaint();
         }
