@@ -25,6 +25,9 @@ public class BrowserFileEditor implements FileEditor {
     // 编辑器标题的用户数据 Key
     public static final Key<String> TITLE_KEY = Key.create("BrowserEditorTitle");
 
+    // 新建编辑器标签页时的初始 URL（由 ToggleBrowserAction.createNewEditorTab 写入）
+    public static final Key<String> INITIAL_URL_KEY = Key.create("BrowserEditorInitialUrl");
+
     // 浏览器工具窗口面板实例
     private final BrowserToolWindowPanel browserPanel;
     // 是否独占面板（编辑区独立标签页模式，关闭时需释放资源）
@@ -41,7 +44,9 @@ public class BrowserFileEditor implements FileEditor {
         // 根据 editorNewTabOnClick 设置决定使用独立面板还是共享面板
         if (BrowserSettingsState.getInstance().isEditorNewTabOnClick()) {
             // 编辑区独立标签页模式：每个编辑器创建独立面板，关闭时释放资源
-            this.browserPanel = new BrowserToolWindowPanel(project, true);
+            // 读取创建时写入的初始 URL（如点击书签新建系统 tab），非空则首个标签页直接导航
+            String initialUrl = file.getUserData(INITIAL_URL_KEY);
+            this.browserPanel = new BrowserToolWindowPanel(project, true, initialUrl);
             this.ownPanel = true;
         } else { // 维持现状：从项目级服务获取共享面板，确保关闭再打开编辑器时标签页不丢失
             this.browserPanel = BrowserProjectService.getInstance(project).getEditorPanel();

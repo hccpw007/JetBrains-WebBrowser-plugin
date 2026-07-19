@@ -3,6 +3,7 @@ package com.cpw.browser.toolwindow;
 
 import com.cpw.browser.action.NavigationActions;
 import com.cpw.browser.action.PanelActions;
+import com.cpw.browser.action.ToggleBrowserAction;
 import com.cpw.browser.util.TranslationUtil;
 import com.cpw.browser.bookmark.Bookmark;
 import com.cpw.browser.bookmark.BookmarkPersistentState;
@@ -103,6 +104,14 @@ public class BrowserToolWindowPanel {
 
     // 构造浏览器面板，editorMode 为 true 时隐藏插件内部 tab 栏（编辑区独立标签页模式）
     public BrowserToolWindowPanel(Project project, boolean editorMode) {
+        this(project, editorMode, null);
+    }
+
+    // 构造浏览器面板，initialUrl 非空时首个标签页直接导航到该 URL（用于新建系统 tab 时打开书签）
+    // project 为当前项目
+    // editorMode 为 true 时隐藏插件内部 tab 栏
+    // initialUrl 为首个标签页初始 URL，null 或空则打开空白页
+    public BrowserToolWindowPanel(Project project, boolean editorMode, String initialUrl) {
         this.project = project;
         this.editorMode = editorMode;
 
@@ -288,7 +297,12 @@ public class BrowserToolWindowPanel {
         if (!editorMode) {
             tabStripPanel.add(addTabButton);
         }
-        tabManager.createTab();
+        // initialUrl 非空时直接导航到指定 URL，否则打开空白页（按设置决定是否打开主页）
+        if (initialUrl != null && !initialUrl.isBlank()) {
+            tabManager.createTab(initialUrl);
+        } else { // 无初始 URL，打开空白页
+            tabManager.createTab();
+        }
 
         // 注册语言变更监听，刷新 UI 文本
         TranslationUtil.addListener(() -> {
@@ -525,7 +539,21 @@ public class BrowserToolWindowPanel {
     }
 
     // 处理书签选中事件
+    // bookmark 为被点击的书签
     private void onBookmarkSelected(Bookmark bookmark) {
+        BrowserSettingsState settings = BrowserSettingsState.getInstance();
+        // 开启"点击书签打开新标签页"时按当前模式新建 tab 并跳转
+        if (settings.isBookmarkOpenNewTab()) {
+            // 系统 tab 模式（编辑区独立标签页）新建 IDEA 原生编辑器 tab
+            if (editorMode) {
+                ToggleBrowserAction.createNewEditorTab(project, bookmark.getUrl());
+            } else { // 插件 tab 模式新建插件内部 tab
+                tabManager.createTab(bookmark.getUrl());
+            }
+            return;
+        }
+
+        // 未开启时维持现状：当前 tab 导航，无活跃 tab 则新建
         BrowserTabPanel tab = tabManager.getActiveTab();
         // 有活跃标签页则直接导航，否则新建标签页
         if (tab != null) {

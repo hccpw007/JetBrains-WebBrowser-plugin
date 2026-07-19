@@ -51,7 +51,7 @@ public class ToggleBrowserAction extends AnAction implements DumbAware {
             // 编辑区模式下根据 editorNewTabOnClick 决定行为
             if (settings.isEditorNewTabOnClick()) {
                 // 每次点击新建独立 IDEA 标签页
-                createNewEditorTab(project);
+                createNewEditorTab(project, null);
             } else { // 维持现状：toggle 单个共享标签页
                 toggleEditorMode(project);
             }
@@ -60,8 +60,10 @@ public class ToggleBrowserAction extends AnAction implements DumbAware {
         }
     }
 
-    // 每次点击都新建一个独立的 IDEA 编辑区标签页（使用内存虚拟文件）
-    private void createNewEditorTab(Project project) {
+    // 新建一个独立的 IDEA 编辑区标签页（使用内存虚拟文件）
+    // project 为当前项目
+    // initialUrl 为新标签页初始 URL，null 或空则打开空白页
+    public static void createNewEditorTab(Project project, String initialUrl) {
         // 确保侧边栏按钮隐藏
         hideToolWindowStrip(project);
 
@@ -75,6 +77,10 @@ public class ToggleBrowserAction extends AnAction implements DumbAware {
             // 创建内存虚拟文件（不落盘，无需清理）
             LightVirtualFile vfile = new LightVirtualFile("Web Browser " + idx + ".webbrowser");
             vfile.setFileType(BrowserFileType.INSTANCE);
+            // 设置初始 URL，由 BrowserFileEditor 读取后导航到该地址
+            if (initialUrl != null && !initialUrl.isBlank()) {
+                vfile.putUserData(BrowserFileEditor.INITIAL_URL_KEY, initialUrl);
+            }
 
             // 在编辑区打开新标签页
             manager.openFile(vfile, true);
@@ -169,7 +175,7 @@ public class ToggleBrowserAction extends AnAction implements DumbAware {
     }
 
     // 确保侧边栏按钮隐藏（编辑区模式切换时调用）
-    private void hideToolWindowStrip(Project project) {
+    private static void hideToolWindowStrip(Project project) {
         ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow("WebBrowser");
 
         // 工具窗口未初始化时直接返回

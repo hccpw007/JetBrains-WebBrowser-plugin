@@ -32,6 +32,8 @@ public class BrowserSettingsPage implements Configurable {
     private JComboBox<String> displayPositionCombo;
     // 编辑区模式下点击图标是否新建独立标签页复选框
     private JBCheckBox editorNewTabOnClickCheckBox;
+    // 点击书签是否打开新标签页复选框
+    private JBCheckBox bookmarkOpenNewTabCheckBox;
     // 开发者工具打开方式下拉框
     private JComboBox<String> devToolsModeCombo;
     // 界面语言下拉框
@@ -247,8 +249,18 @@ public class BrowserSettingsPage implements Configurable {
             editorNewTabOnClickCheckBox.setVisible(isEditor);
         });
 
-        // Row 12: 右下角签名
+        // Row 12: 点击书签是否打开新标签页
         c.gridy = 12;
+        c.gridx = 0;
+        c.gridwidth = 2;
+        c.fill = GridBagConstraints.NONE;
+        c.weightx = 0.0;
+        c.insets = new Insets(4, 0, 0, 0);
+        bookmarkOpenNewTabCheckBox = new JBCheckBox(TranslationUtil.getText("settings.bookmark.open.new.tab"));
+        panel.add(bookmarkOpenNewTabCheckBox, c);
+
+        // Row 13: 右下角签名
+        c.gridy = 13;
         c.gridx = 1;
         c.gridwidth = 1;
         c.weightx = 1.0;
@@ -290,6 +302,10 @@ public class BrowserSettingsPage implements Configurable {
                 && editorNewTabOnClickCheckBox.isVisible()
                 && editorNewTabOnClickCheckBox.isSelected() != state.isEditorNewTabOnClick();
 
+        // bookmarkOpenNewTab 始终可见，直接比较选中状态
+        boolean bookmarkNewTabModified = bookmarkOpenNewTabCheckBox != null
+                && bookmarkOpenNewTabCheckBox.isSelected() != state.isBookmarkOpenNewTab();
+
         return !Objects.equals(homeText, state.getHomePageUrl())
                 || !Objects.equals(openHome, state.isOpenHomeOnNewTab())
                 || !Objects.equals(days, state.getMaxHistoryDays())
@@ -298,7 +314,8 @@ public class BrowserSettingsPage implements Configurable {
                 || !Objects.equals(devToolsMode, state.getDevToolsMode())
                 || !Objects.equals(lang, state.getLanguage())
                 || !Objects.equals(searchEngine, state.getSearchEngine())
-                || newTabModified;
+                || newTabModified
+                || bookmarkNewTabModified;
     }
 
     @Override
@@ -342,6 +359,11 @@ public class BrowserSettingsPage implements Configurable {
             state.setEditorNewTabOnClick(editorNewTabOnClickCheckBox.isSelected());
         }
 
+        // bookmarkOpenNewTab 始终写入
+        if (bookmarkOpenNewTabCheckBox != null) {
+            state.setBookmarkOpenNewTab(bookmarkOpenNewTabCheckBox.isSelected());
+        }
+
         // 语言发生变更则刷新当前页面标签并通知所有 UI 组件
         String newLang = state.getLanguage();
         if (!Objects.equals(oldLang, newLang)) {
@@ -369,6 +391,11 @@ public class BrowserSettingsPage implements Configurable {
         // 刷新 editorNewTabOnClick checkbox 文本
         if (editorNewTabOnClickCheckBox != null) {
             editorNewTabOnClickCheckBox.setText(TranslationUtil.getText("settings.editor.new.tab.on.click"));
+        }
+
+        // 刷新 bookmarkOpenNewTab checkbox 文本
+        if (bookmarkOpenNewTabCheckBox != null) {
+            bookmarkOpenNewTabCheckBox.setText(TranslationUtil.getText("settings.bookmark.open.new.tab"));
         }
         languageSeparator.setText(TranslationUtil.getText("settings.language"));
         languageLabel.setText(TranslationUtil.getText("settings.language") + ":");
@@ -416,6 +443,11 @@ public class BrowserSettingsPage implements Configurable {
         if (editorNewTabOnClickCheckBox != null) {
             // displayPositionCombo 的 ItemListener 会先更新 checkbox 显隐，此处再设置选中值
             editorNewTabOnClickCheckBox.setSelected(state.isEditorNewTabOnClick());
+        }
+
+        // bookmarkOpenNewTab 始终可见，直接读取持久化值
+        if (bookmarkOpenNewTabCheckBox != null) {
+            bookmarkOpenNewTabCheckBox.setSelected(state.isBookmarkOpenNewTab());
         }
         if (devToolsModeCombo != null) {
             devToolsModeCombo.setSelectedIndex(settingToDevToolsIndex(state.getDevToolsMode()));
