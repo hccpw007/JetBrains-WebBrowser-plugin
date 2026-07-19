@@ -6,6 +6,7 @@ import com.intellij.openapi.options.Configurable;
 import com.intellij.ui.TitledSeparator;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBTextField;
+import com.intellij.util.ui.UIUtil;
 
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -41,240 +42,248 @@ public class BrowserSettingsPage implements Configurable {
     // 默认搜索引擎下拉框
     private JComboBox<String> searchEngineCombo;
 
-    // 用于语言切换后刷新标签的字段
+    // 字段标签（语言切换后需刷新）
+    private JLabel languageLabel;
     private JLabel homePageLabel;
-    private TitledSeparator historySeparator;
+    private JLabel searchEngineLabel;
     private JLabel historyDaysLabel;
     private JLabel historyCountLabel;
-    private TitledSeparator devToolsSeparator;
-    private JLabel devToolsModeLabel;
     private JLabel displayPositionLabel;
-    private TitledSeparator languageSeparator;
-    private JLabel languageLabel;
-    private JLabel searchEngineLabel;
+    private JLabel devToolsModeLabel;
+
+    // 段分隔线（语言切换后需刷新）
+    private TitledSeparator generalSeparator;
+    private TitledSeparator homepageSearchSeparator;
+    private TitledSeparator historySeparator;
+    private TitledSeparator displaySeparator;
+    private TitledSeparator devToolsSeparator;
+
+    // 字段下方灰色说明（语言切换后需刷新）
+    private JLabel languageComment;
+    private JLabel homePageUrlComment;
+    private JLabel searchEngineComment;
+    private JLabel historyDaysComment;
+    private JLabel historyCountComment;
+    private JLabel displayPositionComment;
+    private JLabel editorNewTabComment;
+    private JLabel bookmarkNewTabComment;
+    private JLabel devToolsModeComment;
+
+    // 右下角开发者署名
     private JLabel developerLabel;
 
     // 语言代码数组
     private static final String[] LANGUAGE_CODES = {"default", "zh", "en", "ja", "ko", "fr", "de"};
     // 各语言自身名称（第一项占位，运行时从资源包读取）
     private static final String[] LANGUAGE_NATIVE_NAMES = {"", "简体中文", "English", "日本語", "한국어", "Français", "Deutsch"};
+    // 搜索引擎代码列表
+    private static final String[] SEARCH_ENGINE_CODES = {"google", "bing", "duckduckgo", "baidu"};
+    // 搜索引擎下拉显示名称
+    private static final String[] SEARCH_ENGINE_DISPLAY_NAMES = {"Google", "Bing", "DuckDuckGo", "Baidu"};
+    // 字段说明文字字号
+    private static final float COMMENT_FONT_SIZE = 11f;
+    // 复选框下方说明文字的左缩进（对齐 checkbox 文本起点）
+    private static final int CHECKBOX_COMMENT_INDENT = 24;
+    // 数值字段列宽
+    private static final int NUMERIC_FIELD_COLUMNS = 6;
 
+    // 返回设置页显示名称
     @Override
     public String getDisplayName() {
         return "WebBrowser";
     }
 
+    // 构建设置页面根面板，按 5 个功能段组织字段
     @Override
     public JComponent createComponent() {
+        // 根面板使用 GridBagLayout
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
         c.anchor = GridBagConstraints.WEST;
 
-        // Row 0: 分隔线 — 语言（放在最上面）
-        c.gridx = 0;
-        c.gridy = 0;
-        c.gridwidth = 2;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.insets = new Insets(0, 0, 8, 0);
-        c.weightx = 0.0;
-        languageSeparator = new TitledSeparator(TranslationUtil.getText("settings.language"));
-        panel.add(languageSeparator, c);
-
-        // Row 1: 语言下拉框
-        c.gridy = 1;
-        c.gridx = 0;
-        c.gridwidth = 1;
-        c.fill = GridBagConstraints.NONE;
-        c.weightx = 0.0;
-        c.insets = new Insets(0, 0, 0, 8);
-        languageLabel = new JLabel(TranslationUtil.getText("settings.language") + ":");
-        panel.add(languageLabel, c);
-        c.gridx = 1;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.weightx = 1.0;
-        c.insets = new Insets(0, 0, 0, 0);
+        int row = 0;
+        // 段 1：常规
+        generalSeparator = new TitledSeparator(TranslationUtil.getText("settings.section.general"));
+        row = addSeparator(panel, c, row, generalSeparator);
+        languageLabel = new JLabel(TranslationUtil.getText("settings.language"));
         languageCombo = new JComboBox<>(buildLanguageDisplayItems());
-        panel.add(languageCombo, c);
+        languageComment = createCommentLabel(TranslationUtil.getText("settings.language.comment"));
+        row = addLabeledRow(panel, c, row, languageLabel, languageCombo, true, languageComment);
 
-        // Row 2: 主页 URL
-        c.gridy = 2;
-        c.gridx = 0;
-        c.fill = GridBagConstraints.NONE;
-        c.weightx = 0.0;
-        c.insets = new Insets(12, 0, 0, 8);
+        // 段 2：主页与搜索
+        homepageSearchSeparator = new TitledSeparator(TranslationUtil.getText("settings.section.homepage.search"));
+        row = addSeparator(panel, c, row, homepageSearchSeparator);
         homePageLabel = new JLabel(TranslationUtil.getText("settings.homepage.url"));
-        panel.add(homePageLabel, c);
-        c.gridx = 1;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.weightx = 1.0;
-        c.insets = new Insets(12, 0, 0, 0);
         homePageField = new JBTextField();
-        panel.add(homePageField, c);
-
-        // Row 3: 新标签页时打开主页
-        c.gridx = 0;
-        c.gridy = 3;
-        c.gridwidth = 2;
-        c.fill = GridBagConstraints.NONE;
-        c.weightx = 0.0;
-        c.insets = new Insets(4, 0, 0, 0);
+        homePageUrlComment = createCommentLabel(TranslationUtil.getText("settings.homepage.url.comment"));
+        row = addLabeledRow(panel, c, row, homePageLabel, homePageField, true, homePageUrlComment);
         openHomeCheckBox = new JBCheckBox(TranslationUtil.getText("settings.homepage.open"));
-        panel.add(openHomeCheckBox, c);
+        // 新标签页打开主页文案已自解释，无需说明
+        row = addCheckbox(panel, c, row, openHomeCheckBox, null);
+        searchEngineLabel = new JLabel(TranslationUtil.getText("settings.search.engine"));
+        searchEngineCombo = new JComboBox<>(SEARCH_ENGINE_DISPLAY_NAMES);
+        searchEngineComment = createCommentLabel(TranslationUtil.getText("settings.search.engine.comment"));
+        row = addLabeledRow(panel, c, row, searchEngineLabel, searchEngineCombo, true, searchEngineComment);
 
-        // Row 4: 默认搜索引擎
-        c.gridy = 4;
-        c.gridx = 0;
-        c.gridwidth = 1;
-        c.fill = GridBagConstraints.NONE;
-        c.weightx = 0.0;
-        c.insets = new Insets(8, 0, 0, 8);
-        searchEngineLabel = new JLabel(TranslationUtil.getText("settings.search.engine") + ":");
-        panel.add(searchEngineLabel, c);
-        c.gridx = 1;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.weightx = 1.0;
-        c.insets = new Insets(8, 0, 0, 0);
-        searchEngineCombo = new JComboBox<>(new String[]{
-                "Google",
-                "Bing",
-                "DuckDuckGo",
-                "Baidu"
-        });
-        panel.add(searchEngineCombo, c);
-
-        // Row 5: 分隔线 — 历史记录
-        c.gridy = 5;
-        c.gridwidth = 2;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.insets = new Insets(12, 0, 8, 0);
-        c.weightx = 0.0;
+        // 段 3：历史记录
         historySeparator = new TitledSeparator(TranslationUtil.getText("settings.history"));
-        panel.add(historySeparator, c);
-
-        // Row 6: 最多保存天数
-        c.gridy = 6;
-        c.gridx = 0;
-        c.gridwidth = 1;
-        c.fill = GridBagConstraints.NONE;
-        c.weightx = 0.0;
-        c.insets = new Insets(0, 0, 0, 8);
+        row = addSeparator(panel, c, row, historySeparator);
         historyDaysLabel = new JLabel(TranslationUtil.getText("settings.history.days"));
-        panel.add(historyDaysLabel, c);
-        c.gridx = 1;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.weightx = 0.3;
-        c.insets = new Insets(0, 0, 0, 0);
         maxHistoryDaysField = new JBTextField();
-        maxHistoryDaysField.setColumns(4);
-        panel.add(maxHistoryDaysField, c);
-
-        // Row 7: 最多记录条数
-        c.gridy = 7;
-        c.gridx = 0;
-        c.fill = GridBagConstraints.NONE;
-        c.weightx = 0.0;
-        c.insets = new Insets(4, 0, 0, 8);
+        maxHistoryDaysField.setColumns(NUMERIC_FIELD_COLUMNS);
+        historyDaysComment = createCommentLabel(TranslationUtil.getText("settings.history.days.comment"));
+        row = addLabeledRow(panel, c, row, historyDaysLabel, maxHistoryDaysField, false, historyDaysComment);
         historyCountLabel = new JLabel(TranslationUtil.getText("settings.history.entries"));
-        panel.add(historyCountLabel, c);
-        c.gridx = 1;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.weightx = 0.3;
-        c.insets = new Insets(4, 0, 0, 0);
         maxHistoryCountField = new JBTextField();
-        maxHistoryCountField.setColumns(4);
-        panel.add(maxHistoryCountField, c);
+        maxHistoryCountField.setColumns(NUMERIC_FIELD_COLUMNS);
+        historyCountComment = createCommentLabel(TranslationUtil.getText("settings.history.entries.comment"));
+        row = addLabeledRow(panel, c, row, historyCountLabel, maxHistoryCountField, false, historyCountComment);
 
-        // Row 8: 分隔线 — 开发者工具
-        c.gridy = 8;
-        c.gridx = 0;
-        c.gridwidth = 2;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.insets = new Insets(12, 0, 8, 0);
-        c.weightx = 0.0;
-        devToolsSeparator = new TitledSeparator(TranslationUtil.getText("settings.devtools"));
-        panel.add(devToolsSeparator, c);
-
-        // Row 9: 打开方式
-        c.gridy = 9;
-        c.gridx = 0;
-        c.gridwidth = 1;
-        c.fill = GridBagConstraints.NONE;
-        c.weightx = 0.0;
-        c.insets = new Insets(0, 0, 0, 8);
-        devToolsModeLabel = new JLabel(TranslationUtil.getText("settings.devtools.mode"));
-        panel.add(devToolsModeLabel, c);
-        c.gridx = 1;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.weightx = 1.0;
-        c.insets = new Insets(0, 0, 0, 0);
-        devToolsModeCombo = new JComboBox<>(new String[]{
-                TranslationUtil.getText("settings.devtools.below"),
-                TranslationUtil.getText("settings.devtools.window")
-        });
-        panel.add(devToolsModeCombo, c);
-
-        // Row 10: 显示位置
-        c.gridy = 10;
-        c.gridx = 0;
-        c.fill = GridBagConstraints.NONE;
-        c.weightx = 0.0;
-        c.insets = new Insets(4, 0, 0, 8);
+        // 段 4：界面与显示
+        displaySeparator = new TitledSeparator(TranslationUtil.getText("settings.section.display"));
+        row = addSeparator(panel, c, row, displaySeparator);
         displayPositionLabel = new JLabel(TranslationUtil.getText("settings.display.position"));
-        panel.add(displayPositionLabel, c);
-        c.gridx = 1;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.weightx = 1.0;
-        c.insets = new Insets(4, 0, 0, 0);
         displayPositionCombo = new JComboBox<>(new String[]{
                 TranslationUtil.getText("settings.position.toolbar"),
                 TranslationUtil.getText("settings.position.editor")
         });
-        panel.add(displayPositionCombo, c);
-
-        // Row 11: 编辑区模式下点击图标行为（仅 editor 模式显示）
-        c.gridy = 11;
-        c.gridx = 0;
-        c.gridwidth = 2;
-        c.fill = GridBagConstraints.NONE;
-        c.weightx = 0.0;
-        c.insets = new Insets(4, 0, 0, 0);
+        displayPositionComment = createCommentLabel(TranslationUtil.getText("settings.display.position.comment"));
+        row = addLabeledRow(panel, c, row, displayPositionLabel, displayPositionCombo, true, displayPositionComment);
         editorNewTabOnClickCheckBox = new JBCheckBox(TranslationUtil.getText("settings.editor.new.tab.on.click"));
+        editorNewTabComment = createCommentLabel(TranslationUtil.getText("settings.editor.new.tab.on.click.comment"));
+        // 仅在编辑区模式下可见
         editorNewTabOnClickCheckBox.setVisible(false);
-        panel.add(editorNewTabOnClickCheckBox, c);
+        editorNewTabComment.setVisible(false);
+        row = addCheckbox(panel, c, row, editorNewTabOnClickCheckBox, editorNewTabComment);
+        bookmarkOpenNewTabCheckBox = new JBCheckBox(TranslationUtil.getText("settings.bookmark.open.new.tab"));
+        bookmarkNewTabComment = createCommentLabel(TranslationUtil.getText("settings.bookmark.open.new.tab.comment"));
+        row = addCheckbox(panel, c, row, bookmarkOpenNewTabCheckBox, bookmarkNewTabComment);
 
-        // 显示位置变化时控制 checkbox 显隐
+        // 显示位置变化时同步控制 editorNewTabOnClick 及其说明文字显隐
         displayPositionCombo.addItemListener(e -> {
-            // 选中 editor（索引 1）时显示 checkbox，否则隐藏
+            // 选中 editor（索引 1）时显示，否则隐藏
             boolean isEditor = displayPositionCombo.getSelectedIndex() == 1;
             editorNewTabOnClickCheckBox.setVisible(isEditor);
+            editorNewTabComment.setVisible(isEditor);
         });
 
-        // Row 12: 点击书签是否打开新标签页
-        c.gridy = 12;
+        // 段 5：开发者工具
+        devToolsSeparator = new TitledSeparator(TranslationUtil.getText("settings.devtools"));
+        row = addSeparator(panel, c, row, devToolsSeparator);
+        devToolsModeLabel = new JLabel(TranslationUtil.getText("settings.devtools.mode"));
+        devToolsModeCombo = new JComboBox<>(new String[]{
+                TranslationUtil.getText("settings.devtools.below"),
+                TranslationUtil.getText("settings.devtools.window")
+        });
+        devToolsModeComment = createCommentLabel(TranslationUtil.getText("settings.devtools.mode.comment"));
+        row = addLabeledRow(panel, c, row, devToolsModeLabel, devToolsModeCombo, true, devToolsModeComment);
+
+        // 页脚：右下角开发者署名
         c.gridx = 0;
+        c.gridy = row;
         c.gridwidth = 2;
         c.fill = GridBagConstraints.NONE;
-        c.weightx = 0.0;
-        c.insets = new Insets(4, 0, 0, 0);
-        bookmarkOpenNewTabCheckBox = new JBCheckBox(TranslationUtil.getText("settings.bookmark.open.new.tab"));
-        panel.add(bookmarkOpenNewTabCheckBox, c);
-
-        // Row 13: 右下角签名
-        c.gridy = 13;
-        c.gridx = 1;
-        c.gridwidth = 1;
         c.weightx = 1.0;
+        // 占据剩余纵向空间，把署名推到面板底部
+        c.weighty = 1.0;
         c.anchor = GridBagConstraints.LAST_LINE_END;
-        c.fill = GridBagConstraints.NONE;
         c.insets = new Insets(20, 0, 0, 0);
+        // 页脚容器，右对齐
         JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         footerPanel.setOpaque(false);
         developerLabel = new JLabel(TranslationUtil.getText("settings.developer"), SwingConstants.RIGHT);
-        developerLabel.setFont(developerLabel.getFont().deriveFont(11f));
+        developerLabel.setFont(developerLabel.getFont().deriveFont(COMMENT_FONT_SIZE));
         footerPanel.add(developerLabel);
         panel.add(footerPanel, c);
 
         return panel;
+    }
+
+    // 添加段分隔线，返回下一行行号
+    private int addSeparator(JPanel panel, GridBagConstraints c, int row, TitledSeparator separator) {
+        c.gridy = row;
+        c.gridx = 0;
+        c.gridwidth = 2;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 0.0;
+        c.weighty = 0.0;
+        c.anchor = GridBagConstraints.WEST;
+        // 首段不加上间距，后续段加 12px 顶部间距
+        int topInset = row == 0 ? 0 : 12;
+        c.insets = new Insets(topInset, 0, 8, 0);
+        panel.add(separator, c);
+        return row + 1;
+    }
+
+    // 添加"标签 + 控件 + 下方说明"行，返回下一行行号。fillHorizontal 控制控件是否横向填充
+    private int addLabeledRow(JPanel panel, GridBagConstraints c, int row, JLabel label, JComponent field, boolean fillHorizontal, JLabel comment) {
+        // 标签列，固定宽度
+        c.gridy = row;
+        c.gridx = 0;
+        c.gridwidth = 1;
+        c.fill = GridBagConstraints.NONE;
+        c.weightx = 0.0;
+        c.weighty = 0.0;
+        c.anchor = GridBagConstraints.WEST;
+        c.insets = new Insets(0, 0, 0, 8);
+        panel.add(label, c);
+        // 控件列
+        c.gridx = 1;
+        if (fillHorizontal) {
+            // 文本框/下拉框横向填充
+            c.fill = GridBagConstraints.HORIZONTAL;
+            c.weightx = 1.0;
+        } else {
+            // 数值字段保持自然宽度
+            c.fill = GridBagConstraints.NONE;
+            c.weightx = 0.0;
+        }
+        c.insets = new Insets(0, 0, 0, 0);
+        panel.add(field, c);
+        // 字段下方灰色说明
+        row++;
+        c.gridy = row;
+        c.gridx = 1;
+        c.gridwidth = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1.0;
+        c.insets = new Insets(2, 0, 0, 0);
+        panel.add(comment, c);
+        return row + 1;
+    }
+
+    // 添加跨整行的复选框，可选下方缩进说明，返回下一行行号
+    private int addCheckbox(JPanel panel, GridBagConstraints c, int row, JBCheckBox checkBox, JLabel comment) {
+        c.gridy = row;
+        c.gridx = 0;
+        c.gridwidth = 2;
+        c.fill = GridBagConstraints.NONE;
+        c.weightx = 0.0;
+        c.weighty = 0.0;
+        c.anchor = GridBagConstraints.WEST;
+        c.insets = new Insets(4, 0, 0, 0);
+        panel.add(checkBox, c);
+        // 无说明时直接返回
+        if (comment == null) {
+            return row + 1;
+        }
+        // 复选框下方缩进的灰色说明
+        row++;
+        c.gridy = row;
+        c.gridx = 0;
+        c.gridwidth = 2;
+        c.fill = GridBagConstraints.NONE;
+        c.insets = new Insets(2, CHECKBOX_COMMENT_INDENT, 0, 0);
+        panel.add(comment, c);
+        return row + 1;
+    }
+
+    // 创建灰色小字说明标签
+    private JLabel createCommentLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setForeground(UIUtil.getContextHelpForeground());
+        label.setFont(label.getFont().deriveFont(COMMENT_FONT_SIZE));
+        return label;
     }
 
     // 构建语言下拉框显示项
@@ -285,6 +294,7 @@ public class BrowserSettingsPage implements Configurable {
         return items;
     }
 
+    // 判断设置页是否有未保存的修改
     @Override
     public boolean isModified() {
         BrowserSettingsState state = BrowserSettingsState.getInstance();
@@ -318,6 +328,7 @@ public class BrowserSettingsPage implements Configurable {
                 || bookmarkNewTabModified;
     }
 
+    // 应用设置页修改到持久化状态
     @Override
     public void apply() {
         BrowserSettingsState state = BrowserSettingsState.getInstance();
@@ -372,33 +383,47 @@ public class BrowserSettingsPage implements Configurable {
         }
     }
 
-    // 语言切换后刷新所有标签文字
+    // 语言切换后刷新所有标签、分隔线与说明文字
     private void refreshLabels() {
+        // 记录各下拉框当前选中索引，刷新后恢复
         int posIdx = displayPositionCombo.getSelectedIndex();
         int devIdx = devToolsModeCombo.getSelectedIndex();
         int langIdx = languageCombo.getSelectedIndex();
         int searchIdx = searchEngineCombo.getSelectedIndex();
 
-        homePageLabel.setText(TranslationUtil.getText("settings.homepage.url"));
-        openHomeCheckBox.setText(TranslationUtil.getText("settings.homepage.open"));
-        searchEngineLabel.setText(TranslationUtil.getText("settings.search.engine") + ":");
+        // 段分隔线
+        generalSeparator.setText(TranslationUtil.getText("settings.section.general"));
+        homepageSearchSeparator.setText(TranslationUtil.getText("settings.section.homepage.search"));
         historySeparator.setText(TranslationUtil.getText("settings.history"));
+        displaySeparator.setText(TranslationUtil.getText("settings.section.display"));
+        devToolsSeparator.setText(TranslationUtil.getText("settings.devtools"));
+
+        // 字段标签
+        languageLabel.setText(TranslationUtil.getText("settings.language"));
+        homePageLabel.setText(TranslationUtil.getText("settings.homepage.url"));
+        searchEngineLabel.setText(TranslationUtil.getText("settings.search.engine"));
         historyDaysLabel.setText(TranslationUtil.getText("settings.history.days"));
         historyCountLabel.setText(TranslationUtil.getText("settings.history.entries"));
-        devToolsSeparator.setText(TranslationUtil.getText("settings.devtools"));
-        devToolsModeLabel.setText(TranslationUtil.getText("settings.devtools.mode"));
         displayPositionLabel.setText(TranslationUtil.getText("settings.display.position"));
-        // 刷新 editorNewTabOnClick checkbox 文本
-        if (editorNewTabOnClickCheckBox != null) {
-            editorNewTabOnClickCheckBox.setText(TranslationUtil.getText("settings.editor.new.tab.on.click"));
-        }
+        devToolsModeLabel.setText(TranslationUtil.getText("settings.devtools.mode"));
 
-        // 刷新 bookmarkOpenNewTab checkbox 文本
-        if (bookmarkOpenNewTabCheckBox != null) {
-            bookmarkOpenNewTabCheckBox.setText(TranslationUtil.getText("settings.bookmark.open.new.tab"));
-        }
-        languageSeparator.setText(TranslationUtil.getText("settings.language"));
-        languageLabel.setText(TranslationUtil.getText("settings.language") + ":");
+        // 复选框文本
+        openHomeCheckBox.setText(TranslationUtil.getText("settings.homepage.open"));
+        editorNewTabOnClickCheckBox.setText(TranslationUtil.getText("settings.editor.new.tab.on.click"));
+        bookmarkOpenNewTabCheckBox.setText(TranslationUtil.getText("settings.bookmark.open.new.tab"));
+
+        // 字段下方灰色说明
+        languageComment.setText(TranslationUtil.getText("settings.language.comment"));
+        homePageUrlComment.setText(TranslationUtil.getText("settings.homepage.url.comment"));
+        searchEngineComment.setText(TranslationUtil.getText("settings.search.engine.comment"));
+        historyDaysComment.setText(TranslationUtil.getText("settings.history.days.comment"));
+        historyCountComment.setText(TranslationUtil.getText("settings.history.entries.comment"));
+        displayPositionComment.setText(TranslationUtil.getText("settings.display.position.comment"));
+        editorNewTabComment.setText(TranslationUtil.getText("settings.editor.new.tab.on.click.comment"));
+        bookmarkNewTabComment.setText(TranslationUtil.getText("settings.bookmark.open.new.tab.comment"));
+        devToolsModeComment.setText(TranslationUtil.getText("settings.devtools.mode.comment"));
+
+        // 页脚署名
         developerLabel.setText(TranslationUtil.getText("settings.developer"));
 
         // 刷新显示位置下拉框
@@ -422,6 +447,7 @@ public class BrowserSettingsPage implements Configurable {
         searchEngineCombo.setSelectedIndex(Math.max(0, Math.min(searchIdx, 3)));
     }
 
+    // 从持久化状态重置设置页控件
     @Override
     public void reset() {
         BrowserSettingsState state = BrowserSettingsState.getInstance();
@@ -497,9 +523,6 @@ public class BrowserSettingsPage implements Configurable {
         }
         return 0;
     }
-
-    // 搜索引擎代码列表
-    private static final String[] SEARCH_ENGINE_CODES = {"google", "bing", "duckduckgo", "baidu"};
 
     // 搜索引擎下拉索引 -> 代码
     private static String searchEngineIndexToCode(int index) {
