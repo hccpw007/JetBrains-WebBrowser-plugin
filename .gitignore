@@ -1,5 +1,23 @@
+# Gradle
 .gradle
-.idea
-.intellijPlatform
 build.kotlin
 /build/
+
+# IntelliJ IDEA
+.idea
+*.iml
+*.ipr
+*.iws
+out/
+
+# IntelliJ Platform
+.intellijPlatform
+
+# macOS
+.DS_Store
+
+# Local config
+local.properties
+
+# Logs
+*.log
