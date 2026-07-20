@@ -45,6 +45,12 @@
     <!-- Product and plugin compatibility requirements. -->
     <idea-version since-build="253" until-build="*"/>
     <depends>com.intellij.modules.platform</depends>
+    <!-- Depend on the JCEF module so the platform JCEF classes (e.g. JBCefAppRequiredArgumentsProvider)
+         are visible to this plugin's classloader. Since 2026.1 the JCEF API lives in the
+         com.intellij.modules.jcef module instead of being implicitly part of the platform.
+         依赖 JCEF 模块，使平台 JCEF 类（如 JBCefAppRequiredArgumentsProvider）对本插件的类加载器可见。
+         自 2026.1 起 JCEF API 位于 com.intellij.modules.jcef 模块，不再隐式包含在 platform 中。 -->
+    <depends>com.intellij.modules.jcef</depends>
 
     <resource-bundle>messages.MyMessageBundle</resource-bundle>
 
