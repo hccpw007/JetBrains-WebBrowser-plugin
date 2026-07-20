@@ -45,12 +45,19 @@
     <!-- Product and plugin compatibility requirements. -->
     <idea-version since-build="253" until-build="*"/>
     <depends>com.intellij.modules.platform</depends>
-    <!-- Depend on the JCEF module so the platform JCEF classes (e.g. JBCefAppRequiredArgumentsProvider)
-         are visible to this plugin's classloader. Since 2026.1 the JCEF API lives in the
-         com.intellij.modules.jcef module instead of being implicitly part of the platform.
-         依赖 JCEF 模块，使平台 JCEF 类（如 JBCefAppRequiredArgumentsProvider）对本插件的类加载器可见。
-         自 2026.1 起 JCEF API 位于 com.intellij.modules.jcef 模块，不再隐式包含在 platform 中。 -->
-    <depends>com.intellij.modules.jcef</depends>
+    <!-- Optional dependency on the JCEF module.
+         On 2026.1+ the JCEF API lives in the com.intellij.modules.jcef module; declaring it
+         as optional makes that module visible to this plugin's classloader when present,
+         while still allowing the plugin to load on older IDEs (2025.3-2026.0) where JCEF
+         classes are part of the platform. Optional (rather than a hard <depends>) avoids the
+         "Cannot resolve plugin 'com.intellij.modules.jcef'" error at build time against the
+         2025.3 SDK, which does not yet ship this module alias.
+         对 JCEF 模块的可选依赖。
+         在 2026.1+ 上 JCEF API 位于 com.intellij.modules.jcef 模块；声明为可选使该模块在存在时
+         对本插件类加载器可见，同时仍允许插件在较旧 IDE（2025.3-2026.0，JCEF 类属于平台）上加载。
+         使用可选而非硬依赖，可避免在 2025.3 SDK（尚未提供此模块别名）上构建时报
+         "Cannot resolve plugin 'com.intellij.modules.jcef'" 错误。 -->
+    <depends optional="true" config-file="webbrowser-jcef.xml">com.intellij.modules.jcef</depends>
 
     <resource-bundle>messages.MyMessageBundle</resource-bundle>
 

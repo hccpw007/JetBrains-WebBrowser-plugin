@@ -1,0 +1,16 @@
+<!--
+    Optional JCEF module dependency descriptor.
+    This file intentionally contains no extensions. The jcef.appRequiredArgumentsProvider
+    extension is registered in the main plugin.xml so it loads on both pre-2026.1 runtimes
+    (JCEF classes shipped as part of the platform) and 2026.1+ runtimes (JCEF classes shipped
+    in the com.intellij.modules.jcef module). This optional dependency exists only to make
+    the com.intellij.modules.jcef module visible to the plugin classloader on 2026.1+.
+
+    JCEF 模块可选依赖描述符。
+    本文件刻意不包含任何扩展。jcef.appRequiredArgumentsProvider 扩展点注册在主 plugin.xml，
+    以便在 2026.1 之前（JCEF 类随平台分发）与 2026.1+（JCEF 类位于 com.intellij.modules.jcef 模块）
+    两种运行时均能加载。此可选依赖仅用于在 2026.1+ 上使 com.intellij.modules.jcef 模块
+    对插件类加载器可见。
+-->
+<idea-plugin>
+</idea-plugin>
