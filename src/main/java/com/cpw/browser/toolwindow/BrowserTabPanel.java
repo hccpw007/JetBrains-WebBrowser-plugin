@@ -2,6 +2,7 @@ package com.cpw.browser.toolwindow;
 
 import com.cpw.browser.util.TranslationUtil;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.ui.jcef.JBCefApp;
 import com.intellij.ui.jcef.JBCefBrowser;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
@@ -62,6 +63,13 @@ public class BrowserTabPanel {
     public BrowserTabPanel(String initialUrl) {
         this.currentUrl = initialUrl;
         this.pageTitle = TranslationUtil.getText("tab.new.tab");
+
+        // 创建浏览器前确保 JCEF 已完成初始化，避免 IDE 启动恢复工具窗口时
+        // 与 CefStartup-thread 的 CEF 动态库加载（dlopen）竞态导致 native 崩溃
+        if (!JBCefApp.isSupported()) {
+            throw new IllegalStateException("JCEF is not supported in this environment");
+        }
+        JBCefApp.getInstance();
 
         // 创建浏览器并设置背景色
         this.browser = new JBCefBrowser(initialUrl);
