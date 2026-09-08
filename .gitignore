@@ -21,3 +21,6 @@ local.properties
 
 # Logs
 *.log
+
+# Local debugging scratch files
+.debug/

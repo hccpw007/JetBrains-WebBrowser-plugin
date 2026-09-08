@@ -44,6 +44,10 @@ public final class WebBrowserIcons {
     public static final Icon SYSTEM_BROWSER = load("system-browser");
     // 更多菜单图标（三个竖点）
     public static final Icon MORE = load("more");
+    // 桌面视图图标（电脑显示器，手机模式切换按钮的桌面状态）
+    public static final Icon DESKTOP = load("desktop");
+    // 手机视图图标（手机外形，手机模式切换按钮的手机状态）
+    public static final Icon MOBILE = load("mobile");
 
     private WebBrowserIcons() {
         // 工具类，禁止实例化

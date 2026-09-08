@@ -1,5 +1,12 @@
 <!-- Keep a Changelog guide -> https://keepachangelog.com -->
 
+## [1.2.1] - 2026-09-08
+
+### Added
+
+- PC/Mobile view switch with mobile device emulation.
+  <br>新增 PC/手机视图切换。
+
 ## [1.1.1] - 2026-07-19
 
 ### Added

@@ -97,6 +97,9 @@ public class BrowserToolWindowPanel {
     // 新建标签页按钮
     private final JButton addTabButton;
 
+    // 右侧操作工具栏（含缩放、手机模式切换等按钮），切换标签页后用于刷新按钮展示状态
+    private ActionToolbar rightToolbar;
+
     // 构造浏览器工具窗口主面板（默认非编辑区独立标签页模式）
     public BrowserToolWindowPanel(Project project) {
         this(project, false);
@@ -268,12 +271,14 @@ public class BrowserToolWindowPanel {
         rightGroup.add(new PanelActions.ZoomOut(tabManager, this::showZoomToast));
         rightGroup.add(new PanelActions.ZoomReset(tabManager, this::showZoomToast));
         rightGroup.addSeparator();
+        rightGroup.add(new PanelActions.MobileModeToggle(tabManager));
+        rightGroup.addSeparator();
         rightGroup.add(new PanelActions.ToggleBookmarkSidebar(bookmarkSidebar, centerPanel));
         rightGroup.add(new PanelActions.ToggleBookmarkBar(bookmarkBar));
         rightGroup.add(new PanelActions.OpenInSystemBrowser(tabManager));
         rightGroup.add(new PanelActions.MoreMenu(project, tabManager, this::openDevTools));
-        ActionToolbar rightToolbar = ActionManager.getInstance().createActionToolbar("WebBrowser.RightActions", rightGroup, true);
-        rightToolbar.setTargetComponent(rightToolbar.getComponent());
+        this.rightToolbar = ActionManager.getInstance().createActionToolbar("WebBrowser.RightActions", rightGroup, true);
+        this.rightToolbar.setTargetComponent(this.rightToolbar.getComponent());
 
         // 地址栏行：[导航按钮] [地址栏] [开发者工具/书签/新标签页]
         JBPanel<?> navAddressBar = new JBPanel<>(new BorderLayout());
@@ -478,6 +483,16 @@ public class BrowserToolWindowPanel {
             if (onTitleChanged != null) {
                 onTitleChanged.accept("Web Browser");
             }
+        }
+        // 刷新右侧工具栏按钮状态（如手机模式切换按钮随活跃标签页变化）
+        refreshRightToolbar();
+    }
+
+    // 刷新右侧工具栏按钮的展示状态
+    private void refreshRightToolbar() {
+        // 工具栏非空时立即更新按钮展示（update 方法会被调用以同步图标与文案）
+        if (rightToolbar != null) {
+            rightToolbar.updateActionsImmediately();
         }
     }
 

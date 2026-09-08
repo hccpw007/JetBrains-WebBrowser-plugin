@@ -15,6 +15,8 @@ A fully-featured Chrome-like web browser plugin for JetBrains IDEs.
   **搜索引擎** — 输入内容非网址时，可直接使用搜索引擎。
 - **DevTools** — Embedded split-pane or separate window mode.  
   **开发者工具** — 支持嵌入分屏或独立窗口模式。
+- **PC/Mobile View** — One-click switch between desktop and mobile view with device emulation.  
+  **PC/手机视图** — 一键在桌面与手机视图间切换（设备模拟）。
 - **Multi-Tab** — Create, close, and switch between tabs.  
   **多标签页** — 创建、关闭和切换标签页。
 - **Bookmarks** — Manage bookmarks.  

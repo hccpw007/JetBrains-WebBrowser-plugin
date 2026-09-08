@@ -6,8 +6,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.PathManager;
-import com.intellij.ui.jcef.JBCefApp;
 import com.intellij.ui.jcef.JBCefBrowser;
 
 import org.cef.browser.CefBrowser;
@@ -18,13 +16,6 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -60,7 +51,7 @@ public class EmbeddedDevToolsManager {
         // 在后台线程查找 DevTools 端口
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
             try {
-                Integer port = findDevToolsPort();
+                Integer port = CdpSupport.findDevToolsPort();
                 // 如果找到有效端口，则连接 DevTools
                 if (port != null && port > 0) {
                     connectDevTools(port, callback);
@@ -103,85 +94,6 @@ public class EmbeddedDevToolsManager {
         }
     }
 
-    // 查找 JCEF 远程调试端口
-    private Integer findDevToolsPort() {
-        // 尝试通过 JBCefApp API 获取端口
-        try {
-            JBCefApp app = JBCefApp.getInstance();
-            AtomicReference<Integer> result = new AtomicReference<>();
-            CountDownLatch latch = new CountDownLatch(1);
-            app.getRemoteDebuggingPort(port -> {
-                result.set(port);
-                latch.countDown();
-            });
-            // 等待端口查询结果，超时 3 秒
-            if (latch.await(3, TimeUnit.SECONDS)) {
-                Integer port = result.get();
-                // 如果端口有效则直接返回
-                if (port != null && port > 0) {
-                    System.err.println("[WebBrowser] DevTools port via JBCefApp: " + port);
-                    return port;
-                }
-            }
-        } catch (Throwable t) {
-            System.err.println("[WebBrowser] JBCefApp.getRemoteDebuggingPort failed: " + t.getMessage());
-        }
-
-        // 尝试通过 DevToolsActivePort 文件查找端口（限制搜索深度为 2，防止在大缓存目录中长时间遍历）
-        try {
-            List<Path> candidates = new ArrayList<>();
-            Path systemDir = PathManager.getSystemDir();
-            // 如果系统目录不为空，添加 jcef_cache 作为候选路径
-            if (systemDir != null) {
-                candidates.add(systemDir.resolve("jcef_cache"));
-            }
-            try {
-                String userHome = System.getProperty("user.home");
-                // 如果用户主目录不为空，添加 JetBrains 缓存目录作为候选路径
-                if (userHome != null) {
-                    candidates.add(Path.of(userHome, "Library", "Caches", "JetBrains"));
-                }
-            } catch (Exception e) {
-                // 忽略，继续尝试其他候选路径
-            }
-
-            // 遍历所有候选路径，查找 DevToolsActivePort 文件（限制搜索深度为 2 层）
-            for (Path root : candidates) {
-                // 跳过非目录的候选路径
-                if (!Files.isDirectory(root)) continue;
-                try {
-                    java.util.Optional<Path> optionalPath = Files.walk(root, 2)
-                            .filter(p -> "DevToolsActivePort".equals(p.getFileName().toString()))
-                            .findFirst();
-                    // 如果找到 DevToolsActivePort 文件，读取其中的端口号
-                    if (optionalPath.isPresent()) {
-                        Path foundPath = optionalPath.get();
-                        List<String> lines = Files.readAllLines(foundPath);
-                        // 如果文件内容不为空，解析端口号
-                        if (!lines.isEmpty()) {
-                            try {
-                                Integer port = Integer.parseInt(lines.get(0).trim());
-                                // 如果端口有效则返回
-                                if (port > 0) {
-                                    System.err.println("[WebBrowser] DevTools port via file: " + port + " (" + foundPath + ")");
-                                    return port;
-                                }
-                            } catch (NumberFormatException e) {
-                                // 忽略无效端口
-                            }
-                        }
-                    }
-                } catch (Throwable t) {
-                    System.err.println("[WebBrowser] DevToolsActivePort search in " + root + " failed: " + t.getMessage());
-                }
-            }
-        } catch (Throwable t) {
-            System.err.println("[WebBrowser] DevToolsActivePort file search failed: " + t.getMessage());
-        }
-
-        return null;
-    }
-
     // 连接 CDP 并加载嵌入式 DevTools
     private void connectDevTools(int port, Consumer<JBCefBrowser> callback) {
         try {
@@ -195,39 +107,11 @@ public class EmbeddedDevToolsManager {
 
             JsonArray pages = JsonParser.parseString(json).getAsJsonArray();
 
-            // 按当前 URL 匹配 page 目标
-            JsonObject matchedPage = null;
-            String currentUrl = tab.getCurrentUrl();
-            // 遍历 CDP 返回的所有页面列表
-            for (JsonElement page : pages) {
-                JsonObject obj = page.getAsJsonObject();
-                JsonElement typeElem = obj.get("type");
-                // 只筛选类型为 "page" 的页面
-                if (typeElem != null && "page".equals(typeElem.getAsString())) {
-                    String pageUrl = obj.get("url") != null ? obj.get("url").getAsString() : "";
-                    // 按 URL 精确匹配或包含匹配，空白页时直接用第一个
-                    if (pageUrl.equals(currentUrl) ||
-                            (!"about:blank".equals(currentUrl) && pageUrl.contains(currentUrl)) ||
-                            ("about:blank".equals(currentUrl) && pages.size() == 1)) {
-                        matchedPage = obj;
-                        break;
-                    }
-                }
-            }
-
-            // 如果没匹配到，则使用第一个可用的 page 目标
+            // 按当前 URL 匹配 page 目标（未匹配时回退第一个可用的 page 目标）
+            JsonObject matchedPage = CdpSupport.matchPageTarget(pages, tab.getCurrentUrl());
+            // 无任何可用 page 目标时打印提示
             if (matchedPage == null) {
-                System.err.println("[WebBrowser] No page matched '" + currentUrl + "', using first available");
-                // 遍历页面列表，取第一个类型为 "page" 的页面
-                for (JsonElement page : pages) {
-                    JsonObject obj = page.getAsJsonObject();
-                    JsonElement typeElem = obj.get("type");
-                    // 只筛选类型为 "page" 的页面
-                    if (typeElem != null && "page".equals(typeElem.getAsString())) {
-                        matchedPage = obj;
-                        break;
-                    }
-                }
+                System.err.println("[WebBrowser] No page found in /json list");
             }
 
             // 如果匹配到了目标页面

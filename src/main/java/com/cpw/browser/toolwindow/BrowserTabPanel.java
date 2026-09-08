@@ -56,6 +56,9 @@ public class BrowserTabPanel {
     // 嵌入式 DevTools 管理器，负责 DevTools 的端口发现、CDP 连接和生命周期
     private final EmbeddedDevToolsManager devToolsManager = new EmbeddedDevToolsManager(this);
 
+    // 手机视图管理器，负责 PC/手机窄屏外壳切换与 CDP 设备模拟
+    private final MobileViewManager mobileView;
+
     public BrowserTabPanel() {
         this("about:blank");
     }
@@ -76,7 +79,10 @@ public class BrowserTabPanel {
         this.browser.setPageBackgroundColor("white");
         // 确保新窗口页面从 100% 缩放开始
         this.browser.setZoomLevel(1.0);
-        this.component = browser.getComponent();
+        // 手机视图管理器：负责 PC/手机窄屏外壳与 CDP 设备模拟切换
+        this.mobileView = new MobileViewManager(this);
+        // 对外暴露的组件为视图管理器的宿主容器（默认桌面全宽承载浏览器，手机模式时内部包窄屏外壳）
+        this.component = mobileView.getHostComponent();
 
         // 如果初始 URL 不是 about:blank，则记录历史
         if (!"about:blank".equals(initialUrl)) {
@@ -455,6 +461,17 @@ public class BrowserTabPanel {
     // 获取嵌入式 DevTools 的 UI 组件
     public JComponent getEmbeddedDevToolsComponent() {
         return devToolsManager.getComponent();
+    }
+
+    // 是否处于手机窄屏模式
+    public boolean isMobileMode() {
+        return mobileView.isMobileMode();
+    }
+
+    // 切换手机/桌面视图模式
+    // mobile 为 true 进入手机窄屏模式（含手机 UA 与触屏模拟），false 恢复桌面全宽模式
+    public void setMobileMode(boolean mobile) {
+        mobileView.setMobileMode(mobile);
     }
 
     // 释放资源

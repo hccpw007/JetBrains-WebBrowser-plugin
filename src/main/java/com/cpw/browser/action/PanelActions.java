@@ -277,9 +277,53 @@ public final class PanelActions {
         }
     }
 
+    // 在桌面全宽视图与手机窄屏视图之间切换当前标签页（手机模式含手机 UA 与触屏模拟）
+    public static class MobileModeToggle extends AnAction implements DumbAware {
+
+        private final BrowserTabManager tabManager;
+
+        public MobileModeToggle(BrowserTabManager tabManager) {
+            super(TranslationUtil.getText("action.mobile.view"), TranslationUtil.getText("action.mobile.view.desc"), WebBrowserIcons.DESKTOP);
+            this.tabManager = tabManager;
+        }
+
+        @Override
+        public void update(AnActionEvent e) {
+            BrowserTabPanel tab = tabManager.getActiveTab();
+            // 无活跃标签页时禁用切换
+            boolean enabled = tab != null;
+            e.getPresentation().setEnabled(enabled);
+            // 当前活跃标签页是否处于手机模式
+            boolean mobile = enabled && tab.isMobileMode();
+            applyPresentation(e, mobile);
+        }
+
+        @Override
+        public void actionPerformed(AnActionEvent e) {
+            BrowserTabPanel tab = tabManager.getActiveTab();
+            // 无活跃标签页则直接返回
+            if (tab == null) return;
+            // 切换手机/桌面模式
+            tab.setMobileMode(!tab.isMobileMode());
+            // 立即同步按钮展示状态（文字、图标随新模式变化）
+            applyPresentation(e, tab.isMobileMode());
+        }
+
+        // 按手机模式状态刷新按钮文字与图标
+        // e 为触发更新的动作事件
+        // mobile 为 true 表示当前处于手机模式
+        private void applyPresentation(AnActionEvent e, boolean mobile) {
+            // 手机模式提示"切换为电脑视图"，桌面模式提示"切换为手机视图"
+            String key = mobile ? "action.desktop.view" : "action.mobile.view";
+            e.getPresentation().setText(TranslationUtil.getText(key));
+            e.getPresentation().setDescription(TranslationUtil.getText(key + ".desc"));
+            // 图标随状态变化：手机模式显示手机图标，桌面模式显示桌面图标
+            e.getPresentation().setIcon(mobile ? WebBrowserIcons.MOBILE : WebBrowserIcons.DESKTOP);
+        }
+    }
+
     // 在系统默认浏览器中打开
     public static class OpenInSystemBrowser extends AnAction implements DumbAware {
-
         private final BrowserTabManager tabManager;
 
         public OpenInSystemBrowser(BrowserTabManager tabManager) {
