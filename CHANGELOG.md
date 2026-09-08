@@ -1,5 +1,12 @@
 <!-- Keep a Changelog guide -> https://keepachangelog.com -->
 
+## [1.2.2] - 2026-09-08
+
+### Fixed
+
+- Replace the deprecated toolbar refresh API `updateActionsImmediately()` with the recommended `updateActionsAsync()`, removing the deprecated-API warning.
+  <br>将已弃用的工具栏刷新 API `updateActionsImmediately()` 替换为官方推荐的 `updateActionsAsync()`，消除弃用警告。
+
 ## [1.2.1] - 2026-09-08
 
 ### Added
