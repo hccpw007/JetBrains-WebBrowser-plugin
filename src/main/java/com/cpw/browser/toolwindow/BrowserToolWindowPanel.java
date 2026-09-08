@@ -488,11 +488,11 @@ public class BrowserToolWindowPanel {
         refreshRightToolbar();
     }
 
-    // 刷新右侧工具栏按钮的展示状态
+    // 刷新右侧工具栏按钮的展示状态（须在 EDT 线程调用）
     private void refreshRightToolbar() {
-        // 工具栏非空时立即更新按钮展示（update 方法会被调用以同步图标与文案）
+        // 工具栏非空时异步更新按钮展示（废弃的 updateActionsImmediately 改为官方推荐的 updateActionsAsync）
         if (rightToolbar != null) {
-            rightToolbar.updateActionsImmediately();
+            rightToolbar.updateActionsAsync();
         }
     }
 
