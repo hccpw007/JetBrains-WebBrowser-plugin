@@ -24,3 +24,9 @@ local.properties
 
 # Local debugging scratch files
 .debug/
+
+# AI assistant local directories and files
+/.claude-code-gui/
+/.claude/
+/.agents/
+/CLAUDE.md
