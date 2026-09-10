@@ -5,6 +5,7 @@ package com.cpw.browser.toolwindow;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.ui.jcef.JBCefBrowser;
+import com.intellij.ui.jcef.JBCefBrowserBase;
 import com.intellij.ui.jcef.JBCefJSQuery;
 import org.cef.browser.CefBrowser;
 import org.cef.handler.CefKeyboardHandler;
@@ -40,7 +41,8 @@ final class PageFindController {
     PageFindController(JBCefBrowser browser) {
         this.browser = browser;
         // JS 回传通道：接收页面统计出的匹配数量
-        this.countQuery = JBCefJSQuery.create(browser);
+        // 转成 JBCefBrowserBase 以走基类重载，JBCefBrowser 重载已被标记移除
+        this.countQuery = JBCefJSQuery.create((JBCefBrowserBase) browser);
         this.countQuery.addHandler(this::onCountReceived);
         registerShortcutHandler(browser);
     }
