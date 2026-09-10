@@ -23,6 +23,8 @@
             <b>搜索引擎</b> — 输入内容非网址时，可直接使用搜索引擎。</li>
             <li><b>DevTools</b> — Embedded split-pane or separate window mode.<br>
             <b>开发者工具</b> — 支持嵌入分屏或独立窗口模式。</li>
+            <li><b>Find in Page</b> — Ctrl+F find bar with match count and next/previous navigation.<br>
+            <b>页面内查找</b> — Ctrl+F 唤出查找栏，显示匹配总数并支持上一个/下一个。</li>
             <li><b>Multi-Tab</b> — Create, close, and switch between tabs.<br>
             <b>多标签页</b> </li>
             <li><b>Bookmarks</b> — Manage bookmarks.<br>

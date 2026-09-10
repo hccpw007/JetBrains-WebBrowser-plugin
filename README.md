@@ -15,6 +15,8 @@ A fully-featured Chrome-like web browser plugin for JetBrains IDEs.
   **搜索引擎** — 输入内容非网址时，可直接使用搜索引擎。
 - **DevTools** — Embedded split-pane or separate window mode.  
   **开发者工具** — 支持嵌入分屏或独立窗口模式。
+- **Find in Page** — `Ctrl+F` find bar with match count and next/previous navigation.  
+  **页面内查找** — `Ctrl+F` 唤出查找栏，显示匹配总数并支持上一个/下一个。
 - **PC/Mobile View** — One-click switch between desktop and mobile view with device emulation.  
   **PC/手机视图** — 一键在桌面与手机视图间切换（设备模拟）。
 - **Multi-Tab** — Create, close, and switch between tabs.  
