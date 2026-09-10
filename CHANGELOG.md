@@ -1,6 +1,6 @@
 <!-- Keep a Changelog guide -> https://keepachangelog.com -->
 
-## [1.3.0] - 2026-09-10
+## [1.2.2] - 2026-09-10
 
 ### Added
 
@@ -10,8 +10,6 @@
   <br>查找快捷键由浏览器内核拦截，焦点在网页内或面板内均可用。
 - The find bar is available in both tool window and editor area modes, and closes automatically when switching tabs.
   <br>查找栏在工具窗口与编辑区两种模式下均可用，切换标签页时自动关闭。
-
-## [1.2.2] - 2026-09-08
 
 ### Fixed
 
