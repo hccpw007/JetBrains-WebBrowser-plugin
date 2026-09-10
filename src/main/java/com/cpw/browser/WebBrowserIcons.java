@@ -48,6 +48,14 @@ public final class WebBrowserIcons {
     public static final Icon DESKTOP = load("desktop");
     // 手机视图图标（手机外形，手机模式切换按钮的手机状态）
     public static final Icon MOBILE = load("mobile");
+    // 页面内查找图标（放大镜，工具栏查找按钮）
+    public static final Icon FIND = load("find");
+    // 查找上一个匹配图标（向上箭头）
+    public static final Icon FIND_PREV = load("find-prev");
+    // 查找下一个匹配图标（向下箭头）
+    public static final Icon FIND_NEXT = load("find-next");
+    // 关闭查找栏图标（叉号）
+    public static final Icon FIND_CLOSE = load("find-close");
 
     private WebBrowserIcons() {
         // 工具类，禁止实例化

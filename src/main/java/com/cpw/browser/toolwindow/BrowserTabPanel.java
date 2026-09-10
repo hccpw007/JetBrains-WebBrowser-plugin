@@ -16,6 +16,7 @@ import javax.swing.Timer;
 import java.util.ArrayDeque;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 
 // 单个浏览器标签页，封装 JBCefBrowser，管理导航历史、缩放、DevTools
 public class BrowserTabPanel {
@@ -59,6 +60,9 @@ public class BrowserTabPanel {
     // 手机视图管理器，负责 PC/手机窄屏外壳切换与 CDP 设备模拟
     private final MobileViewManager mobileView;
 
+    // 页面内查找控制器，负责网页内查找命令与网页内快捷键拦截
+    private final PageFindController pageFind;
+
     public BrowserTabPanel() {
         this("about:blank");
     }
@@ -81,6 +85,8 @@ public class BrowserTabPanel {
         this.browser.setZoomLevel(1.0);
         // 手机视图管理器：负责 PC/手机窄屏外壳与 CDP 设备模拟切换
         this.mobileView = new MobileViewManager(this);
+        // 页面内查找控制器：注册网页内的查找快捷键拦截
+        this.pageFind = new PageFindController(browser);
         // 对外暴露的组件为视图管理器的宿主容器（默认桌面全宽承载浏览器，手机模式时内部包窄屏外壳）
         this.component = mobileView.getHostComponent();
 
@@ -472,6 +478,32 @@ public class BrowserTabPanel {
     // mobile 为 true 进入手机窄屏模式（含手机 UA 与触屏模拟），false 恢复桌面全宽模式
     public void setMobileMode(boolean mobile) {
         mobileView.setMobileMode(mobile);
+    }
+
+    // 在页面内查找指定文本
+    // text 为查找关键字
+    // forward 为 true 时向后查找，false 时向前查找
+    // findNext 为 true 时沿用上次查找继续，false 时开始一次新的查找
+    public void findText(String text, boolean forward, boolean findNext) {
+        pageFind.findText(text, forward, findNext);
+    }
+
+    // 结束页面内查找并清除高亮
+    public void stopFinding() {
+        pageFind.stopFinding();
+    }
+
+    // 统计页面内匹配数量
+    // text 为查找关键字
+    // callback 为统计结果回调，参数为匹配数量
+    public void countMatches(String text, IntConsumer callback) {
+        pageFind.countMatches(text, callback);
+    }
+
+    // 设置网页内查找快捷键回调
+    // onFindShortcut 为网页内按下查找快捷键后执行的回调
+    public void setOnFindShortcut(Runnable onFindShortcut) {
+        pageFind.setOnFindShortcut(onFindShortcut);
     }
 
     // 释放资源

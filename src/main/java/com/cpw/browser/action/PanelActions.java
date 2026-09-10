@@ -8,6 +8,7 @@ import com.cpw.browser.toolwindow.BrowserTabManager;
 import com.cpw.browser.toolwindow.BrowserTabPanel;
 import com.cpw.browser.ui.BookmarkBar;
 import com.cpw.browser.ui.BookmarkSidebar;
+import com.cpw.browser.ui.FindBar;
 import com.cpw.browser.util.TranslationUtil;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnAction;
@@ -319,6 +320,35 @@ public final class PanelActions {
             e.getPresentation().setDescription(TranslationUtil.getText(key + ".desc"));
             // 图标随状态变化：手机模式显示手机图标，桌面模式显示桌面图标
             e.getPresentation().setIcon(mobile ? WebBrowserIcons.MOBILE : WebBrowserIcons.DESKTOP);
+        }
+    }
+
+    // 页面内查找：显示或隐藏查找栏
+    public static class ToggleFind extends AnAction implements DumbAware {
+
+        private final FindBar findBar;
+        private final Runnable showFindBar;
+
+        public ToggleFind(FindBar findBar, Runnable showFindBar) {
+            super(TranslationUtil.getText("action.find"), TranslationUtil.getText("action.find.desc"), WebBrowserIcons.FIND);
+            this.findBar = findBar;
+            this.showFindBar = showFindBar;
+        }
+
+        @Override
+        public void update(AnActionEvent e) {
+            e.getPresentation().setText(TranslationUtil.getText("action.find"));
+            e.getPresentation().setDescription(TranslationUtil.getText("action.find.desc"));
+        }
+
+        @Override
+        public void actionPerformed(AnActionEvent e) {
+            // 查找栏已显示时点击则关闭，未显示时点击则显示
+            if (findBar.isVisible()) {
+                findBar.hideBar();
+            } else {
+                showFindBar.run();
+            }
         }
     }
 

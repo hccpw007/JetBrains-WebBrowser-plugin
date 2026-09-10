@@ -13,14 +13,20 @@ import com.cpw.browser.ui.AddressBar;
 import com.cpw.browser.ui.BookmarkBar;
 import com.cpw.browser.ui.BookmarkSidebar;
 import com.cpw.browser.ui.ChromeTab;
+import com.cpw.browser.ui.FindBar;
 import com.cpw.browser.util.UrlUtils;
 import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.actionSystem.ActionToolbar;
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.actionSystem.CustomShortcutSet;
 import com.intellij.openapi.actionSystem.DefaultActionGroup;
+import com.intellij.openapi.actionSystem.KeyboardShortcut;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBPanel;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -28,6 +34,7 @@ import javax.swing.JButton;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
+import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 import javax.swing.Timer;
 import java.awt.AlphaComposite;
@@ -40,9 +47,12 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 
 public class BrowserToolWindowPanel {
 
@@ -81,6 +91,12 @@ public class BrowserToolWindowPanel {
 
     // 缩放提示定时器
     private Timer zoomToastTimer;
+
+    // 页面内查找栏（浮在网页右上角，默认隐藏）
+    private final FindBar findBar;
+
+    // 上一次显示过的活跃标签页，用于识别真正的标签页切换并清除其遗留的查找高亮
+    private BrowserTabPanel previousActiveTab;
 
     // 居中区域面板
     private final JPanel centerPanel;
@@ -170,12 +186,57 @@ public class BrowserToolWindowPanel {
                             pref.height
                     );
                 }
+
+                // 查找栏可见时贴右上角显示
+                if (findBar.isVisible()) {
+                    Dimension findPref = findBar.getPreferredSize();
+                    findBar.setBounds(
+                            Math.max(0, w - findPref.width - 8),
+                            8,
+                            findPref.width,
+                            findPref.height
+                    );
+                }
             }
         };
         browserLayer.setLayer(browserContentPanel, JLayeredPane.DEFAULT_LAYER);
         browserLayer.setLayer(zoomToast, JLayeredPane.PALETTE_LAYER);
         browserLayer.add(browserContentPanel, JLayeredPane.DEFAULT_LAYER);
         browserLayer.add(zoomToast, JLayeredPane.PALETTE_LAYER);
+
+        // 页面内查找栏：查找命令转发给当前活跃标签页的网页
+        findBar = new FindBar(new FindBar.FindHandler() {
+            @Override
+            public void find(String text, boolean forward, boolean findNext) {
+                BrowserTabPanel tab = tabManager.getActiveTab();
+                // 有活跃标签页时在页面内执行查找
+                if (tab != null) {
+                    tab.findText(text, forward, findNext);
+                }
+            }
+
+            @Override
+            public void stop() {
+                BrowserTabPanel tab = tabManager.getActiveTab();
+                // 有活跃标签页时结束查找并清除页面内高亮
+                if (tab != null) {
+                    tab.stopFinding();
+                }
+            }
+
+            @Override
+            public void count(String text, IntConsumer callback) {
+                BrowserTabPanel tab = tabManager.getActiveTab();
+                // 无活跃标签页时没有可统计的页面
+                if (tab == null) {
+                    callback.accept(0);
+                    return;
+                }
+                tab.countMatches(text, callback);
+            }
+        });
+        browserLayer.setLayer(findBar, JLayeredPane.PALETTE_LAYER);
+        browserLayer.add(findBar, JLayeredPane.PALETTE_LAYER);
 
         zoomToastTimer = null;
 
@@ -272,6 +333,7 @@ public class BrowserToolWindowPanel {
         rightGroup.add(new PanelActions.ZoomReset(tabManager, this::showZoomToast));
         rightGroup.addSeparator();
         rightGroup.add(new PanelActions.MobileModeToggle(tabManager));
+        rightGroup.add(new PanelActions.ToggleFind(findBar, this::showFindBar));
         rightGroup.addSeparator();
         rightGroup.add(new PanelActions.ToggleBookmarkSidebar(bookmarkSidebar, centerPanel));
         rightGroup.add(new PanelActions.ToggleBookmarkBar(bookmarkBar));
@@ -319,11 +381,16 @@ public class BrowserToolWindowPanel {
             bookmarkSidebar.refreshLabels();
             // 刷新横向书签栏标签
             bookmarkBar.refreshLabels();
+            // 刷新查找栏提示文案
+            findBar.refreshLabels();
             // 刷新所有标签页中的 ChromeTab 关闭按钮提示
             for (Map.Entry<BrowserTabPanel, ChromeTab> entry : chromeTabs.entrySet()) {
                 entry.getValue().refreshTooltip();
             }
         });
+
+        // 注册页面内查找快捷键
+        registerFindShortcut();
     }
 
     // 获取标题变更回调
@@ -349,6 +416,33 @@ public class BrowserToolWindowPanel {
     // 聚焦地址栏输入框
     public void focusAddressBar() {
         addressBar.requestFocusOnField();
+    }
+
+    // 显示页面内查找栏并把焦点移到查找输入框
+    public void showFindBar() {
+        // 查找栏作用于当前活跃标签页，无活跃标签页时无可查找内容
+        if (tabManager.getActiveTab() == null) return;
+        findBar.showBar();
+        browserLayer.revalidate();
+        browserLayer.repaint();
+    }
+
+    // 注册页面内查找快捷键（覆盖焦点在面板内的情况；焦点在网页内时由页面查找控制器拦截）
+    private void registerFindShortcut() {
+        // 查找动作：显示查找栏
+        AnAction findAction = new AnAction() {
+            @Override
+            public void actionPerformed(@NotNull AnActionEvent e) {
+                showFindBar();
+            }
+        };
+        // 同时注册 Ctrl+F 与 Command+F，分别覆盖 Windows/Linux 与 macOS 的按键习惯
+        findAction.registerCustomShortcutSet(
+                new CustomShortcutSet(
+                        new KeyboardShortcut(KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.CTRL_DOWN_MASK), null),
+                        new KeyboardShortcut(KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.META_DOWN_MASK), null)),
+                mainPanel
+        );
     }
 
     // 打开/关闭开发者工具
@@ -396,6 +490,9 @@ public class BrowserToolWindowPanel {
                     if (idx >= 0) tabManager.closeTab(idx);
                 }
         );
+
+        // 网页内按下查找快捷键时显示查找栏
+        tab.setOnFindShortcut(this::showFindBar);
 
         chromeTabs.put(tab, chromeTab);
         tabStripPanel.add(chromeTab, tabStripPanel.getComponentCount() - 1);
@@ -464,6 +561,21 @@ public class BrowserToolWindowPanel {
 
     // 活跃标签页变更回调
     private void onActiveTabChanged(BrowserTabPanel tab) {
+        // 切换到了另一个标签页时关闭查找栏并清除上一个标签页遗留的查找高亮
+        // （该回调也会在地址、标题、加载状态变化时触发，故仅按标签页是否变化判断）
+        if (tab != previousActiveTab) {
+            // 查找栏可见时先关闭，避免查找栏指向已切走的页面
+            if (findBar.isVisible()) {
+                findBar.hideBar();
+            }
+
+            // 上一个标签页可能仍保留查找高亮，需单独清除
+            if (previousActiveTab != null) {
+                previousActiveTab.stopFinding();
+            }
+            previousActiveTab = tab;
+        }
+
         // 存在活跃标签页则更新界面状态
         if (tab != null) {
             addressBar.setUrl(tab.getCurrentUrl());
